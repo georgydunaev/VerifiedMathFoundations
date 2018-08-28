@@ -1,6 +1,20 @@
 Require Export Coq.Vectors.Vector.
 Require Export Coq.Lists.List.
 Require Import Bool.Bool.
+Require Import Logic.FunctionalExtensionality.
+Require Import Coq.Program.Wf.
+
+Fixpoint vec_comp_as {A B C} (f:B->C) (g:A->B) (n:nat) (t0: Vector.t A n) :
+Vector.map f (Vector.map g t0) =
+Vector.map (fun x=>(f(g x))) t0.
+Proof.
+destruct t0.
+simpl.
+reflexivity.
+simpl.
+rewrite -> vec_comp_as.
+reflexivity.
+Defined.
 
 Module VS.
 Section sec0.
@@ -16,14 +30,13 @@ Record PSV := MPSV{
  psv : nat;
 }.
 Check MPSV 0 0.
-Definition A1Type:=Set.
-Inductive Term : A1Type :=
-| FVC :> SetVars -> Term
-| FSC (f:FSV) : (Vector.t Term (fsv f)) -> Term.
-
+Notation A1Type:=Set.
+Inductive Terms : A1Type :=
+| FVC :> SetVars -> Terms
+| FSC (f:FSV) : (Vector.t Terms (fsv f)) -> Terms.
 (*Formulas*)
 Inductive Fo :=
-|Atom (p:PSV) : (Vector.t Term (psv p)) ->  Fo
+|Atom (p:PSV) : (Vector.t Terms (psv p)) ->  Fo
 |Bot :Fo
 |Conj:Fo->Fo->Fo
 |Disj:Fo->Fo->Fo
@@ -33,10 +46,14 @@ Inductive Fo :=
 .
 (* Substitution *)
 
-Fixpoint substT (t:Term) (xi: SetVars) (u:Term): Term. 
+Fixpoint substT (t:Terms) (xi: SetVars) (u:Terms): Terms. 
 Proof.
 destruct u.
-2 : { refine (FSC _ _). exact ( Vector.map (substT t xi) t0 ). }
+2 : { refine (FSC _ _). 
+Check @Vector.map.
+Check @Vector.map _ _ (substT t xi) _ t0.
+exact ( @Vector.map _ _ (substT t xi) _ t0 ). }
+
 {
 (*Check my.beq_natP s xi.*)
 destruct (PeanoNat.Nat.eqb s xi).
@@ -47,7 +64,7 @@ exact s. }
 Defined.
 
 
-Fixpoint isParamT (xi : SetVars) (t : Term) {struct t} : bool :=
+Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
    match t with
    | FVC s => PeanoNat.Nat.eqb s xi
    | FSC f t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
@@ -77,7 +94,7 @@ exact (match (PeanoNat.Nat.eqb x xi) with
 Show Proof.
 Defined.
 
-Fixpoint substF (t:Term) (xi: SetVars) (u : Fo): option Fo. 
+Fixpoint substF (t:Terms) (xi: SetVars) (u : Fo): option Fo. 
 Proof.
 pose(g := substT t xi).
 pose(f := substF t xi).
@@ -130,8 +147,8 @@ Notation " u '[' t >> xi ] ":=(substT t xi u ) (at level 10).
 Set Warnings "-notation-overridden".
 Notation " ph [ t | xi ] ":=(substF t xi ph ) (at level 10).
 (*Set Warnings "default".*)
-Check fun (t:Term) (x:SetVars) => ( t [ t >> x ]).
-Check fun (t:Term) (x:SetVars) (ph:Fo) => ( ph [ t | x ] ).
+Check fun (t:Terms) (x:SetVars) => ( t [ t >> x ]).
+Check fun (t:Terms) (x:SetVars) (ph:Fo) => ( ph [ t | x ] ).
 *)
 
 Open Scope list_scope.
@@ -149,7 +166,7 @@ Inductive PR (axi:list Fo) : Fo -> Type :=
 | hyp (A : Fo): (InL A axi)-> @PR axi A
 | a1 (A B: Fo) : @PR axi (Impl A (Impl B A))
 | a2 (A B C: Fo) : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C)))
-| a12 (ph: Fo) (t:Term) (xi:SetVars)
+| a12 (ph: Fo) (t:Terms) (xi:SetVars)
 : @PR axi (match (substF t xi ph) with 
       | Some q => (Impl (Fora xi ph) q)
       | None => Top
@@ -228,8 +245,18 @@ apply weak. (* Order is not important! *)
 exact x.
 Defined.
 
+Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PR l F)) {struct li}: (PR (li ++ l) F).
+Proof.
+destruct li.
+simpl.
+exact x.
+simpl.
+simple refine (@weak f F (li ++ l) _).
+apply weaken.
+exact x.
+Defined.
+
 (*Export List Notations.*)
-(* \u0448\u044b\u0417\u0444\u043a\u0444*)
 Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PR l B)){struct m}:bool.
 Proof.
 destruct m. 
@@ -281,42 +308,48 @@ Proof.
 destruct rr; firstorder.
 Defined.
 
-Fixpoint Ded (A B:Fo)(m:(PR (cons A nil) B)) 
+Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PR (cons A il) B)) 
 (H:forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m))
-{struct m}:(PR nil (A-->B)).
+{struct m}:(PR il (A-->B)).
 Proof.
 destruct m. (*as [i|i|i|i|i|i|i].*)
- unfold In in i.
++ unfold In in i.
   simpl in i .
   destruct i .
-  rewrite <- e.
-
+  * rewrite <- e.
+    pose (J:=weaken _ il nil (AtoA A )).
+    rewrite app_nil_r in J.
+    exact J.
+(*exact (weaken _ il nil (AtoA A )).
+apply weak.
 exact (AtoA A ).
-exfalso.
-assumption. (*exact H. (*destruct H.*)*)
-apply a1i.
-apply a1.
-apply a1i.
-apply a2.
-apply a1i.
-apply a12.
-apply a1i.
-apply b1.
-trivial.
-apply (MP _ (A-->A0)).
-+ simple refine (@Ded _ _ _ _ ).
+exfalso.*)
+  * simpl in H.
+    apply a1i.
+    exact (hyp il _ i).
++ apply a1i.
+  apply a1.
++ apply a1i.
+  apply a2.
++ apply a1i.
+  apply a12.
++ apply a1i.
+  apply b1.
+  trivial.
++ apply (MP _ (A-->A0)).
+- simple refine (@Ded _ _ _ _ _).
   exact m1.
   intros xi H0.
   pose (W:=H xi H0).
   simpl in W.
-  pose (J:=notGenWith xi (A :: Datatypes.nil) A0 m1).
+  pose (J:=notGenWith xi (A :: il) A0 m1).
   try reflexivity.
   fold J.
   fold J in W.
   apply (lm _ _ W).
-+
+-
 apply (MP _ (A-->(A0-->B))).
-simple refine (@Ded _ _ _ _ ).
+simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
   pose (W:=H xi H0).
@@ -327,7 +360,7 @@ apply a2.
 +
 apply (MP _ (Fora xi (A-->A0))).
 apply GEN.
-simple refine (@Ded _ _ _ _ ).
+simple refine (@Ded _ _ _ _ _).
   exact m.
   intros xi0 H0.
   pose (W:=H xi0 H0).
@@ -347,6 +380,8 @@ exact (ZX _ C).
 exact H0.
 Show Proof.
 Defined.
+
+(*Fixpoint Ded (A B:Fo)(m:(PR (cons A nil) B)) *)
 
 Definition lm3 (a b :bool)(A: true = a)(B: true = b):true = (a && b) 
 :=
@@ -392,11 +427,11 @@ destruct m; simpl; try reflexivity.
 Show Proof.
 Defined.
 
-Fixpoint SimplDed (A B:Fo)(m:(PR (cons A nil) B))
+Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PR (cons A il) B))
 (NP:forall xi:SetVars, (false = isParamF xi A)) 
-{struct m}:(PR nil (A-->B)).
+{struct m}:(PR il (A-->B)).
 Proof.
-simple refine (Ded _ _ _ _ ).
+simple refine (Ded _ _ _ _ _).
 exact m.
 intros xi H.
 rewrite <- NP in H.
@@ -414,7 +449,7 @@ Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
 (*Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).*)
 Context (prI:forall(q:PSV),(Vector.t X (psv q))->Prop).
 
-Fixpoint teI (val:SetVars->X) (t:Term): X.
+Fixpoint teI (val:SetVars->X) (t:Terms): X.
 Proof.
 destruct t.
 exact (val s).
@@ -439,23 +474,32 @@ destruct f.
 +  (*Infinite conjunction!!!*)
  Show Proof.
 *)
+
+(** (\pi + (\xi \mapsto ?) ) **)
+Definition cng (val:SetVars -> X) (xi:SetVars) (m:X) :=
+(fun r:SetVars =>
+match Nat.eqb r xi with
+| true => m
+| false => (val r)
+end).
+
 Fixpoint foI (val:SetVars->X) (f:Fo): Prop.
 Proof.
 destruct f.
 + refine (prI p _).
-  apply (Vector.map  (teI val)).
+  apply (@Vector.map Terms X (teI val)).
   exact t.
 + exact False.
 + exact ( and (foI val f1) (foI val f2)).
 + exact (  or (foI val f1) (foI val f2)).
 + exact ( (foI val f1) -> (foI val f2)).
-+ exact (forall m:X, foI (fun r:SetVars =>
++ exact (forall m:X, foI (cng val x m) f).
+(*forall m:X, foI (fun r:SetVars =>
 match Nat.eqb r x with
 | true => m
 | false => (val r)
 end
-) f
-).
+) f*)
 + exact (exists m:X, foI (fun r:SetVars =>
 match Nat.eqb r x with
 | true => m
@@ -464,6 +508,130 @@ end
 ) f
 ).
 Defined.
+
+Definition ap {A B}{a0 a1:A} (f:A->B) (h:a0=a1):((f a0)=(f a1))
+:= match h in (_ = y) return (f a0 = f y) with
+   | eq_refl => eq_refl
+   end.
+
+
+Lemma equal_a : forall (A B : Type) (f : A -> B) (a0 a1:A),
+  (a0 = a1) -> f a0 = f a1.
+Proof.
+intros A B f a0 a1 r.
+destruct r.
+reflexivity.
+Defined.
+
+(* Measure for terms: the sum of all functional symbols and variables. *)
+Definition meas:=
+(fix meas (u : Terms) : nat :=
+   match u with
+   | FVC _ => 1
+   | FSC f t0 =>
+       @Vector.fold_left nat nat Nat.add 1 (fsv f)
+         (@Vector.map Terms nat meas (fsv f) t0)
+   end).
+
+(* lem1  (is not proven yet) *)
+Fixpoint lem1 (t : Terms) (xi : SetVars) (pi : SetVars->X) (u :Terms)
+{struct u}
+:
+(teI pi (substT t xi u))=(teI (cng pi xi (teI pi t)) u).
+Proof.
+destruct u as [s|f] .
++ simpl.
+  unfold cng.
+  destruct (Nat.eqb s xi).
+  * reflexivity.
+  * simpl.
+    reflexivity.
++ simpl.
+  destruct f.
+  simpl.
+  apply ap.
+  simpl in t0.
+  pose (g:= (@vec_comp_as _ _ _ (teI pi) (substT t xi) _ t0)).
+  rewrite -> g.
+(*
+Check ap.
+assert H.
+destruct t0.
+simpl.
+reflexivity.
+simpl.
+rewrite <- lem1.
+apply ap.
+simpl.
+
+pose (u1:= (fun x : Terms => teI pi (substT t xi x))).
+pose (u2:=(teI (cng pi xi (teI pi t)))).
+fold u1 u2 in |- *.
+pose (Y:=fun wm => @Vector.map Terms X wm n t0).
+apply (@ap _ _ u1 u2 Y).
+unfold u1, u2 in |- *.
+apply functional_extensionality.
+    intro x.
+
+    apply lem1.
+Defined.
+@Vector.map Terms X u1 n t0 =
+@Vector.map Terms X u2 n t0
+*)
+
+pose (Y:=fun wm => @Vector.map Terms X wm fsv0 t0).
+pose (a1:=(fun x : Terms => teI pi (substT t xi x))).
+pose (a2:=(teI (cng pi xi (teI pi t)))).
+pose (Y1:= Y a1). (* (fun x : Terms => teI pi (substT t xi x)) ). *)
+pose (Y2:= Y a2). (* (teI (cng pi xi (teI pi t)))).*)
+(*pose (YY1:=Y1).
+pose (YY2:=Y2).
+assert(r1:Y1=YY1). reflexivity.
+assert(r2:Y2=YY2). reflexivity.*)
+unfold Y in Y1.
+unfold Y in Y2.
+fold Y1 Y2 in |- *.
+Check (@ap).
+Check (@ap _ _ a1 a2 Y).
+apply (@ap _ _ a1 a2 Y). (**! **)
+unfold a1, a2 in |- *.
+apply functional_extensionality.
+    intro x.
+refine (lem1 t xi pi x ).
+Admitted.
+
+(*Context (x:X).
+Print Terms.
+Compute (lem1 (FVC 0) 0 (fun _ => x) ).*)
+
+
+Fixpoint correct (f:Fo) (l:list Fo) (val:SetVars->X) (m:PR l f) 
+(lfi : forall h:Fo, (InL h l)->(foI val h)) {struct m}: foI val f.
+Proof.
+destruct m.
++ exact (lfi A i).
++ simpl.
+  intros a b.
+  exact a.
++ simpl.
+  intros a b c.
+  exact (a c (b c)).
++ destruct (substF t xi ph).
+  2 : {simpl. trivial. }
+  apply (correct _ l).
+  2 : {assumption. }
+  simpl.
+pose (Z:=(@Ded (Fora xi ph) f l )).
+simple refine (Z _ _ ).
+(*
+  pose (W:= lfi f).
+  destruct (Nat.eqb r xi).
+  simpl in H.
+  exact H.
+  unfold foI. 
+  simpl.
+*)
+Admitted.
 
 End cor.
 (* Definition ACK : list Fo := . *)
