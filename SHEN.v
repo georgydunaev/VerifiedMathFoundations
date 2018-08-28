@@ -402,9 +402,72 @@ intros xi H.
 rewrite <- NP in H.
 inversion H.
 Defined.
-
-(* Definition ACK : list Fo := . *)
 End sec0.
+
+(** Correctness theorem **)
+(** for two-valued logic **)
+Section cor.
+Definition Omega := bool. (* Truth values*)
+Context (X:Type).
+(*Context (val:SetVars->X).*)
+Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
+(*Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).*)
+Context (prI:forall(q:PSV),(Vector.t X (psv q))->Prop).
+
+Fixpoint teI (val:SetVars->X) (t:Term): X.
+Proof.
+destruct t.
+exact (val s).
+refine (fsI f _).
+simple refine (@Vector.map _ _ _ _ _).
+2 : apply teI.
+exact val.
+exact t.
+Show Proof.
+Defined.
+(*
+Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
+Proof.
+destruct f.
++ refine (prI p _).
+  apply (Vector.map  (teI val)).
+  exact t.
++ exact false.
++ exact ( andb (foI val f1) (foI val f2)).
++ exact (  orb (foI val f1) (foI val f2)).
++ exact (implb (foI val f1) (foI val f2)).
++  (*Infinite conjunction!!!*)
+ Show Proof.
+*)
+Fixpoint foI (val:SetVars->X) (f:Fo): Prop.
+Proof.
+destruct f.
++ refine (prI p _).
+  apply (Vector.map  (teI val)).
+  exact t.
++ exact False.
++ exact ( and (foI val f1) (foI val f2)).
++ exact (  or (foI val f1) (foI val f2)).
++ exact ( (foI val f1) -> (foI val f2)).
++ exact (forall m:X, foI (fun r:SetVars =>
+match Nat.eqb r x with
+| true => m
+| false => (val r)
+end
+) f
+).
++ exact (exists m:X, foI (fun r:SetVars =>
+match Nat.eqb r x with
+| true => m
+| false => (val r)
+end
+) f
+).
+Defined.
+
+End cor.
+(* Definition ACK : list Fo := . *)
+
 End VS.
 
 
