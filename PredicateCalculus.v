@@ -6,7 +6,7 @@ Require Import Bool.Bool.
 (*Require Import Logic.FunctionalExtensionality.*)
 Require Import Coq.Program.Wf.
 Require Import Lia.
-Add LoadPath "/home/user/0my/COQ".
+Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations".
 Require Export UNIV_INST.
 Require Export eqb_nat.
 (*Require Import Logic.ClassicalFacts.*)
