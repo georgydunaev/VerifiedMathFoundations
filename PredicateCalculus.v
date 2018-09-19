@@ -145,7 +145,7 @@ destruct (PeanoNat.Nat.eqb s xi).
 Print bool.
 exact t.
 exact s. }
-(*Show Proof.*)
+Show Proof.
 Defined.
 
 
@@ -176,7 +176,6 @@ exact (match (PeanoNat.Nat.eqb x xi) with
        | true => false
        | false => (isParamF xi f)
        end).
-Show Proof.
 Defined.
 
 Fixpoint substF (t:Terms) (xi: SetVars) (u : Fo): option Fo. 
@@ -223,7 +222,6 @@ refine (match (isParamF xi (Exis x u)) with
 | false => Some (Exis x u) end).
 Defined.
 
-
 Definition Top:Fo := Impl Bot Bot.
 
 Notation " x --> y ":=(Impl x y) (at level 80).
@@ -246,16 +244,25 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | Datatypes.nil => False
   | b :: m => (sum (b = a) (InL a m))
   end.
+(*Definition InL { A : Type } :=
+fix InL (a : A) (l : list A) {struct l} : Prop :=
+  match l with
+  | Datatypes.nil => False
+  | b :: m => (or (b = a) (InL a m))
+  end.*)
+
 
 Inductive PR (axi:list Fo) : Fo -> Type :=
 | hyp (A : Fo): (InL A axi)-> @PR axi A
 | a1 (A B: Fo) : @PR axi (Impl A (Impl B A))
 | a2 (A B C: Fo) : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C)))
-| a12 (ph: Fo) (t:Terms) (xi:SetVars)
+(*| a12 (ph: Fo) (t:Terms) (xi:SetVars)
 : @PR axi (match (substF t xi ph) with 
       | Some q => (Impl (Fora xi ph) q)
       | None => Top
-      end)
+      end)*)
+| a12 (ph: Fo) (t:Terms) (xi:SetVars) (r:Fo) (H:substF t xi ph = Some r)
+: @PR axi (Impl (Fora xi ph) r)
 | b1 (ps ph: Fo) (xi:SetVars) (H:isParamF xi ps = false):
 @PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 | MP (A B: Fo) : (@PR axi A)->(@PR axi (Impl A B))->(@PR axi B)
@@ -313,11 +320,12 @@ Fixpoint weak (A F:Fo) (l :list Fo) (x: (PR l F)) : (PR (A::l) F).
 Proof.
 destruct x.
 apply hyp.
-apply inr. (*or_intror *)
+constructor 2. (*apply inr.*) (*or_intror *)
 exact i.
 apply a1.
 apply a2.
-apply a12.
+Check (@a12 _ ph t xi r).
+apply (@a12 _ ph t xi r H).
 apply b1.
 assumption.
 apply (@MP _ A0).
@@ -417,7 +425,8 @@ exfalso.*)
 + apply a1i.
   apply a2.
 + apply a1i.
-  apply a12.
+Check (@a12 il ph t xi r H0).
+  apply (@a12 il ph t xi r H0).
 + apply a1i.
   apply b1.
   trivial.
@@ -563,6 +572,8 @@ Context (X:Type).
 (*Context (val:SetVars->X).*)
 Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
 Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
+(*Inductive inter : Prop :=
+| c1 : forall(q:FSV) (u:Vector.t X (fsv q)), X) -> (inter q u)*)
 (*Context (prI:forall(q:PSV),(Vector.t X (psv q))->Prop).*)
 
 Fixpoint teI (val:SetVars->X) (t:Terms): X.
@@ -645,6 +656,7 @@ match PeanoNat.Nat.eqb r x with
 end
 ) f
 ).*)
+Show Proof.
 Defined.
 
 Definition ap {A B}{a0 a1:A} (f:A->B) (h:a0=a1):((f a0)=(f a1))
@@ -1425,8 +1437,16 @@ induction m (* eqn: meq *); intros lfi val.
   exact (a c (b c)).
 + simpl in *|-*.
   destruct (substF t xi ph) eqn: j.
-  apply (UnivInst ph val xi t f j).
-  simpl. firstorder.
+  unfold OImp.
+  intro g.
+  rewrite <- (SomeInj _ _ H).
+  apply (UnivInst ph val xi t f j g) .
+  inversion H.
+  (*Check (UnivInst r val xi t r).
+  pose (UH := UnivInst ph val xi t f j g).
+(* fold cng in UH. *)
+  apply (UnivInst ph val xi t f j g) .
+  simpl. firstorder.*)
 + simpl in *|-*.
   unfold OImp.
   intros H0 H1 m.
