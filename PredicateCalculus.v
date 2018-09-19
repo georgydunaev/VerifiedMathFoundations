@@ -12,6 +12,35 @@ Require Export eqb_nat.
 (*Require Import Logic.ClassicalFacts.*)
 (*Axiom EquivThenEqual: prop_extensionality.*)
 
+Module ModProp.
+Definition Omega := Prop.
+Definition OFalse := False.
+Definition OAnd := and.
+Definition OOr := or.
+Definition OImp := (fun x y:Omega => x->y).
+Notation Osig := ex.
+End ModProp.
+
+Module ModType.
+Notation Omega := Type.
+Definition OFalse := False.
+Print "+"%type.
+Definition OAnd := prod.
+Definition OOr := sum.
+Definition OImp := (fun x y:Omega => x->y).
+Notation Osig := sigT.
+End ModType.
+
+
+Module ModBool.
+Definition Omega := bool.
+Definition OFalse := false.
+Definition OAnd := andb.
+Definition OOr := orb.
+Definition OImp := implb.
+End ModBool.
+
+
 Inductive myeq (A : Type) (x : A) : A -> Type :=
 | myeq_refl : myeq A x x.
 
@@ -42,9 +71,12 @@ Defined.
 
 
 Module VS.
+(* TODO: *)
 Section sec0.
-Definition SetVars  := nat.
-Definition FuncSymb := nat.
+Definition SetVars := nat.
+Variable FuncSymb : Set.
+
+(*Definition FuncSymb := nat.*)
 Definition PredSymb := nat.
 Record FSV := {
  fs : FuncSymb;
@@ -522,35 +554,7 @@ intros xi H.
 rewrite <- NP in H.
 inversion H.
 Defined.
-End sec0.
 
-Module ModProp.
-Definition Omega := Prop.
-Definition OFalse := False.
-Definition OAnd := and.
-Definition OOr := or.
-Definition OImp := (fun x y:Omega => x->y).
-Notation Osig := ex.
-End ModProp.
-
-Module ModType.
-Notation Omega := Type.
-Definition OFalse := False.
-Print "+"%type.
-Definition OAnd := prod.
-Definition OOr := sum.
-Definition OImp := (fun x y:Omega => x->y).
-Notation Osig := sigT.
-End ModType.
-
-
-Module ModBool.
-Definition Omega := bool.
-Definition OFalse := false.
-Definition OAnd := andb.
-Definition OOr := orb.
-Definition OImp := implb.
-End ModBool.
 
 (* Here we choose an interpretation. *)
 (*Export ModBool.*)
@@ -560,6 +564,7 @@ Export ModProp. (* + classical axioms *)
 Section cor.
  (* Truth values*)
 Context (X:Type).
+Check FSV.
 (*Context (val:SetVars->X).*)
 Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
 Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
@@ -1482,7 +1487,7 @@ assert (val:SetVars->X).
           destruct s eqn:ss. exact x2. exact x2.
 Abort.
 End cor.
-
+End sec0.
 End VS.
 
 (* IT IS NOT POSSIBLE TO PROVE THIS THEOREM:
