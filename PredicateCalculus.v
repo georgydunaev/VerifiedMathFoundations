@@ -9,6 +9,7 @@ Require Import Lia.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations".
 Require Export UNIV_INST.
 Require Export eqb_nat.
+Require Export Terms.
 (*Require Import Logic.ClassicalFacts.*)
 (*Axiom EquivThenEqual: prop_extensionality.*)
 
@@ -23,8 +24,7 @@ End ModProp.
 
 Module ModType.
 Notation Omega := Type.
-Definition OFalse := False.
-Print "+"%type.
+Definition OFalse := False. (*Print "+"%type.*)
 Definition OAnd := prod.
 Definition OOr := sum.
 Definition OImp := (fun x y:Omega => x->y).
@@ -41,55 +41,28 @@ Definition OImp := implb.
 End ModBool.
 
 
-Inductive myeq (A : Type) (x : A) : A -> Type :=
-| myeq_refl : myeq A x x.
+(*Module VS.*)
+Module Type VS (X: terms_mod).
+Import X.
 
-
-Fixpoint myvec_comp_as {A B C} (f:B->C) (g:A->B) (n:nat) (t0: Vector.t A n) :
-myeq _ (Vector.map f (Vector.map g t0))
-(Vector.map (fun x=>(f(g x))) t0).
-Proof.
-destruct t0.
-simpl.
-reflexivity.
-simpl.
-rewrite -> myvec_comp_as.
-reflexivity.
-Defined.
-
-Fixpoint vec_comp_as {A B C} (f:B->C) (g:A->B) (n:nat) (t0: Vector.t A n) :
-Vector.map f (Vector.map g t0) =
-Vector.map (fun x=>(f(g x))) t0.
-Proof.
-destruct t0.
-simpl.
-reflexivity.
-simpl.
-rewrite -> vec_comp_as.
-reflexivity.
-Defined.
-
-
-Module VS.
 (* TODO: *)
-Section sec0.
+(*Section sec0.*)
 Definition SetVars := nat.
-Variable FuncSymb : Set.
+(*Variable FuncSymb : Set.*)
 
 (*Definition FuncSymb := nat.*)
 Definition PredSymb := nat.
-Record FSV := {
+(*Record FSV := {
  fs : FuncSymb;
  fsv : nat;
-}.
+}.*)
 Record PSV := MPSV{
  ps : PredSymb;
  psv : nat;
 }.
-Check MPSV 0 0.
-Notation A1Type:=Set.
+(* Check MPSV 0 0. *)
 Unset Elimination Schemes.
-Inductive Terms : A1Type :=
+Inductive Terms : Set :=
 | FVC :> SetVars -> Terms
 | FSC (f:FSV) : (Vector.t Terms (fsv f)) -> Terms.
 Set Elimination Schemes.
@@ -130,56 +103,30 @@ Definition Terms_ind (T : Terms -> Prop)
 
 
 (*Formulas*)
-(*Unset Elimination Schemes.*)
 Inductive Fo :=
-|Atom (p:PSV) : (Vector.t Terms (psv p)) ->  Fo
-|Bot :Fo
-|Conj:Fo->Fo->Fo
-|Disj:Fo->Fo->Fo
-|Impl:Fo->Fo->Fo
-|Fora(x:SetVars)(f:Fo): Fo
-|Exis(x:SetVars)(f:Fo): Fo
+ |Atom (p:PSV) : (Vector.t Terms (psv p)) ->  Fo
+ |Bot :Fo
+ |Conj:Fo->Fo->Fo
+ |Disj:Fo->Fo->Fo
+ |Impl:Fo->Fo->Fo
+ |Fora(x:SetVars)(f:Fo): Fo
+ |Exis(x:SetVars)(f:Fo): Fo
 .
-(*Set Elimination Schemes.
-Section Fo_rect_section.
-Definition Fo_rect (T : Fo -> Type)
-                      (H_FVC : forall sv, T (FVC sv))
-                      (H_FSC : forall f v, (forall n, T (Vector.nth v n)) -> T (FSC f v)) :=
-  fix loopt (t : Terms) : T t :=
-    match t with
-    | FVC sv  => H_FVC sv
-    | FSC f v =>
-      let fix loopv s (v : Vector.t Terms s) : forall n, T (Vector.nth v n) :=
-        match v with
-        | @Vector.nil _ => Fin.case0 _
-        | @Vector.cons _ t _ v => fun n => Fin.caseS' n (fun n => T (Vector.nth (Vector.cons _ t _ v) n))
-                                                      (loopt t)
-                                                      (loopv _ v)
-        end in
-      H_FSC f v (loopv _ v)
-    end.
-End Fo_rect_section.*)
-
 
 (* Substitution *)
-
 Fixpoint substT (t:Terms) (xi: SetVars) (u:Terms): Terms. 
 Proof.
 destruct u.
-2 : { refine (FSC _ _). 
-Check @Vector.map.
-Check @Vector.map _ _ (substT t xi) _ t0.
-exact ( @Vector.map _ _ (substT t xi) _ t0 ). }
-
+2 : {
+ refine (FSC _ _).
+ exact ( @Vector.map _ _ (substT t xi) _ t0 ).
+}
 {
-(*Check my.beq_natP s xi.*)
-destruct (PeanoNat.Nat.eqb s xi).
-Print bool.
-exact t.
-exact s. }
-(*Show Proof.*)
+ destruct (PeanoNat.Nat.eqb s xi).
+ exact t.
+ exact s.
+}
 Defined.
-
 
 Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
    match t with
@@ -187,29 +134,14 @@ Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
    | FSC f t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
    end.
 
-Fixpoint isParamF (xi:SetVars) (f:Fo): bool.
-Proof.
-(*elim f; intros. *)
-destruct f.
-Show Proof.
-Search "Exists".
-exact (Vector.fold_left orb false (Vector.map (isParamT xi) t)).
-exact false.
-Show Proof.
-exact (orb (isParamF xi f1) (isParamF xi f2)).
-exact (orb (isParamF xi f1) (isParamF xi f2)).
-exact (orb (isParamF xi f1) (isParamF xi f2)).
-Show Proof.
-exact (match (PeanoNat.Nat.eqb x xi) with
-       | true => false
-       | false => (isParamF xi f)
-       end).
-exact (match (PeanoNat.Nat.eqb x xi) with
-       | true => false
-       | false => (isParamF xi f)
-       end).
-Show Proof.
-Defined.
+Fixpoint isParamF (xi : SetVars) (f : Fo) {struct f} : bool :=
+   match f with
+   | Atom p t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
+   | Bot => false
+   | Conj f1 f2 | Disj f1 f2 | Impl f1 f2 => isParamF xi f1 || isParamF xi f2
+   | Fora x f0 | Exis x f0 =>
+       if PeanoNat.Nat.eqb x xi then false else isParamF xi f0
+   end.
 
 Fixpoint substF (t:Terms) (xi: SetVars) (u : Fo): option Fo. 
 Proof.
@@ -253,6 +185,7 @@ refine (match (isParamF xi (Exis x u)) with
           | true => None
           end
 | false => Some (Exis x u) end).
+Show Proof.
 Defined.
 
 
@@ -684,7 +617,7 @@ Show Proof.
  simpl in * |- *.
 apply (*Check *)
 (proj1 (
-eq_nth_iff X fsv0 
+eq_nth_iff X fsv0
 (Vector.map (teI pi) (Vector.map (substT t xi) v))
 (Vector.map (teI (cng pi xi (teI pi t))) v)
 )).
@@ -1487,7 +1420,7 @@ assert (val:SetVars->X).
           destruct s eqn:ss. exact x2. exact x2.
 Abort.
 End cor.
-End sec0.
+(*End sec0.*)
 End VS.
 
 (* IT IS NOT POSSIBLE TO PROVE THIS THEOREM:
