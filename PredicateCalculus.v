@@ -48,7 +48,15 @@ Notation SetVars := SetVars.t.
 
 Check SetVars.eqb.
 Check SetVars.eq_refl.
+Module Facts := BoolEqualityFacts SetVars.
+(*Import Facts.*)
+(*Module Args. (* some stuff *) End Args.
+Module Facts := BoolEqualityFacts Args.
+Import Facts.*)
 Fail Check SetVars.eqb_refl.
+Check Facts.eqb_refl.
+Check eqb_refl.
+
 (*From SetVars Import BoolEqualityFacts .*)
 (* 
 Module Type BooleanEqualityType <: EqualityType
@@ -56,25 +64,17 @@ Module Type BooleanEqualityType <: EqualityType
 Module Type BooleanEqualityType' :=
  BooleanEqualityType <+ EqNotation <+ EqbNotation.
 Module BoolEqualityFacts (Import E : BooleanEqualityType').*)
-
-Import Make_UDTF().
+(*Import Make_UDTF().
 Check Make_UDTF.eqb_refl
-
 Import SetVars:BoolEqualityFacts .
+*)
 Lemma ZX (xi:SetVars) :true = negb (SetVars.eqb xi xi) -> False.
 Proof.
 intro q.
-
-Check BoolEqualityFacts.eqb_refl.
-rewrite SetVars.eqb_refl in q.
-destruct xi.
-compute in q.
-inversion q.
-rewrite <- HA in q.
+Check Facts.eqb_refl.
+rewrite Facts.eqb_refl in q.
 inversion q.
 Defined.
-
-
 
 (* TODO: *)
 (*Section sec0.*)
@@ -151,12 +151,12 @@ destruct (eq_dec x y) (*eqn:u*).
 exact true.
 exact false.
 Abort.
-Definition SetVars_eqb (x y : SetVars) := 
+(*delete Definition (*SetVars.*) eqb (x y : SetVars) := 
  match eq_dec x y return bool with
  | left  _ => true
  | right _ => false
- end.
-Print SetVars_eqb.
+ end.*)
+Print SetVars.eqb.
 Fixpoint substT (t:Terms) (xi: SetVars) (u:Terms): Terms. 
 Proof.
 destruct u as [s|f t0].
@@ -165,7 +165,7 @@ destruct u as [s|f t0].
  exact ( @Vector.map _ _ (substT t xi) _ t0 ).
 }
 {
- destruct (SetVars_eqb s xi).
+ destruct (SetVars.eqb s xi).
  exact t.
  exact s.
 }
@@ -173,7 +173,7 @@ Defined.
 
 Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
    match t with
-   | FVC s => SetVars_eqb s xi
+   | FVC s => SetVars.eqb s xi
    | FSC f t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
    end.
 
@@ -183,7 +183,7 @@ Fixpoint isParamF (xi : SetVars) (f : Fo) {struct f} : bool :=
    | Bot => false
    | Conj f1 f2 | Disj f1 f2 | Impl f1 f2 => isParamF xi f1 || isParamF xi f2
    | Fora x f0 | Exis x f0 =>
-       if SetVars_eqb x xi then false else isParamF xi f0
+       if SetVars.eqb x xi then false else isParamF xi f0
    end.
 
 Fixpoint substF (t:Terms) (xi: SetVars) (u : Fo): option Fo. 
@@ -359,7 +359,7 @@ exact true.
 exact true.
 exact true.
 exact (andb (notGenWith xi l _ m1) (notGenWith xi l _ m2)).
-exact (andb (negb (SetVars_eqb xi xi0)) (notGenWith xi l _ m) ).
+exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ m) ).
 Defined.
 Check isParamF.
 (*Check fun A B=> forall xi:SetVars, (true = isParamF xi A)->(notGenWith xi m).*)
@@ -371,9 +371,7 @@ simpl.
 exact (HA xi).
 Defined.
 
-stop
-
-Fixpoint ZX (xi:nat) :true = negb (PeanoNat.Nat.eqb xi xi) -> False.
+(*deleteit Fixpoint ZX (xi:nat) :true = negb (PeanoNat.Nat.eqb xi xi) -> False.
 Proof.
 intro q.
 destruct xi.
@@ -381,8 +379,7 @@ compute in q.
 inversion q.
 rewrite <- HA in q.
 inversion q.
-Defined.
-
+Defined.*)
 
 Theorem lm (a b :bool)(G:true = (a && b) ): true = a.
 Proof.
@@ -471,7 +468,7 @@ simpl in U.
 destruct (N r).
 pose (C:= lm _ _(U H0)).
 exfalso.
-exact (ZX _ C).
+exact (ZX xi C).
 exact H0.
 Show Proof.
 Defined.
@@ -550,14 +547,13 @@ Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
 
 Fixpoint teI (val:SetVars->X) (t:Terms): X.
 Proof.
-destruct t.
+destruct t as [s|f t].
 exact (val s).
 refine (fsI f _).
 simple refine (@Vector.map _ _ _ _ _).
 2 : apply teI.
 exact val.
 exact t.
-Show Proof.
 Defined.
 (*
 Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
@@ -577,7 +573,7 @@ destruct f.
 (** (\pi + (\xi \mapsto ?) ) **)
 Definition cng (val:SetVars -> X) (xi:SetVars) (m:X) :=
 (fun r:SetVars =>
-match PeanoNat.Nat.eqb r xi with
+match SetVars.eqb r xi with
 | true => m
 | false => (val r)
 end).
@@ -615,7 +611,7 @@ end
 ) f*)
 (*Locate "exists".*)
 + exact (Osig (fun m:X => foI (fun r:SetVars =>
-match PeanoNat.Nat.eqb r x with
+match SetVars.eqb r x with
 | true => m
 | false => (val r)
 end
@@ -649,7 +645,7 @@ induction u as [s|f].
 (*destruct u as [s|f] .*)
 + simpl.
   unfold cng.
-  destruct (Nat.eqb s xi) eqn:ek. (* fsI as [H1|H2].*)
+  destruct (SetVars.eqb s xi) eqn:ek. (* fsI as [H1|H2].*)
   * reflexivity.
   * simpl.
     reflexivity.
@@ -703,7 +699,7 @@ Proof. destruct pA, pB; reflexivity. Defined.
 Theorem impl_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 -> B0) = (A1 -> B1).
 Proof. destruct pA, pB; reflexivity. Defined.
 Lemma dbl_cng pi xi m1 m2: forall q,(cng (cng pi xi m1) xi m2) q = (cng pi xi m2) q.
-Proof. intro q. unfold cng. destruct (Nat.eqb q xi); reflexivity. Defined.
+Proof. intro q. unfold cng. destruct (SetVars.eqb q xi); reflexivity. Defined.
 
 
 Theorem l01 h n v :
@@ -799,14 +795,14 @@ Check t.
   trivial.
 * simpl.
   intros xi t H.
-  destruct (PeanoNat.Nat.eqb x xi) eqn:u2.
+  destruct (SetVars.eqb x xi) eqn:u2.
   trivial.
   destruct (isParamF xi f) eqn:u1.
   inversion H.
   trivial.
 * simpl.
   intros xi t H.
-  destruct (PeanoNat.Nat.eqb x xi) eqn:u2.
+  destruct (SetVars.eqb x xi) eqn:u2.
   trivial.
   destruct (isParamF xi f) eqn:u1.
   inversion H.
@@ -837,16 +833,14 @@ apply H0.
 exact (all_then_someP _ _ p1 _ (isParamT x) H).
 Defined.
 
-Lemma IOF xi : PeanoNat.Nat.eqb xi xi = true.
+Lemma IOF xi : SetVars.eqb xi xi = true.
 Proof.
-induction xi.
-simpl. trivial.
-simpl. exact IHxi.
+exact (Facts.eqb_refl xi).
 Defined.
 
 (* USELESS THEOREM *)
 Lemma cng_commT  x xi m0 m1 pi t :
-PeanoNat.Nat.eqb x xi = false -> 
+SetVars.eqb x xi = false -> 
 teI (cng (cng pi x m0) xi m1) t = teI (cng (cng pi xi m1) x m0) t.
 Proof. intro i.
 revert pi.
@@ -855,24 +849,24 @@ simpl.
 unfold cng.
 (*destruct (Nat.eqb x xi) eqn:j.
 inversion i. NO*)
-Check not_iff_compat (PeanoNat.Nat.eqb_eq x xi).
-pose (n3:= proj1 (not_iff_compat (PeanoNat.Nat.eqb_eq x xi)) ).
-Check proj2 (not_true_iff_false (PeanoNat.Nat.eqb x xi)).
-pose (n4:= n3 (proj2 (not_true_iff_false (PeanoNat.Nat.eqb x xi)) i)).
+Check not_iff_compat (SetVars.eqb_eq x xi).
+pose (n3:= proj1 (not_iff_compat (SetVars.eqb_eq x xi)) ).
+Check proj2 (not_true_iff_false (SetVars.eqb x xi)).
+pose (n4:= n3 (proj2 (not_true_iff_false (SetVars.eqb x xi)) i)).
 Require Import Arith.Peano_dec.
 Check eq_nat_dec.
-destruct (PeanoNat.Nat.eq_dec sv xi).
+destruct (SetVars.eq_dec sv xi).
 rewrite -> e.
 rewrite -> IOF.
-destruct (PeanoNat.Nat.eq_dec x xi).
+destruct (SetVars.eq_dec x xi).
 destruct (n4 e0).
 pose (hi := (not_eq_sym n)).
 
 Check not_true_iff_false .
-pose (ih:= not_true_is_false _ (proj2 (not_iff_compat (PeanoNat.Nat.eqb_eq xi x)) hi)).
+pose (ih:= not_true_is_false _ (proj2 (not_iff_compat (SetVars.eqb_eq xi x)) hi)).
 rewrite ih.
 reflexivity.
-pose (ih:= not_true_is_false _ (proj2 (not_iff_compat (PeanoNat.Nat.eqb_eq sv xi)) n)).
+pose (ih:= not_true_is_false _ (proj2 (not_iff_compat (SetVars.eqb_eq sv xi)) n)).
 rewrite -> ih.
 reflexivity.
 simpl.
@@ -946,7 +940,7 @@ intros pi mu q.
     apply H.
     intro z.
     unfold cng.
-    destruct (Nat.eqb z x).
+    destruct (SetVars.eqb z x).
     reflexivity.
     symmetry.
     apply q.
@@ -955,7 +949,7 @@ intros pi mu q.
     apply H.
     intro z.
     unfold cng.
-    destruct (Nat.eqb z x).
+    destruct (SetVars.eqb z x).
     reflexivity.
     apply q.
 + simpl.
@@ -967,7 +961,7 @@ exists m.
     apply H.
     intro z.
     unfold cng.
-    destruct (Nat.eqb z x).
+    destruct (SetVars.eqb z x).
     reflexivity.
     symmetry.
     apply q.
@@ -978,25 +972,25 @@ exists m.
     apply H.
     intro z.
     unfold cng.
-    destruct (Nat.eqb z x).
+    destruct (SetVars.eqb z x).
     reflexivity.
     apply q.
 Defined.
 
 Lemma cng_commF_EQV  xe xi m0 m1 pi fi :
-PeanoNat.Nat.eqb xe xi = false -> 
+SetVars.eqb xe xi = false -> 
 (foI (cng (cng pi xe m0) xi m1) fi <-> foI (cng (cng pi xi m1) xe m0) fi).
 Proof.
 intros H.
 apply weafunF.
 intros z.
 unfold cng.
-destruct (PeanoNat.Nat.eqb z xi) eqn:e0, (PeanoNat.Nat.eqb z xe) eqn:e1.
-pose (U0:= proj1 (PeanoNat.Nat.eqb_eq z xi) e0).
+destruct (SetVars.eqb z xi) eqn:e0, (SetVars.eqb z xe) eqn:e1.
+pose (U0:= proj1 (SetVars.eqb_eq z xi) e0).
 rewrite U0 in e1.
-pose (U1:= proj1 (PeanoNat.Nat.eqb_eq xi xe) e1).
+pose (U1:= proj1 (SetVars.eqb_eq xi xe) e1).
 symmetry in U1.
-pose (U2:= proj2 (PeanoNat.Nat.eqb_eq xe xi) U1).
+pose (U2:= proj2 (SetVars.eqb_eq xe xi) U1).
 rewrite U2 in H.
 inversion H.
 reflexivity. reflexivity. reflexivity.
@@ -1072,7 +1066,7 @@ forall u, (cng (cng pi x m0) x m1) u = (cng pi x m1) u.
 Proof.
 intro u.
 unfold cng.
-destruct (PeanoNat.Nat.eqb u x).
+destruct (SetVars.eqb u x).
 reflexivity.
 reflexivity.
 Defined.
@@ -1164,8 +1158,8 @@ simpl in * |- *.
   apply IHfi1. destruct (orb_elim _ _ H). apply H0.
   apply IHfi2. destruct (orb_elim _ _ H). apply H1.
 * apply FORALL_EQV. intro m0.
-  destruct (PeanoNat.Nat.eqb x xi) eqn:e1.
-  pose (C:=proj1 (PeanoNat.Nat.eqb_eq x xi) e1).
+  destruct (SetVars.eqb x xi) eqn:e1.
+  pose (C:=proj1 (SetVars.eqb_eq x xi) e1).
   rewrite <- C.
   pose (D:= twice_the_same mu x m m0).
   exact (weafunF _ _ D fi).
@@ -1174,6 +1168,29 @@ Check cng_commF_EQV x xi m0 m.
 (* here inductive IHfi*)
 apply IHfi.
 exact H.
+
+Lemma eqb_comm x xi : SetVars.eqb xi x =  SetVars.eqb x xi.
+Proof.
+destruct (SetVars.eqb xi x) eqn:e1.
+symmetry.
+pose (Y:= proj1 (SetVars.eqb_eq xi x) e1).
+rewrite -> Y at 1.
+rewrite <- Y at 1.
+exact e1.
+symmetry.
+pose (n3:= proj2 (not_iff_compat (SetVars.eqb_eq x xi)) ).
+apply not_true_iff_false.
+apply n3.
+intro q.
+symmetry in q.
+revert q.
+fold (xi <> x).
+pose (n5:= proj1 (not_iff_compat (SetVars.eqb_eq xi x)) ).
+apply n5.
+apply not_true_iff_false.
+exact e1.
+Defined.
+
 rewrite <-(eqb_comm xi x).
 exact e1.
 * 
@@ -1182,8 +1199,8 @@ apply EXISTS_EQV. intro m0.
 fold (cng (cng mu xi m) x m0).
 fold (cng mu x m0). (* Print cng. Check cng mu xi m. *)
 
-  destruct (PeanoNat.Nat.eqb x xi) eqn:e1.
-  pose (C:=proj1 (PeanoNat.Nat.eqb_eq x xi) e1).
+  destruct (SetVars.eqb x xi) eqn:e1.
+  pose (C:=proj1 (SetVars.eqb_eq x xi) e1).
   rewrite <- C.
   pose (D:= twice_the_same mu x m m0).
   exact (weafunF _ _ D fi).
@@ -1251,14 +1268,14 @@ apply OR_EQV.
 +
 simpl in * |- *.
 
-destruct (PeanoNat.Nat.eqb x xi) eqn:l2.
+destruct (SetVars.eqb x xi) eqn:l2.
 pose (Q:=SomeInj _ _ H).
 rewrite <- Q.
 simpl.
 apply FORALL_EQV.
 intro m.
 assert (RA : x = xi).
-apply (PeanoNat.Nat.eqb_eq x xi ).
+apply (SetVars.eqb_eq x xi ).
 exact l2.
 rewrite <- RA.
 Check weafunF (cng (cng pi x (teI pi t)) x m) (cng pi x m) 
@@ -1309,14 +1326,14 @@ exact l2.
 +
 simpl in * |- *.
 
-destruct (PeanoNat.Nat.eqb x xi) eqn:l2.
+destruct (SetVars.eqb x xi) eqn:l2.
 pose (Q:=SomeInj _ _ H).
 rewrite <- Q.
 simpl.
 apply EXISTS_EQV.
 intro m.
 assert (RA : x = xi).
-apply (PeanoNat.Nat.eqb_eq x xi ).
+apply (SetVars.eqb_eq x xi ).
 exact l2.
 rewrite <- RA.
 Check weafunF (cng (cng pi x (teI pi t)) x m) (cng pi x m) 
@@ -1439,7 +1456,9 @@ Check Atom (MPSV 0 2).
 Print Terms.
 Check Atom (MPSV 0 2).
 Print Vector.t.
-Check Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC 0) _ (Vector.nil _ )).
+
+(* COUNTEREXAMPLE
+Check Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC v0) _ (Vector.nil _ )).
 Check Atom (MPSV 0 2) 
 (Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC 0) _ (Vector.nil _ ))).
 Definition xeqy := Atom (MPSV 0 2) 
@@ -1463,7 +1482,7 @@ intro H.
 assert (val:SetVars->X).
  intro n. destruct n eqn:nn. exact x1.
           destruct s eqn:ss. exact x2. exact x2.
-Abort.
+Abort.*)
 End cor.
 (*End sec0.*)
 End VS.
