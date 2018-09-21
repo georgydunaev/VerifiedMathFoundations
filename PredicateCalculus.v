@@ -4,8 +4,8 @@ Require Export Coq.Vectors.Vector.
 Require Export Coq.Lists.List.
 Require Import Bool.Bool.
 (*Require Import Logic.FunctionalExtensionality.*)
-Require Import Coq.Program.Wf.
-Require Import Lia.
+(*Require Import Coq.Program.Wf.*)
+(*Require Import Lia.*)
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations".
 Require Export UNIV_INST.
 Require Export eqb_nat.
@@ -41,33 +41,20 @@ Definition OImp := implb.
 End ModBool.
 
 Require Import Coq.Structures.Equalities.
-(*Module VS.*)
-Module Type VS (X: terms_mod) (SetVars: UsualDecidableTypeFull).
+(*Type*)
+Module VS (SetVars FuncSymb: UsualDecidableTypeFull) (*X: terms_mod SetVars*).
+Module X := terms_mod SetVars FuncSymb.
 Import X.
+Module Facts := BoolEqualityFacts SetVars.
 Notation SetVars := SetVars.t.
 
-Check SetVars.eqb.
+(*Check SetVars.eqb.
 Check SetVars.eq_refl.
-Module Facts := BoolEqualityFacts SetVars.
-(*Import Facts.*)
-(*Module Args. (* some stuff *) End Args.
-Module Facts := BoolEqualityFacts Args.
-Import Facts.*)
 Fail Check SetVars.eqb_refl.
 Check Facts.eqb_refl.
-Check eqb_refl.
+Check eqb_refl. *)
 
-(*From SetVars Import BoolEqualityFacts .*)
-(* 
-Module Type BooleanEqualityType <: EqualityType
- := Eq <+ IsEq <+ HasEqBool.
-Module Type BooleanEqualityType' :=
- BooleanEqualityType <+ EqNotation <+ EqbNotation.
-Module BoolEqualityFacts (Import E : BooleanEqualityType').*)
-(*Import Make_UDTF().
-Check Make_UDTF.eqb_refl
-Import SetVars:BoolEqualityFacts .
-*)
+
 Lemma ZX (xi:SetVars) :true = negb (SetVars.eqb xi xi) -> False.
 Proof.
 intro q.
@@ -76,61 +63,12 @@ rewrite Facts.eqb_refl in q.
 inversion q.
 Defined.
 
-(* TODO: *)
-(*Section sec0.*)
-(*Parameter (SetVars : Set).*)
-(*Definition SetVars := nat.*)
-
 Definition PredSymb := nat.
 
-(*Record FSV := {
- fs : FuncSymb;
- fsv : nat;
-}.*)
 Record PSV := MPSV{
  ps : PredSymb;
  psv : nat;
 }.
-(* Check MPSV 0 0. *)
-Unset Elimination Schemes.
-Inductive Terms : Type :=
-| FVC :> SetVars -> Terms
-| FSC (f:FSV) : (Vector.t Terms (fsv f)) -> Terms.
-Set Elimination Schemes.
-
-Definition Terms_rect (T : Terms -> Type)
-                      (H_FVC : forall sv, T (FVC sv))
-                      (H_FSC : forall f v, (forall n, T (Vector.nth v n)) -> T (FSC f v)) :=
-  fix loopt (t : Terms) : T t :=
-    match t with
-    | FVC sv  => H_FVC sv
-    | FSC f v =>
-      let fix loopv s (v : Vector.t Terms s) : forall n, T (Vector.nth v n) :=
-        match v with
-        | @Vector.nil _ => Fin.case0 _
-        | @Vector.cons _ t _ v => fun n => Fin.caseS' n (fun n => T (Vector.nth (Vector.cons _ t _ v) n))
-                                                      (loopt t)
-                                                      (loopv _ v)
-        end in
-      H_FSC f v (loopv _ v)
-    end.
-
-Definition Terms_ind (T : Terms -> Prop)
-                      (H_FVC : forall sv, T (FVC sv))
-                      (H_FSC : forall f v, (forall n, T (Vector.nth v n)) -> T (FSC f v)) :=
-  fix loopt (t : Terms) : T t :=
-    match t with
-    | FVC sv  => H_FVC sv
-    | FSC f v =>
-      let fix loopv s (v : Vector.t Terms s) : forall n, T (Vector.nth v n) :=
-        match v with
-        | @Vector.nil _ => Fin.case0 _
-        | @Vector.cons _ t _ v => fun n => Fin.caseS' n (fun n => T (Vector.nth (Vector.cons _ t _ v) n))
-                                                      (loopt t)
-                                                      (loopv _ v)
-        end in
-      H_FSC f v (loopv _ v)
-    end.
 
 
 (*Formulas*)
@@ -145,37 +83,8 @@ Inductive Fo :=
 .
 
 (* Substitution *)
-Parameter eq_dec : forall x y : SetVars, { x=y } + { ~ x=y }.
-Definition SetVars_eqb (x y : SetVars):bool.
-destruct (eq_dec x y) (*eqn:u*).
-exact true.
-exact false.
-Abort.
-(*delete Definition (*SetVars.*) eqb (x y : SetVars) := 
- match eq_dec x y return bool with
- | left  _ => true
- | right _ => false
- end.*)
-Print SetVars.eqb.
-Fixpoint substT (t:Terms) (xi: SetVars) (u:Terms): Terms. 
-Proof.
-destruct u as [s|f t0].
-2 : {
- refine (FSC _ _).
- exact ( @Vector.map _ _ (substT t xi) _ t0 ).
-}
-{
- destruct (SetVars.eqb s xi).
- exact t.
- exact s.
-}
-Defined.
 
-Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
-   match t with
-   | FVC s => SetVars.eqb s xi
-   | FSC f t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
-   end.
+
 
 Fixpoint isParamF (xi : SetVars) (f : Fo) {struct f} : bool :=
    match f with
@@ -270,7 +179,6 @@ Inductive PR (axi:list Fo) : Fo -> Type :=
 | GEN (A : Fo) (xi:SetVars): (@PR axi A)->(@PR axi (Fora xi A))
 .
 
-Check @PR.
 Definition AtoA (A:Fo) : PR (List.nil) (A-->A).
 Proof.
 apply (MP nil (A-->(A-->A)) _).
@@ -1448,4 +1356,7 @@ apply lfi.
 exact B.
 Defined.
 (** SOUNDNESS IS PROVED **)
+End cor.
+(*End sec0.*)
+End VS.
 

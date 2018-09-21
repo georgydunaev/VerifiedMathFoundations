@@ -7,4 +7,5 @@ Terms:
 all:
 	$(CC) eqb_nat.v
 	$(CC) UNIV_INST.v
+	$(CC) Terms.v
 	$(CC) PredicateCalculus.v
