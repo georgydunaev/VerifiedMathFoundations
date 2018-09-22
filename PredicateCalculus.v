@@ -11,8 +11,7 @@ Require Export UNIV_INST.
 Require Export eqb_nat.
 Require Export Terms.
 Require Export Formulas.
-Require Export Provability2.
-(*Require Export Deduction2.*)
+Require Export Provability.
 
 (*Require Import Logic.ClassicalFacts.*)
 (*Axiom EquivThenEqual: prop_extensionality.*)

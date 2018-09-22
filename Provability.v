@@ -19,10 +19,16 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | b :: m => (sum (b = a) (InL a m))
   end.
 
+Inductive AxiomH : Fo -> Type :=
+| Ha1  : forall A B, AxiomH (A-->(B-->A))
+| Ha2  : forall A B C, AxiomH ((A-->(B-->C))-->((A-->B)-->(A-->C)))
+.
+
 Inductive PR (axi:list Fo) : Fo -> Type :=
 | hyp (A : Fo): (InL A axi)-> @PR axi A
-| a1 (A B: Fo) : @PR axi (Impl A (Impl B A))
-| a2 (A B C: Fo) : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C)))
+| Hax (A : Fo): AxiomH A -> @PR axi A
+(*| a1 (A B: Fo) : @PR axi (Impl A (Impl B A))
+| a2 (A B C: Fo) : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C)))*)
 | a12 (ph: Fo) (t:Terms) (xi:SetVars)
 : @PR axi (match (substF t xi ph) with 
       | Some q => (Impl (Fora xi ph) q)
@@ -34,5 +40,9 @@ Inductive PR (axi:list Fo) : Fo -> Type :=
 | GEN (A : Fo) (xi:SetVars): (@PR axi A)->(@PR axi (Fora xi A))
 .
 
+Definition a1 axi A B : @PR axi (Impl A (Impl B A)).
+Proof. apply Hax, Ha1. Defined.
+Definition a2 axi A B C : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C))).
+Proof. apply Hax, Ha2. Defined.
 
 End Provability_mod.

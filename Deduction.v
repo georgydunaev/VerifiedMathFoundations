@@ -25,7 +25,7 @@ Defined.
 Definition AtoA (A:Fo) : PR (List.nil) (A-->A).
 Proof.
 apply (MP nil (A-->(A-->A)) _).
-apply a1.
+apply a1. (* apply (Hax _ _ (Ha1 _ _)).*)
 apply (MP nil (A-->((A-->A)-->A)) _).
 apply a1.
 apply a2.
@@ -74,8 +74,9 @@ destruct x.
 apply hyp.
 apply inr. (*or_intror *)
 exact i.
-apply a1.
-apply a2.
+apply Hax. apply a.
+(*apply a1.
+apply a2.*)
 apply a12.
 apply b1.
 assumption.
@@ -103,8 +104,9 @@ Defined.
 (*Export List Notations.*)
 Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PR l B)){struct m}:bool.
 Proof.
-destruct m. 
+destruct m.
 exact true.
+destruct a eqn:j.
 exact true.
 exact true.
 exact true.
@@ -171,9 +173,10 @@ exfalso.*)
     apply a1i.
     exact (hyp il _ i).
 + apply a1i.
-  apply a1.
+apply Hax, a.
+(*  apply a1.
 + apply a1i.
-  apply a2.
+  apply a2.*)
 + apply a1i.
   apply a12.
 + apply a1i.
@@ -257,7 +260,12 @@ Fixpoint forClosed (A B:Fo)(m:(PR (cons A nil) B)):
 (forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m)).
 Proof.
 intros H xi Q.
-destruct m; simpl; try reflexivity.
+destruct m. simpl. try reflexivity.
+destruct a eqn:j.
+simpl. try reflexivity.
+simpl. try reflexivity.
+simpl. try reflexivity.
+simpl. try reflexivity.
 + apply lm3.
   simple refine (@forClosed _ _ _ _ _ _); assumption.
   simple refine (@forClosed _ _ _ _ _ _); assumption.
