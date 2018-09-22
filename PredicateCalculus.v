@@ -11,8 +11,8 @@ Require Export UNIV_INST.
 Require Export eqb_nat.
 Require Export Terms.
 Require Export Formulas.
-Require Export Provability.
-Require Export Deduction.
+Require Export Provability2.
+(*Require Export Deduction2.*)
 
 (*Require Import Logic.ClassicalFacts.*)
 (*Axiom EquivThenEqual: prop_extensionality.*)
@@ -65,18 +65,7 @@ Fail Check SetVars.eqb_refl.
 Check Facts.eqb_refl.
 Check eqb_refl. *)
 
-
-
-
-(*Definition PredSymb := nat.*)
-
-
-
 Open Scope list_scope.
-(*Print List.In.
-Locate "+".
-Print sum.*)
-(*DED*)
 
 
 (* Here we choose an interpretation. *)
@@ -965,12 +954,13 @@ Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi val.
 + exact (lfi A i _).
-+ simpl.
-  intros a b.
-  exact a.
-+ simpl.
-  intros a b c.
-  exact (a c (b c)).
++ destruct a.
+  ++ simpl.
+     intros a b.
+     exact a.
+  ++ simpl.
+     intros a b c.
+     exact (a c (b c)).
 + simpl in *|-*.
   destruct (substF t xi ph) eqn: j.
   apply (UnivInst ph val xi t f j).
