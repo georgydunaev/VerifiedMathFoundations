@@ -1,9 +1,10 @@
 (* PUBLIC DOMAIN *)
 (* Author: Georgy Dunaev, georgedunaev@gmail.com *)
-Require Export Coq.Vectors.Vector.
-Require Import Coq.Structures.Equalities.
+Require Coq.Vectors.Vector.
+Require Coq.Structures.Equalities.
 (*Type*)
-Module  terms_mod (SetVars FuncSymb: UsualDecidableTypeFull).
+Import Coq.Structures.Equalities.
+Module  Terms_mod (SetVars FuncSymb: UsualDecidableTypeFull).
 Notation SetVars := SetVars.t.
 Notation FuncSymb := FuncSymb.t.
 (*Parameter FuncSymb : Set.*)
@@ -76,12 +77,12 @@ Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
 
 Section Interpretation.
 Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
-Fixpoint teInterpr 
+Fixpoint teI
    (val:SetVars->X) (t:Terms): X :=
    match t with
    | FVC s => val s
-   | FSC f t0 => fsI f (Vector.map (teInterpr val) t0)
+   | FSC f t0 => fsI f (Vector.map (teI val) t0)
    end.
 End Interpretation.
 
-End terms_mod.
+End Terms_mod.

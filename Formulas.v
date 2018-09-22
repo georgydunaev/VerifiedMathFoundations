@@ -1,13 +1,23 @@
 Require Export Coq.Vectors.Vector.
 Require Import Coq.Structures.Equalities.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
-Require Export Terms.
+Require Terms.
 Require Poly.
 Require Valuation.
+Export Terms.
+Export Valuation.
+Export Poly.ModProp.
 
 Module  Formulas_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
-Module XFo := terms_mod SetVars FuncSymb.
+Module cn := Valuation_mod SetVars.
+Module XFo := Terms_mod SetVars FuncSymb.
+Export cn.
 Export XFo.
+
+Check XFo.Terms.
+Check Terms.
+Check teI.
+
 
 Notation SetVars := SetVars.t.
 Notation PredSymb := PredSymb.t.
@@ -98,30 +108,29 @@ Notation " ph [ t | xi ] ":=(substF t xi ph ) (at level 10).
 Check fun (t:Terms) (x:SetVars) => ( t [ t >> x ]).
 Check fun (t:Terms) (x:SetVars) (ph:Fo) => ( ph [ t | x ] ).
 *)
-Module cn := Valuation.Valuation_mod SetVars.
+
 Section Interpretation.
 Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
-Export Poly.ModProp.
 Context {prI:forall(q:PSV),(Vector.t X (psv q))->Omega}.
-Local Definition teI := @teInterpr X fsI.
-Import cn.
-Definition cng := @cn.cng X.
-Definition dbl_cng := @cn.dbl_cng X.
+(*Local Definition teI := @teInterpr X fsI.*)
 
-Fixpoint foInterpr (val:SetVars->X) (f:Fo): Omega.
+(*Definition cng := @cn.cng X.
+Definition dbl_cng := @cn.dbl_cng X.*)
+
+Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
 Proof.
 destruct f.
 Show Proof.
 + refine (prI p _).
-  apply (@Vector.map Terms X (teI val)).
+  eapply (@Vector.map Terms X (@teI _ fsI val)).
   exact t.
 + exact OFalse.
-+ exact ( OAnd (foInterpr val f1) (foInterpr val f2)).
-+ exact (  OOr (foInterpr val f1) (foInterpr val f2)).
-+ exact ( OImp (foInterpr val f1) (foInterpr val f2)).
++ exact ( OAnd (foI val f1) (foI val f2)).
++ exact (  OOr (foI val f1) (foI val f2)).
++ exact ( OImp (foI val f1) (foI val f2)).
 Show Proof.
-+ exact (forall m:X, foInterpr (cng val x m) f).
-+ exact (Osig (fun m:X => foInterpr (fun r:SetVars =>
++ exact (forall m:X, foI (cng val x m) f).
++ exact (Osig (fun m:X => foI (fun r:SetVars =>
 match SetVars.eqb r x with
 | true => m
 | false => (val r)

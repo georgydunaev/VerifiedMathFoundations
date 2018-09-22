@@ -1,4 +1,5 @@
-Require Import Setoid.
+Require Setoid.
+Require Bool.Bool.
 
 Definition ap {A B}{a0 a1:A} (f:A->B) (h:a0=a1):((f a0)=(f a1))
 := match h in (_ = y) return (f a0 = f y) with
@@ -74,6 +75,7 @@ split.
   exact (H m).
 Defined.
 
+Import Bool.Bool.
 Lemma orb_elim (a b:bool): ((a||b)=false)->((a=false)/\(b=false)).
 Proof.
 intros. destruct a,b. 

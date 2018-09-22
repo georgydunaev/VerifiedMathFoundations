@@ -1,4 +1,4 @@
-Require Export Coq.Vectors.Vector.
+Require Coq.Vectors.Vector.
 
 Inductive myeq (A : Type) (x : A) : A -> Type :=
 | myeq_refl : myeq A x x.

@@ -2,38 +2,33 @@
 (* Author: Georgy Dunaev, georgedunaev@gmail.com *)
 Require Export Coq.Vectors.Vector.
 Require Export Coq.Lists.List.
-Require Import Bool.Bool. 
-(*Require Import Logic.FunctionalExtensionality.*)
-(*Require Import Coq.Program.Wf.*)
-(*Require Import Lia.*)
+Require Import Bool.Bool.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export UNIV_INST.
-(*Require Export eqb_nat.
-Require Export Terms.
-Require Export Formulas.*)
 Require Provability.
 Require Misc.
 Require Poly.
 Require Valuation.
-(*Require Import Logic.ClassicalFacts.*)
-(*Axiom EquivThenEqual: prop_extensionality.*)
-
-
-
-Require Import Coq.Structures.Equalities.
-(*Type*)
-Module VS (SetVars FuncSymb PredSymb: UsualDecidableTypeFull) (*X: terms_mod SetVars*).
-(*Module X := terms_mod SetVars FuncSymb.
-Import X.*)
-(*Module X := Formulas_mod SetVars FuncSymb PredSymb.
-Export X.*)
 Export Provability.
-Module XPr := Provability_mod SetVars FuncSymb PredSymb.
-Export XPr.
 Export Misc.
 
+Require Import Coq.Structures.Equalities.
+Module VS (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
+Module XPr := Provability_mod SetVars FuncSymb PredSymb.
 Module Facts := BoolEqualityFacts SetVars.
 Module cn := Valuation.Valuation_mod SetVars.
+
+Export XPr.
+(*Export XPr.XPro.*)
+(*Check teInterpr.
+
+Check @XPr.XPro.teI.
+Check XPr.teI.
+
+Check XPro.teI.*)
+
+Check teI.
+
 
 Notation SetVars := SetVars.t.
 Notation PredSymb := PredSymb.t.
@@ -61,21 +56,23 @@ Check FSV.
 Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
 Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
 (*Context (prI:forall(q:PSV),(Vector.t X (psv q))->Prop).*)
-Definition teI := @teInterpr X fsI.
+(*Local Definition *)
+(*Notation "'teI'" := @teInterpr X fsI.*)
 Export cn.
+
 (*Local Definition cng := @cn.cng X.
 Declare Equivalent Keys cng cn.cng.
 Definition cng := (unfold in @cn.cng X).*)
 
-Local Definition dbl_cng := @cn.dbl_cng X.
-Definition foI := @foInterpr X fsI prI.
+(*Local Definition dbl_cng := @cn.dbl_cng X.
+Definition foI := @foInterpr X fsI prI.*)
 
 Section Lem1.
 (*Context (t : Terms).*)
 
 (* page 136 of the book *)
 Definition lem1 (t : Terms) : forall (u :Terms) (xi : SetVars) (pi : SetVars->X) ,
-(teI pi (substT t xi u))=(teI (cng pi xi (teI pi t)) u).
+(@teI X fsI pi (substT t xi u))=(@teI X fsI (cng pi xi (@teI X fsI pi t)) u).
 Proof.
 fix lem1 1.
 intros.
@@ -228,7 +225,8 @@ Defined.
 (* p.137 *)
 Section Lem2.
 
-Lemma mqd x t pi m (H:isParamT x t = false): (teI (cng pi x m) t) = (teI pi t).
+Lemma mqd x t pi m (H:isParamT x t = false): 
+(@teI X fsI (cng pi x m) t) = (@teI X fsI pi t).
 Proof.
 induction t.
  simpl.
@@ -257,7 +255,7 @@ Defined.
 (* USELESS THEOREM *)
 Lemma cng_commT  x xi m0 m1 pi t :
 SetVars.eqb x xi = false -> 
-teI (cng (cng pi x m0) xi m1) t = teI (cng (cng pi xi m1) x m0) t.
+@teI X fsI (cng (cng pi x m0) xi m1) t = @teI X fsI (cng (cng pi xi m1) x m0) t.
 Proof. intro i.
 revert pi.
 induction t; intro pi.
@@ -296,7 +294,8 @@ apply H.
 Defined.
 
 
-Lemma weafunT pi mu (q: forall z, pi z = mu z) t : teI pi t = teI mu t.
+Lemma weafunT pi mu (q: forall z, pi z = mu z) t : 
+@teI X fsI pi t = @teI X fsI mu t.
 Proof.
 induction t.
 + simpl. exact (q sv).
@@ -310,7 +309,7 @@ Defined.
 Print Omega.
 Locate "<->". (* iff *)
 Lemma weafunF (pi mu:SetVars->X) (q: forall z, pi z = mu z) fi 
-: foI pi fi <-> foI mu fi.
+: @foI X fsI prI pi fi <-> @foI X fsI prI mu fi.
 Proof.
 revert pi mu q.
 induction fi.
@@ -321,7 +320,7 @@ intros pi mu q.
   apply eq_nth_iff.
   intros p1 p2 HU.
 Print teI.
-Print XPr.X.teI.
+(*Print XPr.XPro.teI.*)
   rewrite -> (nth_map (teI pi) t p1 p2 HU).
   rewrite -> (nth_map (teI mu) t p2 p2 eq_refl).
   apply weafunT.
@@ -347,7 +346,7 @@ Print XPr.X.teI.
   split.
   * intros.
     rewrite IHfi. (*weafunF.*)
-    apply H.
+    apply H with (m:=m).
     intro z.
     unfold cng.
     destruct (SetVars.eqb z x).
@@ -389,7 +388,7 @@ Defined.
 
 Lemma cng_commF_EQV  xe xi m0 m1 pi fi :
 SetVars.eqb xe xi = false -> 
-(foI (cng (cng pi xe m0) xi m1) fi <-> foI (cng (cng pi xi m1) xe m0) fi).
+(@foI X fsI prI (cng (cng pi xe m0) xi m1) fi <-> @foI X fsI prI (cng (cng pi xi m1) xe m0) fi).
 Proof.
 intros H.
 apply weafunF.
@@ -411,7 +410,7 @@ Defined.
 Lemma lem2caseAtom : forall (p : PSV) (t0 : Vector.t Terms (psv p))
 (t : Terms) (xi : SetVars) (pi : SetVars->X)
 (r:Fo) (H:(substF t xi (Atom p t0)) = Some r) ,
-foI pi r <-> foI (cng pi xi (teI pi t)) (Atom p t0).
+@foI X fsI prI pi r <-> @foI X fsI prI (cng pi xi (@teI X fsI pi t)) (Atom p t0).
 Proof.
 intros.
 +  simpl in H. (*simpl in *|-*; intros r H.*)
@@ -434,23 +433,15 @@ apply EqualThenEquiv.
   rewrite -> (nth_map (substT t xi) v p2 p2 eq_refl).
   apply lem1. reflexivity.
 Defined.
-
-Lemma twice_the_same pi x m0 m1 : 
-forall u, (cng (cng pi x m0) x m1) u = (cng pi x m1) u.
-Proof.
-intro u.
-unfold cng.
-destruct (SetVars.eqb u x).
-reflexivity.
-reflexivity.
-Defined.
+(*@foI X fsI prI*)
 
 (*Lemma eqb_comm x xi : PeanoNat.Nat.eqb xi x =  PeanoNat.Nat.eqb x xi.
 unfold PeanoNat.Nat.eqb.
 Admitted.*)
 
 Lemma NPthenNCACVT x t m pi: 
- isParamT x t = false -> (teI (cng pi x m) t) = (teI pi t).
+ isParamT x t = false -> 
+(@teI X fsI (cng pi x m) t) = (@teI X fsI pi t).
 Proof.
 intros H.
 induction t.
@@ -494,7 +485,7 @@ split.
 Defined.
 
 Lemma NPthenNCACVF xi fi m mu :  isParamF xi fi = false ->
-foI (cng mu xi m) fi <-> foI mu fi.
+@foI X fsI prI (cng mu xi m) fi <-> @foI X fsI prI mu fi.
 Proof.
 revert mu.
 induction fi; intro mu;
@@ -582,7 +573,7 @@ Defined.
 
 Definition lem2 (t : Terms) : forall (fi : Fo) (xi : SetVars) (pi : SetVars->X)
 (r:Fo) (H:(substF t xi fi) = Some r), (*(SH:sig (fun(r:Fo)=>(substF t xi fi) = Some r)),*)
-(foI pi r)<->(foI (cng pi xi (teI pi t)) fi).
+(@foI X fsI prI pi r)<->(@foI X fsI prI (cng pi xi (@teI X fsI pi t)) fi).
 Proof.
 fix lem2 1.
 (*H depends on t xi fi r *)
@@ -705,8 +696,8 @@ exact l2.
 rewrite <- RA.
 Check weafunF (cng (cng pi x (teI pi t)) x m) (cng pi x m) 
 (twice_the_same pi x (teI pi t) m) fi.
-rewrite -> (weafunF (cng (cng pi x (teI pi t)) x m) (cng pi x m) 
-(twice_the_same pi x (teI pi t) m) fi).
+rewrite -> (weafunF (cng (cng pi x (@teI X fsI pi t)) x m) (cng pi x m) 
+(twice_the_same pi x (@teI X fsI pi t) m) fi).
 firstorder.
 
 destruct (isParamF xi fi) eqn:l1.
@@ -721,7 +712,7 @@ apply EXISTS_EQV.
 intro m.
 Check cng_commF_EQV.
 fold (cng  pi x m ).
-fold (cng  (cng pi xi (teI pi t)) x m ).
+fold (cng  (cng pi xi (@teI X fsI pi t)) x m ).
 
 rewrite cng_commF_EQV.
 2 : {
@@ -744,7 +735,7 @@ intro m.
 Check cng_commF_EQV.
 Check IHfi (cng pi x m) fi.
 fold (cng  pi x m ).
-fold (cng  (cng pi xi (teI pi t)) x m ).
+fold (cng  (cng pi xi (@teI X fsI pi t)) x m ).
 
 rewrite cng_commF_EQV.
 Check NPthenNCACVF.
@@ -756,7 +747,7 @@ Defined. (* END OF LEM2 *)
 End Lem2.
 
 Lemma UnivInst : forall (fi:Fo) (pi:SetVars->X) (x:SetVars) (t:Terms)
-(r:Fo) (H:(substF t x fi)=Some r), foI pi (Impl (Fora x fi) r).
+(r:Fo) (H:(substF t x fi)=Some r), @foI X fsI prI pi (Impl (Fora x fi) r).
 Proof.
 intros fi pi x t r H.
 simpl.
@@ -766,20 +757,21 @@ apply H0.
 Defined.
 
 Lemma ExisGene : forall (fi:Fo) (pi:SetVars->X) (x:SetVars) (t:Terms)
-(r:Fo) (H:(substF t x fi)=Some r), foI pi (Impl r (Exis x fi)).
+(r:Fo) (H:(substF t x fi)=Some r), @foI X fsI prI pi (Impl r (Exis x fi)).
 Proof.
 intros fi pi x t r H.
 simpl.
 intro H0.
-exists (teI pi t).
-fold (cng pi x (teI pi t)).
+exists (@teI X fsI pi t).
+fold (cng pi x (@teI X fsI pi t)).
 apply (lem2 t fi x pi r H).
 apply H0.
 Defined.
 (* PROOF OF THE SOUNDNESS *)
 Theorem correct (f:Fo) (l:list Fo) (m:PR l f) 
-(lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars->X), (foI val h)) : 
-forall (val:SetVars->X), foI val f.
+(lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars->X), 
+(@foI X fsI prI val h)) : 
+forall (val:SetVars->X), @foI X fsI prI val f.
 Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi val.

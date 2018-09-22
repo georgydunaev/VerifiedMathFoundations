@@ -1,11 +1,13 @@
+Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Coq.Lists.List.
 Require Import Coq.Structures.Equalities.
-Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
-Require Export Formulas.
+Require Formulas.
+Export Formulas.
+Export Coq.Lists.List.
 
 Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
-Module X := Formulas_mod SetVars FuncSymb PredSymb.
-Export X.
+Module XPro := Formulas_mod SetVars FuncSymb PredSymb.
+Export XPro.
 
 Notation SetVars := SetVars.t.
 Notation PredSymb := PredSymb.t.
@@ -53,7 +55,7 @@ Definition b1 axi (ps ph: Fo) (xi:SetVars) (H:isParamF xi ps = false):
 @PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax, Hb1, H. Defined.
 
-Export Coq.Lists.List.
+
 Definition AtoA {axi} (A:Fo) : PR axi (A-->A).
 Proof.
 apply (MP axi (A-->(A-->A)) _).
