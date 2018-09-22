@@ -9,7 +9,7 @@ Formulas:
  
 all:
 	cp *.v library/
-	cd library && echo "I'm in some_dir" && \
+	cd library && echo "The output will be in /library/." && \
 	$(CC)eqb_nat.v && \
 	$(CC)UNIV_INST.v && \
 	$(CC)Terms.v && \
