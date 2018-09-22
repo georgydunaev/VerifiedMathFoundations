@@ -1,3 +1,5 @@
+/old/
+/library/
 # Coq gitignore:
 .*.aux
 *.a
