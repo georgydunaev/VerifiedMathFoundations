@@ -1,7 +1,7 @@
 Require Coq.Lists.List.
 Require Bool.Bool. 
 Require Import Coq.Structures.Equalities.
-Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations".
+Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export Provability.
 
 Module Deduction_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).

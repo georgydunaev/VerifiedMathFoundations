@@ -1,5 +1,5 @@
 Require Import Coq.Structures.Equalities.
-Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations".
+Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export Formulas.
 
 Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
