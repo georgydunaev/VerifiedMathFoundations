@@ -8,40 +8,17 @@ Require Import Bool.Bool.
 (*Require Import Lia.*)
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export UNIV_INST.
-Require Export eqb_nat.
+(*Require Export eqb_nat.
 Require Export Terms.
-Require Export Formulas.
-Require Export Provability.
-
+Require Export Formulas.*)
+Require Provability.
+Require Misc.
+Require Poly.
+Require Valuation.
 (*Require Import Logic.ClassicalFacts.*)
 (*Axiom EquivThenEqual: prop_extensionality.*)
 
-Module ModProp.
-Definition Omega := Prop.
-Definition OFalse := False.
-Definition OAnd := and.
-Definition OOr := or.
-Definition OImp := (fun x y:Omega => x->y).
-Notation Osig := ex.
-End ModProp.
 
-Module ModType.
-Notation Omega := Type.
-Definition OFalse := False. (*Print "+"%type.*)
-Definition OAnd := prod.
-Definition OOr := sum.
-Definition OImp := (fun x y:Omega => x->y).
-Notation Osig := sigT.
-End ModType.
-
-
-Module ModBool.
-Definition Omega := bool.
-Definition OFalse := false.
-Definition OAnd := andb.
-Definition OOr := orb.
-Definition OImp := implb.
-End ModBool.
 
 Require Import Coq.Structures.Equalities.
 (*Type*)
@@ -50,14 +27,18 @@ Module VS (SetVars FuncSymb PredSymb: UsualDecidableTypeFull) (*X: terms_mod Set
 Import X.*)
 (*Module X := Formulas_mod SetVars FuncSymb PredSymb.
 Export X.*)
-Module X := Provability_mod SetVars FuncSymb PredSymb.
-Export X.
-
+Export Provability.
+Module XPr := Provability_mod SetVars FuncSymb PredSymb.
+Export XPr.
+Export Misc.
 
 Module Facts := BoolEqualityFacts SetVars.
+Module cn := Valuation.Valuation_mod SetVars.
+
 Notation SetVars := SetVars.t.
 Notation PredSymb := PredSymb.t.
 Notation FuncSymb := FuncSymb.t.
+
 (*Check SetVars.eqb.
 Check SetVars.eq_refl.
 Fail Check SetVars.eqb_refl.
@@ -69,7 +50,7 @@ Open Scope list_scope.
 
 (* Here we choose an interpretation. *)
 (*Export ModBool.*)
-Export ModProp. (* + classical axioms *)
+Export Poly.ModProp. (* + classical axioms *)
 (*Export ModType. It doesn't work properly. *)
 (** Soundness theorem section **)
 Section cor.
@@ -80,93 +61,14 @@ Check FSV.
 Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
 Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
 (*Context (prI:forall(q:PSV),(Vector.t X (psv q))->Prop).*)
+Definition teI := @teInterpr X fsI.
+Export cn.
+(*Local Definition cng := @cn.cng X.
+Declare Equivalent Keys cng cn.cng.
+Definition cng := (unfold in @cn.cng X).*)
 
-Fixpoint teI (val:SetVars->X) (t:Terms): X.
-Proof.
-destruct t as [s|f t].
-exact (val s).
-refine (fsI f _).
-simple refine (@Vector.map _ _ _ _ _).
-2 : apply teI.
-exact val.
-exact t.
-Defined.
-(*
-Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
-Proof.
-destruct f.
-+ refine (prI p _).
-  apply (Vector.map  (teI val)).
-  exact t.
-+ exact false.
-+ exact ( andb (foI val f1) (foI val f2)).
-+ exact (  orb (foI val f1) (foI val f2)).
-+ exact (implb (foI val f1) (foI val f2)).
-+  (*Infinite conjunction!!!*)
- Show Proof.
-*)
-
-(** (\pi + (\xi \mapsto ?) ) **)
-Definition cng (val:SetVars -> X) (xi:SetVars) (m:X) :=
-(fun r:SetVars =>
-match SetVars.eqb r xi with
-| true => m
-| false => (val r)
-end).
-
-(*Inductive foI (val:SetVars->X) (f:Fo): Prop
-:=
-   | cAtom p t0 => ?Goal0@{t:=t0}
-.
-   | cBot => ?Goal
-   | cConj f1 f2 => ?Goal1
-   | cDisj f1 f2 => ?Goal2
-   | cImpl f1 f2 => ?Goal3
-   | cFora x f0 => ?Goal4@{f:=f0}
-   | cExis x f0 => ?Goal5@{f:=f0}
-.*)
-
-Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
-Proof.
-destruct f.
-Show Proof.
-+ refine (prI p _).
-  apply (@Vector.map Terms X (teI val)).
-  exact t.
-+ exact OFalse.
-+ exact ( OAnd (foI val f1) (foI val f2)).
-+ exact (  OOr (foI val f1) (foI val f2)).
-+ exact ( OImp (foI val f1) (foI val f2)).
-Show Proof.
-+ exact (forall m:X, foI (cng val x m) f).
-(*forall m:X, foI (fun r:SetVars =>
-match Nat.eqb r x with
-| true => m
-| false => (val r)
-end
-) f*)
-(*Locate "exists".*)
-+ exact (Osig (fun m:X => foI (fun r:SetVars =>
-match SetVars.eqb r x with
-| true => m
-| false => (val r)
-end
-) f)
-).
-(*+ exact (exists m:X, foI (fun r:SetVars =>
-match PeanoNat.Nat.eqb r x with
-| true => m
-| false => (val r)
-end
-) f
-).*)
-Defined.
-
-Definition ap {A B}{a0 a1:A} (f:A->B) (h:a0=a1):((f a0)=(f a1))
-:= match h in (_ = y) return (f a0 = f y) with
-   | eq_refl => eq_refl
-   end.
-
+Local Definition dbl_cng := @cn.dbl_cng X.
+Definition foI := @foInterpr X fsI prI.
 
 Section Lem1.
 (*Context (t : Terms).*)
@@ -180,7 +82,7 @@ intros.
 induction u as [s|f].
 (*destruct u as [s|f] .*)
 + simpl.
-  unfold cng.
+  unfold cng, cn.cng.
   destruct (SetVars.eqb s xi) eqn:ek. (* fsI as [H1|H2].*)
   * reflexivity.
   * simpl.
@@ -214,28 +116,6 @@ Defined.
 
 End Lem1.
 
-Theorem SomeInj {foo} :forall (a b : foo), Some a = Some b -> a = b.
-Proof.
-  intros a b H.
-  inversion H.
-  reflexivity.
-Defined.
-
-Theorem eq_equ (A B:Prop) : A=B -> (A <-> B).
-Proof.
-intro p. 
-destruct p.
-firstorder.
-Defined. (* rewrite p. firstorder. *)
-
-Theorem conj_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 /\ B0) = (A1 /\ B1).
-Proof. destruct pA, pB; reflexivity. Defined.
-Theorem disj_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 \/ B0) = (A1 \/ B1).
-Proof. destruct pA, pB; reflexivity. Defined.
-Theorem impl_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 -> B0) = (A1 -> B1).
-Proof. destruct pA, pB; reflexivity. Defined.
-Lemma dbl_cng pi xi m1 m2: forall q,(cng (cng pi xi m1) xi m2) q = (cng pi xi m2) q.
-Proof. intro q. unfold cng. destruct (SetVars.eqb q xi); reflexivity. Defined.
 
 
 Theorem l01 h n v :
@@ -389,8 +269,6 @@ Check not_iff_compat (SetVars.eqb_eq x xi).
 pose (n3:= proj1 (not_iff_compat (SetVars.eqb_eq x xi)) ).
 Check proj2 (not_true_iff_false (SetVars.eqb x xi)).
 pose (n4:= n3 (proj2 (not_true_iff_false (SetVars.eqb x xi)) i)).
-Require Import Arith.Peano_dec.
-Check eq_nat_dec.
 destruct (SetVars.eq_dec sv xi).
 rewrite -> e.
 rewrite -> IOF.
@@ -417,13 +295,6 @@ rewrite -> (nth_map (teI (cng (cng pi xi m1) x m0)) v p2 p2 eq_refl).
 apply H.
 Defined.
 
-Lemma EqualThenEquiv A B: A=B -> (A<->B). intro H. rewrite H. exact (iff_refl B). Defined.
-
-Lemma ix W (P Q:W->Prop) (H: P = Q):(forall x, P x) =(forall y, Q y).
-Proof.
-rewrite H.
-reflexivity.
-Defined.
 
 Lemma weafunT pi mu (q: forall z, pi z = mu z) t : teI pi t = teI mu t.
 Proof.
@@ -438,7 +309,8 @@ induction t.
 Defined.
 Print Omega.
 Locate "<->". (* iff *)
-Lemma weafunF pi mu (q: forall z, pi z = mu z) fi : foI pi fi <-> foI mu fi.
+Lemma weafunF (pi mu:SetVars->X) (q: forall z, pi z = mu z) fi 
+: foI pi fi <-> foI mu fi.
 Proof.
 revert pi mu q.
 induction fi.
@@ -448,6 +320,8 @@ intros pi mu q.
   apply ap.
   apply eq_nth_iff.
   intros p1 p2 HU.
+Print teI.
+Print XPr.X.teI.
   rewrite -> (nth_map (teI pi) t p1 p2 HU).
   rewrite -> (nth_map (teI mu) t p2 p2 eq_refl).
   apply weafunT.
@@ -532,42 +406,6 @@ inversion H.
 reflexivity. reflexivity. reflexivity.
 Defined.
 
-Lemma AND_EQV : forall A0 B0 A1 B1 : Prop, 
-(A0 <-> A1) -> (B0 <-> B1) -> ((A0 /\ B0) <-> (A1 /\ B1)).
-Proof.
-intros A0 B0 A1 B1 H0 H1.
-rewrite H0.
-rewrite H1.
-reflexivity.
-Defined.
-Lemma OR_EQV : forall A0 B0 A1 B1 : Prop, 
-(A0 <-> A1) -> (B0 <-> B1) -> ((A0 \/ B0) <-> (A1 \/ B1)).
-Proof.
-intros A0 B0 A1 B1 H0 H1.
-rewrite H0.
-rewrite H1.
-reflexivity.
-Defined.
-Lemma IMP_EQV : forall A0 B0 A1 B1 : Prop, 
-(A0 <-> A1) -> (B0 <-> B1) -> ((A0 -> B0) <-> (A1 -> B1)).
-Proof.
-intros A0 B0 A1 B1 H0 H1.
-rewrite H0.
-rewrite H1.
-reflexivity.
-Defined.
-Lemma FORALL_EQV : forall A0 A1 : X -> Prop, 
-(forall m, A0 m <-> A1 m) -> ((forall m:X, A0 m) <-> (forall m:X, A1 m)).
-Proof.
-intros A0 A1 H0.
-split.
-+ intros.
-  rewrite <- H0.
-  exact (H m).
-+ intros.
-  rewrite -> H0.
-  exact (H m).
-Defined.
 
 
 Lemma lem2caseAtom : forall (p : PSV) (t0 : Vector.t Terms (psv p))
@@ -576,7 +414,7 @@ Lemma lem2caseAtom : forall (p : PSV) (t0 : Vector.t Terms (psv p))
 foI pi r <-> foI (cng pi xi (teI pi t)) (Atom p t0).
 Proof.
 intros.
-+  (*simpl in *|-*; intros r H.*)
++  simpl in H. (*simpl in *|-*; intros r H.*)
   pose (Q:=SomeInj _ _ H).
   rewrite <- Q.
   simpl.
@@ -636,14 +474,7 @@ Check all_then_someP Terms (fsv f) p2 v (isParamT x) H.
 apply (all_then_someP Terms (fsv f) p2 v (isParamT x) H).
 Defined.
 
-Lemma orb_elim (a b:bool): ((a||b)=false)->((a=false)/\(b=false)).
-Proof.
-intros. destruct a,b. 
-simpl in H. inversion H.
-simpl in H. inversion H.
-firstorder.
-firstorder.
-Defined.
+
 
 Lemma EXISTS_EQV : forall A0 A1 : X -> Prop, 
 (forall m, A0 m <-> A1 m) -> ((exists m:X, A0 m) <-> (exists m:X, A1 m)).
@@ -960,16 +791,16 @@ induction m (* eqn: meq *); intros lfi val.
   ++ simpl.
      intros a b c.
      exact (a c (b c)).
-+ simpl in *|-*.
-  destruct (substF t xi ph) eqn: j.
-  apply (UnivInst ph val xi t f j).
-  simpl. firstorder.
-+ simpl in *|-*.
-  unfold OImp.
-  intros H0 H1 m.
-  apply H0.
-  rewrite -> (NPthenNCACVF xi ps0 m val H).
-  exact H1.
+  ++ simpl in *|-*.
+  (*destruct (substF t xi ph) eqn: j.*)
+  apply (UnivInst ph val xi t r s).
+  (*simpl. firstorder.*)
+  ++ simpl in *|-*.
+     unfold OImp.
+     intros H0 H1 m.
+     apply H0.
+     rewrite -> (NPthenNCACVF xi ps0 m val H).
+     exact H1.
 + simpl in * |- *.
   unfold OImp in IHm2.
 apply IHm2.

@@ -2,10 +2,12 @@ Require Export Coq.Vectors.Vector.
 Require Import Coq.Structures.Equalities.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export Terms.
+Require Poly.
+Require Valuation.
 
 Module  Formulas_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
-Module X := terms_mod SetVars FuncSymb.
-Export X.
+Module XFo := terms_mod SetVars FuncSymb.
+Export XFo.
 
 Notation SetVars := SetVars.t.
 Notation PredSymb := PredSymb.t.
@@ -96,6 +98,53 @@ Notation " ph [ t | xi ] ":=(substF t xi ph ) (at level 10).
 Check fun (t:Terms) (x:SetVars) => ( t [ t >> x ]).
 Check fun (t:Terms) (x:SetVars) (ph:Fo) => ( ph [ t | x ] ).
 *)
+Module cn := Valuation.Valuation_mod SetVars.
+Section Interpretation.
+Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
+Export Poly.ModProp.
+Context {prI:forall(q:PSV),(Vector.t X (psv q))->Omega}.
+Local Definition teI := @teInterpr X fsI.
+Import cn.
+Definition cng := @cn.cng X.
+Definition dbl_cng := @cn.dbl_cng X.
+
+Fixpoint foInterpr (val:SetVars->X) (f:Fo): Omega.
+Proof.
+destruct f.
+Show Proof.
++ refine (prI p _).
+  apply (@Vector.map Terms X (teI val)).
+  exact t.
++ exact OFalse.
++ exact ( OAnd (foInterpr val f1) (foInterpr val f2)).
++ exact (  OOr (foInterpr val f1) (foInterpr val f2)).
++ exact ( OImp (foInterpr val f1) (foInterpr val f2)).
+Show Proof.
++ exact (forall m:X, foInterpr (cng val x m) f).
++ exact (Osig (fun m:X => foInterpr (fun r:SetVars =>
+match SetVars.eqb r x with
+| true => m
+| false => (val r)
+end
+) f)
+).
+Defined.
+(*
+Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
+Proof.
+destruct f.
++ refine (prI p _).
+  apply (Vector.map  (teI val)).
+  exact t.
++ exact false.
++ exact ( andb (foI val f1) (foI val f2)).
++ exact (  orb (foI val f1) (foI val f2)).
++ exact (implb (foI val f1) (foI val f2)).
++  (*Infinite conjunction!!!*)
+ Show Proof.
+*)
+End Interpretation.
+
 
 
 End Formulas_mod.

@@ -74,5 +74,14 @@ Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
    | FSC f t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
    end.
 
+Section Interpretation.
+Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
+Fixpoint teInterpr 
+   (val:SetVars->X) (t:Terms): X :=
+   match t with
+   | FVC s => val s
+   | FSC f t0 => fsI f (Vector.map (teInterpr val) t0)
+   end.
+End Interpretation.
 
 End terms_mod.
