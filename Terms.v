@@ -2,12 +2,10 @@
 (* Author: Georgy Dunaev, georgedunaev@gmail.com *)
 Require Coq.Vectors.Vector.
 Require Coq.Structures.Equalities.
-(*Type*)
 Import Coq.Structures.Equalities.
 Module  Terms_mod (SetVars FuncSymb: UsualDecidableTypeFull).
 Notation SetVars := SetVars.t.
 Notation FuncSymb := FuncSymb.t.
-(*Parameter FuncSymb : Set.*)
 
 Record FSV := {
  fs : FuncSymb;
@@ -54,7 +52,6 @@ Definition Terms_ind (T : Terms -> Prop)
       H_FSC f v (loopv _ v)
     end.
 
-(*Print SetVars.eqb.*)
 Fixpoint substT (t:Terms) (xi: SetVars) (u:Terms): Terms. 
 Proof.
 destruct u as [s|f t0].

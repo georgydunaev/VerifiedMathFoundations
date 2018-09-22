@@ -6,7 +6,7 @@ Export Formulas.
 Export Coq.Lists.List.
 
 Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
-Module XPro := Formulas_mod SetVars FuncSymb PredSymb.
+Module XPro := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
 Export XPro.
 
 Notation SetVars := SetVars.t.

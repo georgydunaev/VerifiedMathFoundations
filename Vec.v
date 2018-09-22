@@ -1,4 +1,4 @@
-Require Coq.Vectors.Vector.
+Require Vector.
 
 Inductive myeq (A : Type) (x : A) : A -> Type :=
 | myeq_refl : myeq A x x.

@@ -1,5 +1,5 @@
 Module ModProp.
-Definition Omega := Prop.
+Notation Omega := Prop.
 Definition OFalse := False.
 Definition OAnd := and.
 Definition OOr := or.
@@ -9,16 +9,15 @@ End ModProp.
 
 Module ModType.
 Notation Omega := Type.
-Definition OFalse := False. (*Print "+"%type.*)
+Definition OFalse := False.
 Definition OAnd := prod.
 Definition OOr := sum.
 Definition OImp := (fun x y:Omega => x->y).
 Notation Osig := sigT.
 End ModType.
 
-
 Module ModBool.
-Definition Omega := bool.
+Notation Omega := bool.
 Definition OFalse := false.
 Definition OAnd := andb.
 Definition OOr := orb.

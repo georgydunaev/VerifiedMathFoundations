@@ -1,5 +1,5 @@
-Require Coq.Lists.List.
-Require Bool.Bool. 
+Require List.
+Require Bool.
 Require Import Coq.Structures.Equalities.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export Provability.
@@ -17,18 +17,8 @@ Module Facts := BoolEqualityFacts SetVars.
 Lemma ZX (xi:SetVars) :true = negb (SetVars.eqb xi xi) -> False.
 Proof.
 intro q.
-Check Facts.eqb_refl.
 rewrite Facts.eqb_refl in q.
 inversion q.
-Defined.
-
-Definition AtoA (A:Fo) : PR (List.nil) (A-->A).
-Proof.
-apply (MP nil (A-->(A-->A)) _).
-apply a1. (* apply (Hax _ _ (Ha1 _ _)).*)
-apply (MP nil (A-->((A-->A)-->A)) _).
-apply a1.
-apply a2.
 Defined.
 
 Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false): 
@@ -114,8 +104,7 @@ exact true.
 exact (andb (notGenWith xi l _ m1) (notGenWith xi l _ m2)).
 exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ m) ).
 Defined.
-Check isParamF.
-(*Check fun A B=> forall xi:SetVars, (true = isParamF xi A)->(notGenWith xi m).*)
+
 Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
 Proof.
 destruct xi.
@@ -123,16 +112,6 @@ reflexivity.
 simpl.
 exact (HA xi).
 Defined.
-
-(*deleteit Fixpoint ZX (xi:nat) :true = negb (PeanoNat.Nat.eqb xi xi) -> False.
-Proof.
-intro q.
-destruct xi.
-compute in q.
-inversion q.
-rewrite <- HA in q.
-inversion q.
-Defined.*)
 
 Theorem lm (a b :bool)(G:true = (a && b) ): true = a.
 Proof.
@@ -165,15 +144,11 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     pose (J:=weaken _ il nil (AtoA A )).
     rewrite app_nil_r in J.
     exact J.
-(*exact (weaken _ il nil (AtoA A )).
-apply weak.
-exact (AtoA A ).
-exfalso.*)
   * simpl in H.
     apply a1i.
     exact (hyp il _ i).
 + apply a1i.
-apply Hax, a.
+  apply Hax, a.
 (*  apply a1.
 + apply a1i.
   apply a2.
@@ -193,41 +168,35 @@ apply Hax, a.
   fold J.
   fold J in W.
   apply (lm _ _ W).
--
-apply (MP _ (A-->(A0-->B))).
-simple refine (@Ded _ _ _ _ _).
+- apply (MP _ (A-->(A0-->B))).
+  simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
   pose (W:=H xi H0).
   simpl in W.
   apply (lm2 _ _ W).
-(*Last part about GEN*)
-apply a2.
-+
-apply (MP _ (Fora xi (A-->A0))).
-apply GEN.
-simple refine (@Ded _ _ _ _ _).
-  exact m.
-  intros xi0 H0.
-  pose (W:=H xi0 H0).
-  simpl in W.
-* exact (lm2 _ _ W).
-* simpl.
-apply b1.
-pose (r := isParamF xi A).
-pose (U := H xi).
-fold r in U |- *.
-simpl in U.
-
-destruct (N r).
-pose (C:= lm _ _(U H0)).
-exfalso.
-exact (ZX xi C).
-exact H0.
-Show Proof.
+ (*Last part about GEN*)
+  apply a2.
+  + apply (MP _ (Fora xi (A-->A0))).
+    apply GEN.
+    simple refine (@Ded _ _ _ _ _).
+    exact m.
+    intros xi0 H0.
+    pose (W:=H xi0 H0).
+    simpl in W.
+    * exact (lm2 _ _ W).
+    * simpl.
+      apply b1.
+      pose (r := isParamF xi A).
+      pose (U := H xi).
+      fold r in U |- *.
+      simpl in U.
+      destruct (N r).
+      pose (C:= lm _ _(U H0)).
+      exfalso.
+      exact (ZX xi C).
+      exact H0.
 Defined.
-
-(*Fixpoint Ded (A B:Fo)(m:(PR (cons A nil) B)) *)
 
 Definition lm3 (a b :bool)(A: true = a)(B: true = b):true = (a && b) 
 :=
@@ -275,7 +244,6 @@ simpl. try reflexivity.
   rewrite <- Q in U.
   exfalso.
   inversion U.
-Show Proof.
 Defined.
 
 Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PR (cons A il) B))

@@ -22,7 +22,3 @@ apply n5.
 apply not_true_iff_false.
 exact e1.
 Defined.
-
-(*pose (n4:= n3 (proj2 (not_true_iff_false (PeanoNat.Nat.eqb x xi)) i)).
-unfold PeanoNat.Nat.eqb.
-Admitted.*)

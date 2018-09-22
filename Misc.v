@@ -18,7 +18,7 @@ Proof.
 intro p. 
 destruct p.
 firstorder.
-Defined. (* rewrite p. firstorder. *)
+Defined.
 
 Theorem conj_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 /\ B0) = (A1 /\ B1).
 Proof. destruct pA, pB; reflexivity. Defined.
@@ -29,7 +29,7 @@ Proof. destruct pA, pB; reflexivity. Defined.
 
 Lemma EqualThenEquiv A B: A=B -> (A<->B). intro H. rewrite H. exact (iff_refl B). Defined.
 
-Lemma ix W (P Q:W->Prop) (H: P = Q):(forall x, P x) =(forall y, Q y).
+Lemma ix W (P Q:W->Prop) (H: P = Q):(forall x, P x)=(forall y, Q y).
 Proof.
 rewrite H.
 reflexivity.
@@ -75,7 +75,7 @@ split.
   exact (H m).
 Defined.
 
-Import Bool.Bool.
+Import Bool.
 Lemma orb_elim (a b:bool): ((a||b)=false)->((a=false)/\(b=false)).
 Proof.
 intros. destruct a,b. 

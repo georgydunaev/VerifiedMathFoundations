@@ -14,11 +14,6 @@ Module XFo := Terms_mod SetVars FuncSymb.
 Export cn.
 Export XFo.
 
-Check XFo.Terms.
-Check Terms.
-Check teI.
-
-
 Notation SetVars := SetVars.t.
 Notation PredSymb := PredSymb.t.
 Notation FuncSymb := FuncSymb.t.
@@ -27,10 +22,7 @@ Record PSV := MPSV{
  ps : PredSymb;
  psv : nat;
 }.
-(*Check Terms.
-Check terms_mod.Terms.
-Check Formulas_mod.Terms.*)
-(*Formulas*)
+
 Inductive Fo :=
  |Atom (p:PSV) : (Vector.t Terms (psv p)) ->  Fo
  |Bot :Fo
@@ -93,9 +85,7 @@ refine (match (isParamF xi (Exis x u)) with
           | true => None
           end
 | false => Some (Exis x u) end).
-Show Proof.
 Defined.
-
 
 Definition Top:Fo := Impl Bot Bot.
 
@@ -112,15 +102,10 @@ Check fun (t:Terms) (x:SetVars) (ph:Fo) => ( ph [ t | x ] ).
 Section Interpretation.
 Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
 Context {prI:forall(q:PSV),(Vector.t X (psv q))->Omega}.
-(*Local Definition teI := @teInterpr X fsI.*)
-
-(*Definition cng := @cn.cng X.
-Definition dbl_cng := @cn.dbl_cng X.*)
 
 Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
 Proof.
 destruct f.
-Show Proof.
 + refine (prI p _).
   eapply (@Vector.map Terms X (@teI _ fsI val)).
   exact t.
@@ -128,13 +113,12 @@ Show Proof.
 + exact ( OAnd (foI val f1) (foI val f2)).
 + exact (  OOr (foI val f1) (foI val f2)).
 + exact ( OImp (foI val f1) (foI val f2)).
-Show Proof.
 + exact (forall m:X, foI (cng val x m) f).
 + exact (Osig (fun m:X => foI (fun r:SetVars =>
-match SetVars.eqb r x with
-| true => m
-| false => (val r)
-end
+   match SetVars.eqb r x with
+   | true => m
+   | false => (val r)
+   end
 ) f)
 ).
 Defined.
@@ -153,7 +137,5 @@ destruct f.
  Show Proof.
 *)
 End Interpretation.
-
-
 
 End Formulas_mod.
