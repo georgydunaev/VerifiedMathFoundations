@@ -76,10 +76,10 @@ apply inr. (*or_intror *)
 exact i.
 apply Hax. apply a.
 (*apply a1.
-apply a2.*)
+apply a2.
 apply a12.
 apply b1.
-assumption.
+assumption. *)
 apply (@MP _ A0).
 apply weak.
 exact x1.
@@ -176,12 +176,12 @@ exfalso.*)
 apply Hax, a.
 (*  apply a1.
 + apply a1i.
-  apply a2.*)
+  apply a2.
 + apply a1i.
   apply a12.
 + apply a1i.
   apply b1.
-  trivial.
+  trivial.*)
 + apply (MP _ (A-->A0)).
 - simple refine (@Ded _ _ _ _ _).
   exact m1.
