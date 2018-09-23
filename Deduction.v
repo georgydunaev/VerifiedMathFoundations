@@ -26,7 +26,8 @@ Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false):
  PR nil (ps --> ph) -> PR nil (ps --> Fora xi ph).
 Proof.
 intro q.
-apply (MP nil (Fora xi (ps --> ph))).
+apply MP with (A:=(Fora xi (ps --> ph))).
+(*apply (MP nil (Fora xi (ps --> ph))).*)
 + apply GEN.
   exact q.
 + apply (b1 _).
@@ -37,12 +38,12 @@ Definition gen (A:Fo) (xi:SetVars) (*Generalization from Bernay's rule*)
 : PR nil (A) -> PR nil (Fora xi A).
 Proof.
 intro q.
-apply (MP nil Top).
+apply MP with (A:= Top).
 unfold Top.
 exact (AtoA Bot).
-apply (MP nil (Fora xi (Top --> A))).
+apply MP with (A:= (Fora xi (Top --> A))).
 * apply GEN.
-  apply (MP nil A).
+  apply MP with (A:= A).
   + exact q.
   + apply a1.
 * apply b1.
@@ -54,7 +55,7 @@ Definition neg (f:Fo):= (Impl f Bot).
 Definition a1i (A B : Fo)(l : list Fo):(PR l B)->(PR l (Impl A B)).
 Proof.
 intros x.
-apply (MP l B).
+apply MP with (A:= B).
 exact x.
 apply a1.
 Defined.
@@ -71,7 +72,7 @@ apply a2.
 apply a12.
 apply b1.
 assumption. *)
-apply (MP _ A0).
+apply MP with (A:= A0).
 apply weak.
 exact x1.
 apply weak.
@@ -147,7 +148,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     exact J.
   * simpl in H.
     apply a1i.
-    exact (hyp il _ i).
+    exact (hyp _ il _ i).
 + apply a1i.
   apply Hax, a.
 (*  apply a1.
@@ -158,7 +159,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
 + apply a1i.
   apply b1.
   trivial.*)
-+ apply (MP _ (A-->A0)).
++ apply MP with (A:= (A-->A0)).
 - simple refine (@Ded _ _ _ _ _).
   exact m1.
   intros xi H0.
@@ -169,7 +170,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   fold J.
   fold J in W.
   apply (lm _ _ W).
-- apply (MP _ (A-->(A0-->B))).
+- apply MP with (A:= (A-->(A0-->B))).
   simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
@@ -178,7 +179,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   apply (lm2 _ _ W).
  (*Last part about GEN*)
   apply a2.
-  + apply (MP _ (Fora xi (A-->A0))).
+  + apply MP with (A:= (Fora xi (A-->A0))).
     apply GEN.
     simple refine (@Ded _ _ _ _ _).
     exact m.
@@ -251,6 +252,7 @@ Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PR (cons A il) B))
 (NP:forall xi:SetVars, (false = isParamF xi A)) 
 {struct m}:(PR il (A-->B)).
 Proof.
+(*unshelve eapply Ded.*)
 simple refine (Ded _ _ _ _ _).
 exact m.
 intros xi H.

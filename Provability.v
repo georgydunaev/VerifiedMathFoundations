@@ -33,16 +33,16 @@ Inductive AxiomH : Fo -> Type :=
 AxiomH (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .
 
-Inductive GPR {axs : Fo -> Type} (ctx:list Fo) : Fo -> Type :=
-| hyp (A : Fo): (InL A ctx)-> @GPR axs ctx A
-| Hax (A : Fo): (axs A) -> @GPR axs ctx A
-| MP (A B: Fo) : (@GPR axs ctx A)->(@GPR axs ctx (Impl A B))
-                 ->(@GPR axs ctx B)
-| GEN (A : Fo) (xi:SetVars.t): (@GPR axs ctx A)->(@GPR axs ctx (Fora xi A))
+Inductive GPR (axs : Fo -> Type) (ctx:list Fo) : Fo -> Type :=
+| hyp (A : Fo): (InL A ctx)-> GPR axs ctx A
+| Hax (A : Fo): (axs A) -> GPR axs ctx A
+| MP (A B: Fo) : (GPR axs ctx A)->(GPR axs ctx (Impl A B))
+                 ->(GPR axs ctx B)
+| GEN (A : Fo) (xi:SetVars.t): (GPR axs ctx A)->(GPR axs ctx (Fora xi A))
 .
 
 (* Provability in predicate calculus *)
-Definition PR := @GPR AxiomH.
+Definition PR := GPR AxiomH.
 
 (*Inductive PR (axi:list Fo) : Fo -> Type :=
 | hyp (A : Fo): (InL A axi)-> @PR axi A
@@ -68,12 +68,12 @@ Definition b1 axi (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
 @PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax, Hb1, H. Defined.
 
-
-Definition AtoA {axi} (A:Fo) : PR axi (A-->A).
+Arguments GPR {axs}.
+Definition AtoA {ctx} (A:Fo) : PR ctx (A-->A).
 Proof.
-apply (MP axi (A-->(A-->A)) _).
+apply MP with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
 apply a1. (* apply (Hax _ _ (Ha1 _ _)).*)
-apply (MP axi (A-->((A-->A)-->A)) _).
+apply MP with (A:= A-->((A-->A)-->A)).
 apply a1.
 apply a2.
 Defined.

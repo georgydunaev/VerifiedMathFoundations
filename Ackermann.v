@@ -27,32 +27,51 @@ Import VectorNotations.
 Section inf_sec.
 Context (en:nat->PredSymb.t) (enInj: forall x1 x2, en x1 = en x2 -> x1=x2).
 (*Module Facts := BoolEqualityFacts SetVars.*)
+Notation "( a '==' b )" :=
+(Atom {| ps := en 0; psv := 2 |} [a:Terms; b:Terms]).
+Notation "( a 'e.' b )" := (Atom {| ps := en 1; psv := 2 |} [a:Terms; b:Terms]).
+
 Inductive AxiomAST : Fo -> Type :=
 | aPC  :> forall {A}, (AxiomH A) -> (AxiomAST A)
-| aeq1 : forall (x:SetVars.t), (AxiomAST (Atom (MPSV (en 0) 2) [FVC x ; FVC x]))
+| aeq1 : forall (x:SetVars.t), AxiomAST (x == x)
+(*AxiomAST (Atom (MPSV (en 0) 2) [FVC x ; FVC x])*)
 | aeq2 : forall (x y:SetVars.t) (f r:Fo)
 (H:substF y x f = Some r)
-, (AxiomAST (Atom (MPSV (en 0) 2) [FVC x ; FVC y] --> ( r --> f) ))
+, AxiomAST ((x == y) --> ( r --> f ))
+(*AxiomAST (Atom (MPSV (en 0) 2) [FVC x ; FVC y] --> ( r --> f) ))*)
 .
 
 (* (MPSV 0 2) - = 
    (MPSV 1 2) - \in
 *)
 (*Check AxiomAST (Ha1 Bot Bot). ? *)
+Check Vector.cons .
+(*Notation "( a '==' b )" := (Atom (MPSV (en 0) 2) [FVC a ; FVC b]).*)
+(*Notation "( a '==' b )" := (Atom (MPSV (en 0) 2) [a:Terms ; b:Terms]).
+Notation "( a 'e.' b )" := (Atom (MPSV (en 1) 2) [a:Terms ; b:Terms]).
+*)
 
-Notation "( a '==' b )" := (Atom (MPSV (en 0) 2) [a ; b]).
-Notation "( a 'e.' b )" := (Atom (MPSV (en 1) 2) [a ; b]).
 
 (* Provability in Ackermann set theory *)
 Definition APR := @GPR AxiomAST.
 (* Mendelson p.102/447 *)
 (*Coercion FVC : SetVars.t >-> Terms.*)
 (*Coercion Q : (Vector.t SetVars.t n) >-> (Vector.t Terms n).*)
+Theorem J (y:SetVars.t): Terms.
+exact y. Defined.
+Definition p2_23_a ctx (t:Terms) (x:SetVars.t): APR ctx (t == t).
 
-Definition p2_23_a ctx (t:Terms) (x:SetVars.t): 
-APR ctx (Atom (MPSV (en 0) 2) [t ; t]).
-Proof. (* (Atom (MPSV (en 0) 2) [FVC x ; FVC x]) *)
-apply MP with (A:= Fora x (FVC x== FVC x)).
+Theorem q x: (x == x) = (Atom {| ps := en 0; psv := 2 |} [x; x]).
+Proof. reflexivity. Defined.
+
+Proof. 
+apply MP with (A:= Fora x (x == x)).
+(*
+try fold (Fora x (x == x)).
+try rewrite <- q.
+pose (q:= (x == x)).
+replace (Atom {| ps := en 0; psv := 2 |} [FVC x; FVC x]) with (x == x).
+*)
 apply GEN.
 apply Hax, (aeq1 x).
 apply Hax, aPC.
@@ -61,8 +80,8 @@ simpl.
 rewrite -> Facts.eqb_refl.
 reflexivity.
 Defined.
-Definition p2_23_b ctx (t s:Terms) (x:SetVars.t): 
-APR ctx ((Atom (MPSV (en 0) 2) [t ; t]) --> (Atom (MPSV (en 0) 2) [t ; t]) ).
+Definition p2_23_b ctx (t s:Terms) (x:SetVars.t):
+APR ctx ((t==s) --> (s==t) ).
 Proof.
 
 Abort.
