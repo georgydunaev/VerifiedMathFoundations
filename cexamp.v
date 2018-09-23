@@ -1,20 +1,26 @@
-Require Import Coq.Structures.Equalities.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
-(*Require PredicateCalculus.*)
+Require Import Coq.Structures.Equalities.
+Require PredicateCalculus.
 Require Terms.
+
 (*UsualDecidableTypeFull)*)
-Module nat_is_UDTF . 
+Module nat_is_UDTF .
 Definition t :=nat.
 Definition SetVars:=nat.
 End nat_is_UDTF.
-Module eexampl := Terms.terms_mod PeanoNat.Nat PeanoNat.Nat.
+
+Module eexampl := 
+PredicateCalculus.Soundness_mod PeanoNat.Nat PeanoNat.Nat PeanoNat.Nat.
 
 Module counterexample.
-Import eexampl.
+Export eexampl.
+(* OK
 Print SetVars.
 Print FuncSymb.
-Print eexampl.FSV.
 Check FSV.
+*)
+(*Print eexampl.FSV.*)
+
 (*Module example1 : Terms.terms_mod PeanoNat.Nat (*nat_is_UDTF*).*)
 (*Definition FuncSymb := nat.
 Record FSV := {
@@ -35,6 +41,8 @@ Set Elimination Schemes.
 *)
 
 (* TODO: add *)
+
+(* OK!
 Print Fo.
 Check Atom.
 Print PSV.
@@ -42,40 +50,11 @@ Check Atom (MPSV 0 2).
 Print Terms.
 Check Atom (MPSV 0 2).
 Print Vector.t.
-Import
-
-End counterexample.
-
-Module Type exVS (X: Terms.terms_mod).
-Check X.FuncSymb.
-Print X.FSV.
-End exVS.
-
-Module example2 : exVS example1.
-
-Check example1.FuncSymb.
-Print Fo.
-
-(*Check newt.PR.*)
-
-End example2.
-
-
-Module example2_1 : exVS.
-Module X := example1.
-Import X.
-End example2_1.
-
-
-Module Type newt (v:PredicateCalculus.VS).
-
-
-
-
-(* COUNTEREXAMPLE
-Check Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC v0) _ (Vector.nil _ )).
-Check Atom (MPSV 0 2) 
+Check Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC 0) _ (Vector.nil _ )).
+Check Atom (MPSV 0 2)
 (Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC 0) _ (Vector.nil _ ))).
+*)
+
 Definition xeqy := Atom (MPSV 0 2) 
 (Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC 0) _ (Vector.nil _ ))).
 
@@ -83,21 +62,32 @@ Theorem upr : PR (xeqy::nil) (Fora 2 xeqy).
 Proof.
 apply GEN.
 apply hyp.
-simpl. (*Print "+"%type.*) 
+simpl.
 apply inl.
 reflexivity.
 Defined.
+(* COUNTEREXAMPLE*)
 (* PR is from provability, but it is better to call it derivability.*)
-
+Section cor.
+Context (X:Type).
+Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
+Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
+(*Arguments foI X fsI prI .
+Print Implicit foI.
+Check foI.*)
+Definition foIn := @foI X fsI prI.
 Theorem badcorrect (x1 x2 : X) (nequ : ~(x1=x2))
 (f:Fo) (l:list Fo) (m:PR l f) :
-~ (forall(val:SetVars->X) (lfi : forall h:Fo, (InL h l)->(foI val h)), foI val f).
+~ (forall(val:SetVars->X) (lfi : forall h:Fo, (InL h l)->(foIn val h)), foIn val f).
 Proof.
 intro H.
 assert (val:SetVars->X).
  intro n. destruct n eqn:nn. exact x1.
-          destruct s eqn:ss. exact x2. exact x2.
-Abort.*)
+(*          destruct s eqn:ss. exact x2. exact x2.*)
+Abort.
+End cor.
+
+End counterexample.
 
 (* IT IS NOT POSSIBLE TO PROVE THIS THEOREM:
 Fixpoint correct (f:Fo) (l:list Fo) (val:SetVars->X) (m:PR l f) 
@@ -177,3 +167,29 @@ simpl.
   simpl.
 *)
 Abort. *)
+
+(*TRASH
+Module Type exVS (X: Terms.terms_mod).
+Check X.FuncSymb.
+Print X.FSV.
+End exVS.
+
+Module example2 : exVS example1.
+
+Check example1.FuncSymb.
+Print Fo.
+
+(*Check newt.PR.*)
+
+End example2.
+
+
+Module example2_1 : exVS.
+Module X := example1.
+Import X.
+End example2_1.
+
+
+Module Type newt (v:PredicateCalculus.VS).
+
+*)

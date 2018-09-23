@@ -70,7 +70,7 @@ apply a2.
 apply a12.
 apply b1.
 assumption. *)
-apply (@MP _ A0).
+apply (MP _ A0).
 apply weak.
 exact x1.
 apply weak.

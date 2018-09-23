@@ -14,7 +14,7 @@ Notation PredSymb := PredSymb.t.
 Notation FuncSymb := FuncSymb.t.
 (*Notation " x --> y ":=(Impl x y) (at level 80).*)
 
-Open Scope list_scope.
+(*Open Scope list_scope.*)
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
   match l with
@@ -31,7 +31,17 @@ Inductive AxiomH : Fo -> Type :=
 AxiomH (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .
 
-Inductive PR (axi:list Fo) : Fo -> Type :=
+Inductive GPR {axs : Fo -> Type} (ctx:list Fo) : Fo -> Type :=
+| hyp (A : Fo): (InL A ctx)-> @GPR axs ctx A
+| Hax (A : Fo): (axs A) -> @GPR axs ctx A
+| MP (A B: Fo) : (@GPR axs ctx A)->(@GPR axs ctx (Impl A B))
+                 ->(@GPR axs ctx B)
+| GEN (A : Fo) (xi:SetVars): (@GPR axs ctx A)->(@GPR axs ctx (Fora xi A))
+.
+
+Definition PR := @GPR AxiomH.
+
+(*Inductive PR (axi:list Fo) : Fo -> Type :=
 | hyp (A : Fo): (InL A axi)-> @PR axi A
 | Hax (A : Fo): (AxiomH A) -> @PR axi A
 (*| a1 (A B: Fo) : @PR axi (Impl A (Impl B A))
@@ -45,7 +55,7 @@ Inductive PR (axi:list Fo) : Fo -> Type :=
 @PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ) *)
 | MP (A B: Fo) : (@PR axi A)->(@PR axi (Impl A B))->(@PR axi B)
 | GEN (A : Fo) (xi:SetVars): (@PR axi A)->(@PR axi (Fora xi A))
-.
+.*)
 
 Definition a1 axi A B : @PR axi (Impl A (Impl B A)).
 Proof. apply Hax, Ha1. Defined.

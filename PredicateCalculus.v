@@ -13,7 +13,8 @@ Require Valuation.
 Export Provability.
 Export Misc.
 Require Import Coq.Structures.Equalities.
-Module VS (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
+
+Module Soundness_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module XPr := Provability.Provability_mod SetVars FuncSymb PredSymb.
 Module Facts := BoolEqualityFacts SetVars.
 Module cn := Valuation.Valuation_mod SetVars.
@@ -663,4 +664,4 @@ Defined.
 (** SOUNDNESS IS PROVED **)
 End cor.
 (*End sec0.*)
-End VS.
+End Soundness_mod.
