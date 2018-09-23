@@ -14,7 +14,7 @@ PredicateCalculus.Soundness_mod PeanoNat.Nat PeanoNat.Nat PeanoNat.Nat.
 
 Module counterexample.
 Export eexampl.
-(* OK
+(*
 Print SetVars.
 Print FuncSymb.
 Check FSV.

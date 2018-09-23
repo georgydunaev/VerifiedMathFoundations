@@ -663,5 +663,7 @@ induction m (* eqn: meq *); intros lfi val.
 Defined.
 (** SOUNDNESS IS PROVED **)
 End cor.
+(*Print Assumptions correct.*)
+
 (*End sec0.*)
 End Soundness_mod.
