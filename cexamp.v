@@ -83,10 +83,10 @@ Check foI.*)
 Definition foIn := @foI X fsI prI.
 Theorem badcorrect (x1 x2 : X) (nequ : ~(x1=x2))
 (f:Fo) (l:list Fo) (m:PR l f) :
-~ (forall(val:SetVars->X) (lfi : forall h:Fo, (InL h l)->(foIn val h)), foIn val f).
+~ (forall(val:SetVars.t->X) (lfi : forall h:Fo, (InL h l)->(foIn val h)), foIn val f).
 Proof.
 intro H.
-assert (val:SetVars->X).
+assert (val:SetVars.t->X).
  intro n. destruct n eqn:nn. exact x1.
 (*          destruct s eqn:ss. exact x2. exact x2.*)
 Abort.

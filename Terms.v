@@ -3,18 +3,18 @@
 Require Coq.Vectors.Vector.
 Require Coq.Structures.Equalities.
 Import Coq.Structures.Equalities.
-Module  Terms_mod (SetVars FuncSymb: UsualDecidableTypeFull).
-Notation SetVars := SetVars.t (*only parsing*).
-Notation FuncSymb := FuncSymb.t (*only parsing*).
+Module Terms_mod (SetVars FuncSymb: UsualDecidableTypeFull).
+(*Local Notation SetVars := SetVars.t (*only parsing*).
+Local Notation FuncSymb := FuncSymb.t (*only parsing*).*)
 
 Record FSV := {
- fs : FuncSymb;
+ fs : FuncSymb.t;
  fsv : nat;
 }.
 
 Unset Elimination Schemes.
 Inductive Terms : Type :=
-| FVC :> SetVars -> Terms
+| FVC :> SetVars.t -> Terms
 | FSC (f:FSV) : (Vector.t Terms (fsv f)) -> Terms.
 Set Elimination Schemes.
 
@@ -52,7 +52,7 @@ Definition Terms_ind (T : Terms -> Prop)
       H_FSC f v (loopv _ v)
     end.
 
-Fixpoint substT (t:Terms) (xi: SetVars) (u:Terms): Terms. 
+Fixpoint substT (t:Terms) (xi: SetVars.t) (u:Terms): Terms. 
 Proof.
 destruct u as [s|f t0].
 2 : {
@@ -66,7 +66,7 @@ destruct u as [s|f t0].
 }
 Defined.
 
-Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
+Fixpoint isParamT (xi : SetVars.t) (t : Terms) {struct t} : bool :=
    match t with
    | FVC s => SetVars.eqb s xi
    | FSC f t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
@@ -75,7 +75,7 @@ Fixpoint isParamT (xi : SetVars) (t : Terms) {struct t} : bool :=
 Section Interpretation.
 Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
 Fixpoint teI
-   (val:SetVars->X) (t:Terms): X :=
+   (val:SetVars.t->X) (t:Terms): X :=
    match t with
    | FVC s => val s
    | FSC f t0 => fsI f (Vector.map (teI val) t0)
