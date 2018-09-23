@@ -81,5 +81,4 @@ Fixpoint teI
    | FSC f t0 => fsI f (Vector.map (teI val) t0)
    end.
 End Interpretation.
-
 End Terms_mod.

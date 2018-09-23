@@ -9,9 +9,9 @@ Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module XPro := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
 Export XPro.
 
-Notation SetVars := SetVars.t.
-Notation PredSymb := PredSymb.t.
-Notation FuncSymb := FuncSymb.t.
+Notation SetVars := SetVars.t (only parsing).
+Notation PredSymb := PredSymb.t (only parsing).
+Notation FuncSymb := FuncSymb.t (only parsing).
 (*Notation " x --> y ":=(Impl x y) (at level 80).*)
 
 (*Open Scope list_scope.*)
@@ -39,6 +39,7 @@ Inductive GPR {axs : Fo -> Type} (ctx:list Fo) : Fo -> Type :=
 | GEN (A : Fo) (xi:SetVars): (@GPR axs ctx A)->(@GPR axs ctx (Fora xi A))
 .
 
+(* Provability in predicate calculus *)
 Definition PR := @GPR AxiomH.
 
 (*Inductive PR (axi:list Fo) : Fo -> Type :=

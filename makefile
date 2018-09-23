@@ -20,4 +20,5 @@ all:
 	$(CC)Provability.v && \
 	$(CC)Deduction.v && \
 	$(CC)PredicateCalculus.v && \
-	$(CC)cexamp.v 
+	$(CC)cexamp.v  && \
+	$(CC)Ackermann.v
