@@ -13,10 +13,10 @@ Module cn := Valuation_mod SetVars.
 Module XFo := Terms_mod SetVars FuncSymb.
 Export cn.
 Export XFo.
-
-Notation SetVars := SetVars.t.
-Notation PredSymb := PredSymb.t.
-Notation FuncSymb := FuncSymb.t.
+(*
+Notation SetVars := SetVars.t (*only parsing*).
+Notation FuncSymb := FuncSymb.t (only parsing). *)
+Notation PredSymb := PredSymb.t (*only parsing*).
 
 Record PSV := MPSV{
  ps : PredSymb;

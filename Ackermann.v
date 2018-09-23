@@ -12,20 +12,20 @@ Module X := Provability_mod SetVars FuncSymb PredSymb.
 Export X.
 Export Coq.Lists.List.
 Import Bool.Bool.
-(*
-Notation SetVars := SetVars.t (only parsing).
-Notation PredSymb := PredSymb.t (only parsing).
+
+(*Notation SetVars := SetVars.t (*only parsing*).
 Notation FuncSymb := FuncSymb.t (only parsing).
-*)
-Import VectorNotations.
+Notation PredSymb := PredSymb.t (*only parsing*).*)
 Check substF.
+Import VectorNotations.
+(*Check substF.*)
 
 (*Module Facts := BoolEqualityFacts SetVars.*)
 Inductive AxiomAST : Fo -> Type :=
 | aPC  :> forall {A}, (AxiomH A) -> (AxiomAST A)
 | aeq1 : forall (x:SetVars), (AxiomAST (Atom (MPSV 0 2) [FVC x ; FVC x]))
 | aeq2 : forall (x y:SetVars) (f r:Fo) 
-(*H: subst y *)
+(*H: substF y *)
 , (AxiomAST (Atom (MPSV 0 1) [FVC x] ))
 .
 

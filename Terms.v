@@ -4,8 +4,8 @@ Require Coq.Vectors.Vector.
 Require Coq.Structures.Equalities.
 Import Coq.Structures.Equalities.
 Module  Terms_mod (SetVars FuncSymb: UsualDecidableTypeFull).
-Notation SetVars := SetVars.t.
-Notation FuncSymb := FuncSymb.t.
+Notation SetVars := SetVars.t (*only parsing*).
+Notation FuncSymb := FuncSymb.t (*only parsing*).
 
 Record FSV := {
  fs : FuncSymb;

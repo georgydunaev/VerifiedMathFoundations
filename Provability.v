@@ -9,9 +9,11 @@ Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module XPro := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
 Export XPro.
 
+(*
 Notation SetVars := SetVars.t (only parsing).
-Notation PredSymb := PredSymb.t (only parsing).
 Notation FuncSymb := FuncSymb.t (only parsing).
+Notation PredSymb := PredSymb.t (only parsing).
+*)
 (*Notation " x --> y ":=(Impl x y) (at level 80).*)
 
 (*Open Scope list_scope.*)

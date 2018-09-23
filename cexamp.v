@@ -9,8 +9,13 @@ Definition t :=nat.
 Definition SetVars:=nat.
 End nat_is_UDTF.
 
+Module SetVars := PeanoNat.Nat.
+Module FuncSymb := PeanoNat.Nat.
+Module PredSymb := PeanoNat.Nat.
 Module eexampl := 
-PredicateCalculus.Soundness_mod PeanoNat.Nat PeanoNat.Nat PeanoNat.Nat.
+PredicateCalculus.Soundness_mod SetVars FuncSymb PredSymb.
+(*Module eexampl := 
+PredicateCalculus.Soundness_mod PeanoNat.Nat PeanoNat.Nat PeanoNat.Nat.*)
 
 Module counterexample.
 Export eexampl.

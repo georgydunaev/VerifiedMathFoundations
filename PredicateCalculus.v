@@ -20,9 +20,9 @@ Module Facts := BoolEqualityFacts SetVars.
 Module cn := Valuation.Valuation_mod SetVars.
 Export XPr.
 Export cn.
-Notation SetVars := SetVars.t.
-Notation PredSymb := PredSymb.t.
-Notation FuncSymb := FuncSymb.t.
+Notation SetVars := SetVars.t (only parsing).
+Notation FuncSymb := FuncSymb.t (only parsing).
+Notation PredSymb := PredSymb.t (only parsing).
 
 (* Here we choose an interpretation. *)
 (*Export ModBool.*)

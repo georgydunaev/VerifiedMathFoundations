@@ -9,9 +9,10 @@ Module X := Provability_mod SetVars FuncSymb PredSymb.
 Export X.
 Export Coq.Lists.List.
 Import Bool.Bool.
-Notation SetVars := SetVars.t.
-Notation PredSymb := PredSymb.t.
-Notation FuncSymb := FuncSymb.t.
+Notation SetVars := SetVars.t (only parsing).
+Notation FuncSymb := FuncSymb.t (only parsing).
+Notation PredSymb := PredSymb.t (only parsing).
+
 Module Facts := BoolEqualityFacts SetVars.
 
 Lemma ZX (xi:SetVars) :true = negb (SetVars.eqb xi xi) -> False.
