@@ -68,7 +68,7 @@ Definition b1 axi (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
 @PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax, Hb1, H. Defined.
 
-Arguments GPR {axs}.
+(*Arguments GPR {axs}.*)
 Definition AtoA {ctx} (A:Fo) : PR ctx (A-->A).
 Proof.
 apply MP with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
