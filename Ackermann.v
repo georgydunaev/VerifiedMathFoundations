@@ -96,6 +96,8 @@ Proof.
 Fail Check Ded.
 Fail intro b.
 Admitted.
+
+
 Definition p2_23_b ctx (t s:Terms) (x y:SetVars.t):
 APR ctx ((t==s) --> (s==t) ).
 Proof.

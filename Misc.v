@@ -85,3 +85,21 @@ firstorder.
 firstorder.
 Defined.
 
+Lemma orb_intro (a b:bool): ((a=false)/\(b=false))->((a||b)=false).
+Proof.
+intros. firstorder.
+Defined.
+
+Theorem lm2 (a b :bool)(G:true = (a && b) ): true = b.
+Proof.
+destruct a.
+trivial.
+inversion G.
+Defined.
+
+Theorem N (rr:bool): (true=rr \/ rr=false).
+Proof.
+destruct rr; firstorder.
+Defined.
+
+

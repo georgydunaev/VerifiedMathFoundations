@@ -664,8 +664,22 @@ induction m (* eqn: meq *); intros lfi val.
   exact B.
 Defined.
 (** SOUNDNESS IS PROVED **)
+
+Check foI. 
+
+(*
+Theorem completeness (f:Fo)
+(H : forall (val:SetVars.t->X), @foI X fsI prI val f)
+ : 
+exists  (l:list Fo)
+(lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars.t->X), 
+(@foI X fsI prI val h)), PR l f
+.
+Proof.
+Defined. *)
 End cor.
 (*Print Assumptions correct.*)
+
 
 (*End sec0.*)
 End Soundness_mod.

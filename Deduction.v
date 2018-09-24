@@ -1,7 +1,9 @@
 Require List.
 Require Bool.
 Require Import Coq.Structures.Equalities.
+
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
+Require Import Misc.
 Require Export Provability.
 
 Module Deduction_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
@@ -122,17 +124,6 @@ trivial.
 inversion G.
 Defined.
 
-Theorem lm2 (a b :bool)(G:true = (a && b) ): true = b.
-Proof.
-destruct a.
-trivial.
-inversion G.
-Defined.
-
-Theorem N (rr:bool): (true=rr \/ rr=false).
-Proof.
-destruct rr; firstorder.
-Defined.
 
 Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PR (cons A il) B)) 
 (H:forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m))
@@ -249,15 +240,40 @@ simpl. try reflexivity.
 Defined.
 
 Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PR (cons A il) B))
-(NP:forall xi:SetVars, (false = isParamF xi A)) 
+(NP:forall xi:SetVars, (isParamF xi A = false)) 
 {struct m}:(PR il (A-->B)).
 Proof.
 (*unshelve eapply Ded.*)
 simple refine (Ded _ _ _ _ _).
 exact m.
 intros xi H.
-rewrite <- NP in H.
+rewrite -> NP in H.
 inversion H.
+Defined.
+Check orb_elim.
+Definition swap ctx A B C
+(HA : forall xi : SetVars.t, isParamF xi A = false)
+(HB : forall xi : SetVars.t, isParamF xi B = false)
+(HC : forall xi : SetVars.t, isParamF xi C = false) :
+(PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+Proof.
+unshelve eapply SimplDed. 
+2 : { intro xi.
+simpl.
+apply orb_intro. split. apply HA.
+apply orb_intro. split. apply HB. apply HC.
+}
+unshelve eapply SimplDed. 2 : apply HB.
+unshelve eapply SimplDed. 2 : apply HA.
+(*assert (l1 : PR (A :: B :: (A --> (B --> C)) :: ctx) (B --> C)).
+admit.*)
+apply MP with (A:=B).
+Print GPR.
+apply hyp.
+simpl. firstorder. (*apply inr.*)
+apply MP with (A:=A).
+apply hyp; firstorder.
+apply hyp; firstorder.
 Defined.
 
 End Deduction_mod.
