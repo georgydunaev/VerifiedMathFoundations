@@ -13,15 +13,16 @@ Require Valuation.
 Export Provability.
 Export Misc.
 Require Import Coq.Structures.Equalities.
-Module VS (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
+
+Module Soundness_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module XPr := Provability.Provability_mod SetVars FuncSymb PredSymb.
 Module Facts := BoolEqualityFacts SetVars.
 Module cn := Valuation.Valuation_mod SetVars.
 Export XPr.
 Export cn.
-Notation SetVars := SetVars.t.
-Notation PredSymb := PredSymb.t.
-Notation FuncSymb := FuncSymb.t.
+(*Notation SetVars := SetVars.t (only parsing).
+Notation FuncSymb := FuncSymb.t (only parsing).
+Notation PredSymb := PredSymb.t (only parsing).*)
 
 (* Here we choose an interpretation. *)
 (*Export ModBool.*)
@@ -35,7 +36,8 @@ Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
 
 Section Lem1.
 (* page 136 of the book *)
-Definition lem1 (t : Terms) : forall (u :Terms) (xi : SetVars) (pi : SetVars->X) ,
+Definition lem1 (t : Terms) : forall (u :Terms) 
+(xi : SetVars.t) (pi : SetVars.t->X) ,
 (@teI X fsI pi (substT t xi u))=(@teI X fsI (cng pi xi (@teI X fsI pi t)) u).
 Proof.
 fix lem1 1.
@@ -76,7 +78,7 @@ apply all_then_someV. trivial.
 Defined.
 
 (* Not a parameter then not changed afted substitution (for Terms) *)
-Lemma NPthenNCAST (u:Terms)(xi:SetVars)(t:Terms) (H:(isParamT xi u=false))
+Lemma NPthenNCAST (u:Terms)(xi:SetVars.t)(t:Terms) (H:(isParamT xi u=false))
 : (substT t xi u) = u.
 Proof. induction u.
 + simpl in * |- *.
@@ -106,7 +108,7 @@ exact H.
 Defined.
 
 (* Not a parameter then not changed afted substitution (for Formulas) *)
-Fixpoint NPthenNCASF (mu:Fo) : forall (xi:SetVars)(t:Terms) (H:(isParamF xi mu=false))
+Fixpoint NPthenNCASF (mu:Fo) : forall (xi:SetVars.t)(t:Terms) (H:(isParamF xi mu=false))
    , substF t xi mu = Some mu .
 Proof. (*induction mu eqn:u0.*)
 destruct mu eqn:u0.
@@ -225,7 +227,7 @@ induction t.
   apply H.
 Defined.
 
-Lemma weafunF (pi mu:SetVars->X) (q: forall z, pi z = mu z) fi
+Lemma weafunF (pi mu:SetVars.t->X) (q: forall z, pi z = mu z) fi
 : @foI X fsI prI pi fi <-> @foI X fsI prI mu fi.
 Proof.
 revert pi mu q.
@@ -321,7 +323,7 @@ reflexivity. reflexivity. reflexivity.
 Defined.
 
 Lemma lem2caseAtom : forall (p : PSV) (t0 : Vector.t Terms (psv p))
-(t : Terms) (xi : SetVars) (pi : SetVars->X)
+(t : Terms) (xi : SetVars.t) (pi : SetVars.t->X)
 (r:Fo) (H:(substF t xi (Atom p t0)) = Some r) ,
 @foI X fsI prI pi r <-> @foI X fsI prI (cng pi xi (@teI X fsI pi t)) (Atom p t0).
 Proof.
@@ -459,7 +461,8 @@ simpl in * |- *.
   exact e1.
 Defined.
 
-Definition lem2 (t : Terms) : forall (fi : Fo) (xi : SetVars) (pi : SetVars->X)
+Definition lem2 (t : Terms) : forall (fi : Fo) (xi : SetVars.t) 
+(pi : SetVars.t->X)
 (r:Fo) (H:(substF t xi fi) = Some r), (*(SH:sig (fun(r:Fo)=>(substF t xi fi) = Some r)),*)
 (@foI X fsI prI pi r)<->(@foI X fsI prI (cng pi xi (@teI X fsI pi t)) fi).
 Proof.
@@ -598,7 +601,7 @@ intros pi r H.
 Defined. (* END OF LEM2 *)
 End Lem2.
 
-Lemma UnivInst : forall (fi:Fo) (pi:SetVars->X) (x:SetVars) (t:Terms)
+Lemma UnivInst : forall (fi:Fo) (pi:SetVars.t->X) (x:SetVars.t) (t:Terms)
 (r:Fo) (H:(substF t x fi)=Some r), @foI X fsI prI pi (Impl (Fora x fi) r).
 Proof.
 intros fi pi x t r H.
@@ -608,7 +611,7 @@ apply (lem2 t fi x pi r H).
 apply H0.
 Defined.
 
-Lemma ExisGene : forall (fi:Fo) (pi:SetVars->X) (x:SetVars) (t:Terms)
+Lemma ExisGene : forall (fi:Fo) (pi:SetVars.t->X) (x:SetVars.t) (t:Terms)
 (r:Fo) (H:(substF t x fi)=Some r), @foI X fsI prI pi (Impl r (Exis x fi)).
 Proof.
 intros fi pi x t r H.
@@ -622,9 +625,9 @@ Defined.
 
 (* PROOF OF THE SOUNDNESS *)
 Theorem correct (f:Fo) (l:list Fo) (m:PR l f) 
-(lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars->X), 
+(lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars.t->X), 
 (@foI X fsI prI val h)) : 
-forall (val:SetVars->X), @foI X fsI prI val f.
+forall (val:SetVars.t->X), @foI X fsI prI val f.
 Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi val.
@@ -662,5 +665,7 @@ induction m (* eqn: meq *); intros lfi val.
 Defined.
 (** SOUNDNESS IS PROVED **)
 End cor.
+(*Print Assumptions correct.*)
+
 (*End sec0.*)
-End VS.
+End Soundness_mod.

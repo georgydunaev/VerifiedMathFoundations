@@ -14,12 +14,13 @@ Module XFo := Terms_mod SetVars FuncSymb.
 Export cn.
 Export XFo.
 
-Notation SetVars := SetVars.t.
-Notation PredSymb := PredSymb.t.
-Notation FuncSymb := FuncSymb.t.
+(*Local Notation SetVars := SetVars.t (*only parsing*).
+Local Notation FuncSymb := FuncSymb.t (*only parsing*). 
+Local Notation PredSymb := PredSymb.t (*only parsing*).*)
+(*Notation PredSymbQQ := PredSymb.t.*)
 
 Record PSV := MPSV{
- ps : PredSymb;
+ ps : PredSymb.t;
  psv : nat;
 }.
 
@@ -29,12 +30,12 @@ Inductive Fo :=
  |Conj:Fo->Fo->Fo
  |Disj:Fo->Fo->Fo
  |Impl:Fo->Fo->Fo
- |Fora(x:SetVars)(f:Fo): Fo
- |Exis(x:SetVars)(f:Fo): Fo
+ |Fora(x:SetVars.t)(f:Fo): Fo
+ |Exis(x:SetVars.t)(f:Fo): Fo
 .
 
 (* Substitution *)
-Fixpoint isParamF (xi : SetVars) (f : Fo) {struct f} : bool :=
+Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
    match f with
    | Atom p t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
    | Bot => false
@@ -43,7 +44,7 @@ Fixpoint isParamF (xi : SetVars) (f : Fo) {struct f} : bool :=
        if SetVars.eqb x xi then false else isParamF xi f0
    end.
 
-Fixpoint substF (t:Terms) (xi: SetVars) (u : Fo): option Fo. 
+Fixpoint substF (t:Terms) (xi: SetVars.t) (u : Fo): option Fo. 
 Proof.
 pose(g := substT t xi).
 pose(f := substF t xi).
@@ -103,7 +104,7 @@ Section Interpretation.
 Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
 Context {prI:forall(q:PSV),(Vector.t X (psv q))->Omega}.
 
-Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
+Fixpoint foI (val:SetVars.t->X) (f:Fo): Omega.
 Proof.
 destruct f.
 + refine (prI p _).
@@ -114,7 +115,7 @@ destruct f.
 + exact (  OOr (foI val f1) (foI val f2)).
 + exact ( OImp (foI val f1) (foI val f2)).
 + exact (forall m:X, foI (cng val x m) f).
-+ exact (Osig (fun m:X => foI (fun r:SetVars =>
++ exact (Osig (fun m:X => foI (fun r:SetVars.t =>
    match SetVars.eqb r x with
    | true => m
    | false => (val r)

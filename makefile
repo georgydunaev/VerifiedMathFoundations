@@ -19,4 +19,6 @@ all:
 	$(CC)Formulas.v && \
 	$(CC)Provability.v && \
 	$(CC)Deduction.v && \
-	$(CC)PredicateCalculus.v 
+	$(CC)PredicateCalculus.v && \
+	$(CC)cexamp.v  && \
+	$(CC)Ackermann.v
