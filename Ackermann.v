@@ -1,4 +1,6 @@
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
+Require Import Misc.
+Require Import Deduction.
 Require List.
 Require Bool.
 Require Import Coq.Structures.Equalities.
@@ -12,7 +14,9 @@ Module SetVars : UsualDecidableTypeFull :=PeanoNat.Nat.
 Module FuncSymb : UsualDecidableTypeFull := PeanoNat.Nat.
 Module PredSymb : UsualDecidableTypeFull := PeanoNat.Nat.
 
-Module X := Provability_mod SetVars FuncSymb PredSymb.
+(* Module X := Provability_mod SetVars FuncSymb PredSymb.
+Export X. *)
+Module X := Deduction_mod SetVars FuncSymb PredSymb.
 Export X.
 Module Facts := BoolEqualityFacts SetVars.
 
@@ -90,13 +94,13 @@ reflexivity.
 Defined.
 
 (*TODO Prove the completeness theorem. *)
-Definition swap ctx A B C: 
+(*Definition swap ctx A B C: 
 (PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
 Proof.
 Fail Check Ded.
 Fail intro b.
-Admitted.
-
+Admitted.*)
+Check swapSIMPL.
 
 Definition p2_23_b ctx (t s:Terms) (x y:SetVars.t):
 APR ctx ((t==s) --> (s==t) ).
@@ -107,8 +111,9 @@ pose (step2 := swap ctx (x == y) (x == x) (y == x)).
 (*apply MP with .
 apply MP with (A:= Fora x (x == x)).
 apply aeq2.*)
-
 Abort.
+
+
 End inf_sec.
 
 End Ackermann_mod.

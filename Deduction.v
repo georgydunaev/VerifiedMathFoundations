@@ -251,29 +251,33 @@ rewrite -> NP in H.
 inversion H.
 Defined.
 Check orb_elim.
-Definition swap ctx A B C
+
+Definition swapSIMPL ctx A B C
 (HA : forall xi : SetVars.t, isParamF xi A = false)
 (HB : forall xi : SetVars.t, isParamF xi B = false)
 (HC : forall xi : SetVars.t, isParamF xi C = false) :
 (PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
 Proof.
-unshelve eapply SimplDed. 
-2 : { intro xi.
-simpl.
+unshelve eapply SimplDed.
+2 : { intro xi. simpl.
 apply orb_intro. split. apply HA.
 apply orb_intro. split. apply HB. apply HC.
 }
 unshelve eapply SimplDed. 2 : apply HB.
 unshelve eapply SimplDed. 2 : apply HA.
-(*assert (l1 : PR (A :: B :: (A --> (B --> C)) :: ctx) (B --> C)).
-admit.*)
-apply MP with (A:=B).
-Print GPR.
-apply hyp.
+apply MP with (A:=B). apply hyp.
 simpl. firstorder. (*apply inr.*)
 apply MP with (A:=A).
 apply hyp; firstorder.
 apply hyp; firstorder.
 Defined.
+
+Definition swap ctx A B C :
+(PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+Proof.
+unshelve eapply SimplDed.
+
+Admitted.
+
 
 End Deduction_mod.
