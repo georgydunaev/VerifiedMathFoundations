@@ -632,13 +632,14 @@ Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi val.
 + exact (lfi A i _).
-+ destruct a.
-  ++ simpl.
-     intros a b.
-     exact a.
-  ++ simpl.
-     intros a b c.
-     exact (a c (b c)).
++ destruct a eqn:k.
+  ++ destruct p.
+     * simpl.
+       intros a0 b.
+       exact a0.
+     * simpl.
+       intros a0 b c.
+       exact (a0 c (b c)).
   ++ simpl in *|-*.
   (*destruct (substF t xi ph) eqn: j.*)
   apply (UnivInst ph val xi t r s).

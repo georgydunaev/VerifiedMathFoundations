@@ -42,7 +42,7 @@ Coercion es:nat>->SetVars.t.
 Notation "( a 'e.' b )" := (Atom {| ps := en 1; psv := 2 |} [a:Terms; b:Terms]).
 
 Inductive AxiomAST : Fo -> Type :=
-| aPC  :> forall {A}, (AxiomH A) -> (AxiomAST A)
+| aPC  :> forall {A}, (PRECA A) -> (AxiomAST A)
 | aeq1 : forall (x:SetVars.t), AxiomAST (Fora 0 (0 == 0))
 (*AxiomAST (Atom (MPSV (en 0) 2) [FVC x ; FVC x])*)
 | aeq2 : forall (x y:SetVars.t) (f r:Fo)

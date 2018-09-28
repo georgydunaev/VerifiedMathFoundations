@@ -64,25 +64,36 @@ Defined.
 
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PR l F)) : (PR (A::l) F).
 Proof.
-destruct x.
-apply hyp.
-apply inr. (*or_intror *)
-exact i.
-apply Hax. apply a.
+destruct x as [a b|a b|a b|a b].
++ apply hyp.
+  right. (* apply inr. or_intror *)
+  exact b.
++ apply Hax,b.
 (*apply a1.
 apply a2.
 apply a12.
 apply b1.
 assumption. *)
-apply MP with (A:= A0).
-apply weak.
-exact x1.
-apply weak.
-exact x2.
-apply GEN. (* Order is not important! *)
-apply weak. (* Order is not important! *)
-exact x.
-Defined.
++ apply MP with (A:= a).
+  * apply weak.
+    exact x1.
+  * apply weak.
+    exact x2.
++ apply GEN. (* Order is not important! *)
+  apply weak. (* Order is not important! *)
+  exact x.
+Show Proof.
+Abort.
+
+Fixpoint weak (A F : Fo) (l : list Fo) (x : PR l F) {struct x} :
+   PR (A :: l) F :=
+   match x in (GPR _ _ f) return (PR (A :: l) f) with
+   | hyp _ _ a b => hyp PRECA (A :: l) a (inr b)
+   | Hax _ _ a b => Hax PRECA (A :: l) a b
+   | MP _ _ a b x1 x2 =>
+       MP PRECA (A :: l) a b (weak A a l x1) (weak A (a --> b) l x2)
+   | GEN _ _ a b x0 => GEN PRECA (A :: l) a b (weak A a l x0)
+   end.
 
 Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PR l F)) {struct li}: (PR (li ++ l) F).
 Proof.
@@ -93,20 +104,27 @@ simpl.
 simple refine (@weak f F (li ++ l) _).
 apply weaken.
 exact x.
-Defined.
+Show Proof.
+Abort.
+
+Fixpoint weaken (F : Fo) (li l : list Fo) (x : PR l F) {struct li} :
+   PR (li ++ l) F :=
+   match li as l0 return (PR (l0 ++ l) F) with
+   | Datatypes.nil => x
+   | f :: li0 => weak f F (li0 ++ l) (weaken F li0 l x)
+   end.
 
 (*Export List Notations.*)
 Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PR l B)){struct m}:bool.
 Proof.
-destruct m.
+destruct m eqn: o.
 exact true.
-destruct a eqn:j.
-exact true.
-exact true.
+destruct p eqn:j.
 exact true.
 exact true.
-exact (andb (notGenWith xi l _ m1) (notGenWith xi l _ m2)).
-exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ m) ).
+exact true.
+exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
+exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ).
 Defined.
 
 Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
@@ -141,15 +159,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     apply a1i.
     exact (hyp _ il _ i).
 + apply a1i.
-  apply Hax, a.
-(*  apply a1.
-+ apply a1i.
-  apply a2.
-+ apply a1i.
-  apply a12.
-+ apply a1i.
-  apply b1.
-  trivial.*)
+  apply Hax, p.
 + apply MP with (A:= (A-->A0)).
 - simple refine (@Ded _ _ _ _ _).
   exact m1.
@@ -223,7 +233,7 @@ Fixpoint forClosed (A B:Fo)(m:(PR (cons A nil) B)):
 Proof.
 intros H xi Q.
 destruct m. simpl. try reflexivity.
-destruct a eqn:j.
+destruct p eqn:j.
 simpl. try reflexivity.
 simpl. try reflexivity.
 simpl. try reflexivity.
