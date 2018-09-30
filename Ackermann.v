@@ -62,7 +62,7 @@ Notation "( a 'e.' b )" := (Atom (MPSV (en 1) 2) [a:Terms ; b:Terms]).
 
 
 (* Provability in Ackermann set theory *)
-Definition APR := GPR AxiomAST.
+Definition APR := GPR dcb AxiomAST.
 (* Mendelson p.102/447 *)
 (*Coercion FVC : SetVars.t >-> Terms.*)
 (*Coercion Q : (Vector.t SetVars.t n) >-> (Vector.t Terms n).*)
@@ -77,7 +77,7 @@ Proof.
 (*apply MP with (A:= Fora x (x == x)).
 change (Atom {| ps := en 0; psv := 2 |} [FVC x; FVC x]) with (x == x).
 *)
-apply MP with (A:= Fora x ( x == x)).
+apply MP with (A:= Fora x ( x == x)) (1:=I).
 (*
 try fold (Fora x (x == x)).
 try rewrite <- q.

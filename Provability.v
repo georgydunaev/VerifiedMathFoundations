@@ -42,14 +42,22 @@ PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 (*Coercion PRO : PROCA >-> PRECA.*)
 
 Section GRP_sec.
+Record checks := {
+useMP:Prop;
+useGEN:Prop;
+}.
+
+Definition dcb := {|useMP:=True;useGEN:=True|}.
+(*Context (useGEN:Prop).*)
+Context (c:checks).
 Context (axs : Fo -> Type).
 Context (ctx:list Fo).
 Inductive GPR : Fo -> Type :=
 | hyp (A : Fo): (InL A ctx)-> GPR A
 | Hax :> forall (A : Fo), (axs A) -> GPR A
-| MP (A B: Fo) : (GPR A)->(GPR (Impl A B))
+| MP (q:useMP c) (A B: Fo) : (GPR A)->(GPR (Impl A B))
                  ->(GPR B)
-| GEN (A : Fo) (xi:SetVars.t): (GPR A)->(GPR (Fora xi A))
+| GEN (q:useGEN c) (A : Fo) (xi:SetVars.t): (GPR A)->(GPR (Fora xi A))
 .
 Print All.
 End GRP_sec.
@@ -68,7 +76,21 @@ Print all.
 Section GRP2_sec.
 Context (axs : Fo -> Type).
 Context (ctx:list Fo).
-Context (lrules:list (Rules Fo)).
+(*Context (lrules:list (Rules Fo)).*)
+Context (useMP:Prop).
+Theorem gh (H: useMP): nat. Abort.
+Inductive inhab (A:Prop) : Prop :=
+| c1 (p:A) : inhab A.
+Theorem gh (H: inhab useMP): nat.
+destruct H.
+Abort.
+Context (isMP:bool).
+Theorem gh (H: isMP=false): nat.
+destruct isMP.
+inversion H.
+exact 0.
+Show Proof.
+Abort.
 Inductive DER : Fo -> Type :=
 | Hyp (A : Fo): (InL A ctx)-> DER A
 | Axi :> forall (A : Fo), (axs A) -> DER A
@@ -77,11 +99,11 @@ Inductive DER : Fo -> Type :=
                  ->(DER B)
 | GEND (A : Fo) (xi:SetVars.t): (DER A)->(DER (Fora xi A))*)
 .
-(*Print All.*)
 End GRP2_sec.
+(*Print All.*)
 
 (* Provability in predicate calculus *)
-Definition PR := GPR PRECA. (*here*)
+Definition PR := GPR dcb PRECA. (*here*)
 
 Definition a1 axi A B : @PR axi (Impl A (Impl B A)).
 Proof. apply Hax.
@@ -96,23 +118,27 @@ Proof. apply Hax, PRO, Ha2. Defined.
 Definition b1 axi (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
 @PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax, Hb1, H. Defined.
-
-Theorem subcalc {ctx} (A:Fo) : GPR PROCA ctx A -> GPR  PRECA ctx A.
+Theorem subcalc {ctx} (A:Fo) : 
+GPR {| useMP:= True; useGEN := False |} PROCA ctx A -> 
+GPR {| useMP:= True; useGEN := True |} PRECA ctx A.
 Proof.
 intro p.
 try apply PRO.
 induction p.
 apply hyp, i.
 apply Hax, PRO, a.
-apply MP with (A:=A). apply IHp1. apply IHp2.
-Abort. (* how to separate rules of inference?*)
+apply @MP with (A:=A) (1:=I). apply IHp1. apply IHp2.
+destruct q.
+Defined.
+(* how to separate rules of inference?*)
 
 (*Arguments GPR {axs}.*)
+(*Notation newMP := (MP (1:=I)).*)
 Definition AtoA {ctx} (A:Fo) : PR ctx (A-->A).
 Proof.
-apply MP with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
+apply MP with (A:=(A-->(A-->A))) (1:=I).  (*(MP ctx (A-->(A-->A)) _).*)
 apply a1. (* apply (Hax _ _ (Ha1 _ _)).*)
-apply MP with (A:= A-->((A-->A)-->A)).
+apply MP with (A:= A-->((A-->A)-->A)) (1:=I).
 apply a1.
 apply a2.
 Defined.

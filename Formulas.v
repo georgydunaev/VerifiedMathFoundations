@@ -46,11 +46,10 @@ Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
 
 Fixpoint substF (t:Terms) (xi: SetVars.t) (u : Fo): option Fo. 
 Proof.
-pose(g := substT t xi).
 pose(f := substF t xi).
 destruct u.
 refine (Some (Atom p _)).
-exact (Vector.map g t0).
+exact (Vector.map (substT t xi) t0).
 exact (Some Bot).
  exact (
  match (f u1),(f u2) with

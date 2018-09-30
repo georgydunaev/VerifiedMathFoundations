@@ -28,9 +28,9 @@ Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false):
  PR nil (ps --> ph) -> PR nil (ps --> Fora xi ph).
 Proof.
 intro q.
-apply MP with (A:=(Fora xi (ps --> ph))).
+apply MP with (A:=(Fora xi (ps --> ph))) (1:=I).
 (*apply (MP nil (Fora xi (ps --> ph))).*)
-+ apply GEN.
++ apply (GEN) with (1:=I).
   exact q.
 + apply (b1 _).
   exact H.
@@ -40,12 +40,12 @@ Definition gen (A:Fo) (xi:SetVars) (*Generalization from Bernay's rule*)
 : PR nil (A) -> PR nil (Fora xi A).
 Proof.
 intro q.
-apply MP with (A:= Top).
+apply MP with (A:= Top) (1:=I).
 unfold Top.
 exact (AtoA Bot).
-apply MP with (A:= (Fora xi (Top --> A))).
-* apply GEN.
-  apply MP with (A:= A).
+apply MP with (A:= (Fora xi (Top --> A)))  (1:=I).
+* apply GEN with (1:=I).
+  apply MP with (A:= A) (1:=I).
   + exact q.
   + apply a1.
 * apply b1.
@@ -57,14 +57,14 @@ Definition neg (f:Fo):= (Impl f Bot).
 Definition a1i (A B : Fo)(l : list Fo):(PR l B)->(PR l (Impl A B)).
 Proof.
 intros x.
-apply MP with (A:= B).
+apply MP with (A:= B) (1:=I).
 exact x.
 apply a1.
 Defined.
 
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PR l F)) : (PR (A::l) F).
 Proof.
-destruct x as [a b|a b|a b|a b].
+destruct x as [a b|a b|i a b|a b].
 + apply hyp.
   right. (* apply inr. or_intror *)
   exact b.
@@ -74,12 +74,12 @@ apply a2.
 apply a12.
 apply b1.
 assumption. *)
-+ apply MP with (A:= a).
++ apply MP with (A:= a) (1:=I).
   * apply weak.
     exact x1.
   * apply weak.
     exact x2.
-+ apply GEN. (* Order is not important! *)
++ apply GEN with (1:=I). (* Order is not important! *)
   apply weak. (* Order is not important! *)
   exact x.
 Show Proof.
@@ -87,12 +87,12 @@ Abort.
 
 Fixpoint weak (A F : Fo) (l : list Fo) (x : PR l F) {struct x} :
    PR (A :: l) F :=
-   match x in (GPR _ _ f) return (PR (A :: l) f) with
-   | hyp _ _ a b => hyp PRECA (A :: l) a (inr b)
-   | Hax _ _ a b => Hax PRECA (A :: l) a b
-   | MP _ _ a b x1 x2 =>
-       MP PRECA (A :: l) a b (weak A a l x1) (weak A (a --> b) l x2)
-   | GEN _ _ a b x0 => GEN PRECA (A :: l) a b (weak A a l x0)
+   match x in (GPR _ _ _ f) return (PR (A :: l) f) with
+   | hyp _ _ _ a b => hyp dcb PRECA (A :: l) a (inr b)
+   | Hax _ _ _ a b => Hax dcb PRECA (A :: l) a b
+   | MP _ _ _ _ a b x1 x2 =>
+       MP dcb PRECA (A :: l) I a b (weak A a l x1) (weak A (a --> b) l x2)
+   | GEN _ _ _ _ a b x0 => GEN dcb PRECA (A :: l) I a b (weak A a l x0)
    end.
 
 Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PR l F)) {struct li}: (PR (li ++ l) F).
@@ -157,10 +157,11 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     exact J.
   * simpl in H.
     apply a1i.
-    exact (hyp _ il _ i).
+    apply hyp with (ctx:=il) (1:=i).
+    (*exact (hyp _ il _ i).*)
 + apply a1i.
   apply Hax, p.
-+ apply MP with (A:= (A-->A0)).
++ apply MP with (A:= (A-->A0)) (1:=I).
 - simple refine (@Ded _ _ _ _ _).
   exact m1.
   intros xi H0.
@@ -171,7 +172,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   fold J.
   fold J in W.
   apply (lm _ _ W).
-- apply MP with (A:= (A-->(A0-->B))).
+- apply MP with (A:= (A-->(A0-->B))) (1:=I).
   simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
@@ -180,8 +181,8 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   apply (lm2 _ _ W).
  (*Last part about GEN*)
   apply a2.
-  + apply MP with (A:= (Fora xi (A-->A0))).
-    apply GEN.
+  + apply MP with (A:= (Fora xi (A-->A0))) (1:=I).
+    apply GEN with (1:=I).
     simple refine (@Ded _ _ _ _ _).
     exact m.
     intros xi0 H0.
@@ -275,9 +276,9 @@ apply orb_intro. split. apply HB. apply HC.
 }
 unshelve eapply SimplDed. 2 : apply HB.
 unshelve eapply SimplDed. 2 : apply HA.
-apply MP with (A:=B). apply hyp.
+apply MP with (A:=B) (1:=I). apply hyp.
 simpl. firstorder. (*apply inr.*)
-apply MP with (A:=A).
+apply MP with (A:=A) (1:=I).
 apply hyp; firstorder.
 apply hyp; firstorder.
 Defined.
