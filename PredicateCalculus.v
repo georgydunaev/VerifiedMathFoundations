@@ -632,13 +632,14 @@ Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi val.
 + exact (lfi A i _).
-+ destruct a.
-  ++ simpl.
-     intros a b.
-     exact a.
-  ++ simpl.
-     intros a b c.
-     exact (a c (b c)).
++ destruct a eqn:k.
+  ++ destruct p.
+     * simpl.
+       intros a0 b.
+       exact a0.
+     * simpl.
+       intros a0 b c.
+       exact (a0 c (b c)).
   ++ simpl in *|-*.
   (*destruct (substF t xi ph) eqn: j.*)
   apply (UnivInst ph val xi t r s).
@@ -664,8 +665,22 @@ induction m (* eqn: meq *); intros lfi val.
   exact B.
 Defined.
 (** SOUNDNESS IS PROVED **)
+
+Check foI. 
+
+(*
+Theorem completeness (f:Fo)
+(H : forall (val:SetVars.t->X), @foI X fsI prI val f)
+ : 
+exists  (l:list Fo)
+(lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars.t->X), 
+(@foI X fsI prI val h)), PR l f
+.
+Proof.
+Defined. *)
 End cor.
 (*Print Assumptions correct.*)
+
 
 (*End sec0.*)
 End Soundness_mod.

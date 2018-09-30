@@ -1,7 +1,9 @@
 Require List.
 Require Bool.
 Require Import Coq.Structures.Equalities.
+
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
+Require Import Misc.
 Require Export Provability.
 
 Module Deduction_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
@@ -26,9 +28,9 @@ Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false):
  PR nil (ps --> ph) -> PR nil (ps --> Fora xi ph).
 Proof.
 intro q.
-apply MP with (A:=(Fora xi (ps --> ph))).
+apply MP with (A:=(Fora xi (ps --> ph))) (1:=I).
 (*apply (MP nil (Fora xi (ps --> ph))).*)
-+ apply GEN.
++ apply (GEN) with (1:=I).
   exact q.
 + apply (b1 _).
   exact H.
@@ -38,12 +40,12 @@ Definition gen (A:Fo) (xi:SetVars) (*Generalization from Bernay's rule*)
 : PR nil (A) -> PR nil (Fora xi A).
 Proof.
 intro q.
-apply MP with (A:= Top).
+apply MP with (A:= Top) (1:=I).
 unfold Top.
 exact (AtoA Bot).
-apply MP with (A:= (Fora xi (Top --> A))).
-* apply GEN.
-  apply MP with (A:= A).
+apply MP with (A:= (Fora xi (Top --> A)))  (1:=I).
+* apply GEN with (1:=I).
+  apply MP with (A:= A) (1:=I).
   + exact q.
   + apply a1.
 * apply b1.
@@ -55,32 +57,43 @@ Definition neg (f:Fo):= (Impl f Bot).
 Definition a1i (A B : Fo)(l : list Fo):(PR l B)->(PR l (Impl A B)).
 Proof.
 intros x.
-apply MP with (A:= B).
+apply MP with (A:= B) (1:=I).
 exact x.
 apply a1.
 Defined.
 
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PR l F)) : (PR (A::l) F).
 Proof.
-destruct x.
-apply hyp.
-apply inr. (*or_intror *)
-exact i.
-apply Hax. apply a.
+destruct x as [a b|a b|i a b|a b].
++ apply hyp.
+  right. (* apply inr. or_intror *)
+  exact b.
++ apply Hax,b.
 (*apply a1.
 apply a2.
 apply a12.
 apply b1.
 assumption. *)
-apply MP with (A:= A0).
-apply weak.
-exact x1.
-apply weak.
-exact x2.
-apply GEN. (* Order is not important! *)
-apply weak. (* Order is not important! *)
-exact x.
-Defined.
++ apply MP with (A:= a) (1:=I).
+  * apply weak.
+    exact x1.
+  * apply weak.
+    exact x2.
++ apply GEN with (1:=I). (* Order is not important! *)
+  apply weak. (* Order is not important! *)
+  exact x.
+Show Proof.
+Abort.
+
+Fixpoint weak (A F : Fo) (l : list Fo) (x : PR l F) {struct x} :
+   PR (A :: l) F :=
+   match x in (GPR _ _ _ f) return (PR (A :: l) f) with
+   | hyp _ _ _ a b => hyp dcb PRECA (A :: l) a (inr b)
+   | Hax _ _ _ a b => Hax dcb PRECA (A :: l) a b
+   | MP _ _ _ _ a b x1 x2 =>
+       MP dcb PRECA (A :: l) I a b (weak A a l x1) (weak A (a --> b) l x2)
+   | GEN _ _ _ _ a b x0 => GEN dcb PRECA (A :: l) I a b (weak A a l x0)
+   end.
 
 Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PR l F)) {struct li}: (PR (li ++ l) F).
 Proof.
@@ -91,20 +104,27 @@ simpl.
 simple refine (@weak f F (li ++ l) _).
 apply weaken.
 exact x.
-Defined.
+Show Proof.
+Abort.
+
+Fixpoint weaken (F : Fo) (li l : list Fo) (x : PR l F) {struct li} :
+   PR (li ++ l) F :=
+   match li as l0 return (PR (l0 ++ l) F) with
+   | Datatypes.nil => x
+   | f :: li0 => weak f F (li0 ++ l) (weaken F li0 l x)
+   end.
 
 (*Export List Notations.*)
 Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PR l B)){struct m}:bool.
 Proof.
-destruct m.
+destruct m eqn: o.
 exact true.
-destruct a eqn:j.
-exact true.
-exact true.
+destruct p eqn:j.
 exact true.
 exact true.
-exact (andb (notGenWith xi l _ m1) (notGenWith xi l _ m2)).
-exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ m) ).
+exact true.
+exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
+exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ).
 Defined.
 
 Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
@@ -122,17 +142,6 @@ trivial.
 inversion G.
 Defined.
 
-Theorem lm2 (a b :bool)(G:true = (a && b) ): true = b.
-Proof.
-destruct a.
-trivial.
-inversion G.
-Defined.
-
-Theorem N (rr:bool): (true=rr \/ rr=false).
-Proof.
-destruct rr; firstorder.
-Defined.
 
 Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PR (cons A il) B)) 
 (H:forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m))
@@ -148,18 +157,11 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     exact J.
   * simpl in H.
     apply a1i.
-    exact (hyp _ il _ i).
+    apply hyp with (ctx:=il) (1:=i).
+    (*exact (hyp _ il _ i).*)
 + apply a1i.
-  apply Hax, a.
-(*  apply a1.
-+ apply a1i.
-  apply a2.
-+ apply a1i.
-  apply a12.
-+ apply a1i.
-  apply b1.
-  trivial.*)
-+ apply MP with (A:= (A-->A0)).
+  apply Hax, p.
++ apply MP with (A:= (A-->A0)) (1:=I).
 - simple refine (@Ded _ _ _ _ _).
   exact m1.
   intros xi H0.
@@ -170,7 +172,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   fold J.
   fold J in W.
   apply (lm _ _ W).
-- apply MP with (A:= (A-->(A0-->B))).
+- apply MP with (A:= (A-->(A0-->B))) (1:=I).
   simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
@@ -179,8 +181,8 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   apply (lm2 _ _ W).
  (*Last part about GEN*)
   apply a2.
-  + apply MP with (A:= (Fora xi (A-->A0))).
-    apply GEN.
+  + apply MP with (A:= (Fora xi (A-->A0))) (1:=I).
+    apply GEN with (1:=I).
     simple refine (@Ded _ _ _ _ _).
     exact m.
     intros xi0 H0.
@@ -232,7 +234,7 @@ Fixpoint forClosed (A B:Fo)(m:(PR (cons A nil) B)):
 Proof.
 intros H xi Q.
 destruct m. simpl. try reflexivity.
-destruct a eqn:j.
+destruct p eqn:j.
 simpl. try reflexivity.
 simpl. try reflexivity.
 simpl. try reflexivity.
@@ -249,15 +251,44 @@ simpl. try reflexivity.
 Defined.
 
 Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PR (cons A il) B))
-(NP:forall xi:SetVars, (false = isParamF xi A)) 
+(NP:forall xi:SetVars, (isParamF xi A = false)) 
 {struct m}:(PR il (A-->B)).
 Proof.
 (*unshelve eapply Ded.*)
 simple refine (Ded _ _ _ _ _).
 exact m.
 intros xi H.
-rewrite <- NP in H.
+rewrite -> NP in H.
 inversion H.
 Defined.
+Check orb_elim.
+
+Definition swapSIMPL ctx A B C
+(HA : forall xi : SetVars.t, isParamF xi A = false)
+(HB : forall xi : SetVars.t, isParamF xi B = false)
+(HC : forall xi : SetVars.t, isParamF xi C = false) :
+(PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+Proof.
+unshelve eapply SimplDed.
+2 : { intro xi. simpl.
+apply orb_intro. split. apply HA.
+apply orb_intro. split. apply HB. apply HC.
+}
+unshelve eapply SimplDed. 2 : apply HB.
+unshelve eapply SimplDed. 2 : apply HA.
+apply MP with (A:=B) (1:=I). apply hyp.
+simpl. firstorder. (*apply inr.*)
+apply MP with (A:=A) (1:=I).
+apply hyp; firstorder.
+apply hyp; firstorder.
+Defined.
+
+Definition swap ctx A B C :
+(PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+Proof.
+unshelve eapply SimplDed.
+
+Admitted.
+
 
 End Deduction_mod.

@@ -24,56 +24,121 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | b :: m => (sum (b = a) (InL a m))
   end.
 
-Inductive AxiomH : Fo -> Type :=
-| Ha1  : forall A B, AxiomH (A-->(B-->A))
-| Ha2  : forall A B C, AxiomH ((A-->(B-->C))-->((A-->B)-->(A-->C)))
-| Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
- (r:Fo) (s:(substF t xi ph)=Some r), AxiomH (Impl (Fora xi ph) r)
-| Hb1  : forall (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false),
-AxiomH (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
+(* PROpositional Calculus Axioms *)
+Inductive PROCA : Fo -> Type :=
+| Ha1  : forall A B, PROCA (A-->(B-->A))
+| Ha2  : forall A B C, PROCA ((A-->(B-->C))-->((A-->B)-->(A-->C)))
 .
 
-Inductive GPR (axs : Fo -> Type) (ctx:list Fo) : Fo -> Type :=
-| hyp (A : Fo): (InL A ctx)-> GPR axs ctx A
-| Hax (A : Fo): (axs A) -> GPR axs ctx A
-| MP (A B: Fo) : (GPR axs ctx A)->(GPR axs ctx (Impl A B))
-                 ->(GPR axs ctx B)
-| GEN (A : Fo) (xi:SetVars.t): (GPR axs ctx A)->(GPR axs ctx (Fora xi A))
+(* PREdicate Calculus Axioms *)
+Inductive PRECA : Fo -> Type :=
+| PRO  :> forall A, (PROCA A) -> (PRECA A)
+| Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
+ (r:Fo) (s:(substF t xi ph)=Some r), PRECA (Impl (Fora xi ph) r)
+| Hb1  : forall (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false),
+PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .
+
+(*Coercion PRO : PROCA >-> PRECA.*)
+
+Section GRP_sec.
+Record checks := {
+useMP:Prop;
+useGEN:Prop;
+}.
+
+Definition dcb := {|useMP:=True;useGEN:=True|}.
+(*Context (useGEN:Prop).*)
+Context (c:checks).
+Context (axs : Fo -> Type).
+Context (ctx:list Fo).
+Inductive GPR : Fo -> Type :=
+| hyp (A : Fo): (InL A ctx)-> GPR A
+| Hax :> forall (A : Fo), (axs A) -> GPR A
+| MP (q:useMP c) (A B: Fo) : (GPR A)->(GPR (Impl A B))
+                 ->(GPR B)
+| GEN (q:useGEN c) (A : Fo) (xi:SetVars.t): (GPR A)->(GPR (Fora xi A))
+.
+Print All.
+End GRP_sec.
+
+Record Rules fo := {
+premises : list fo;
+conclusion : fo;
+condition : Prop;
+}.
+
+Import ListNotations.
+Definition rMP A B := Build_Rules Fo [A ; A-->B] B.
+Definition rGEN A xi := Build_Rules Fo [A] (Fora xi A).
+Definition RulesScheme fo := list fo * list SetVars.t -> Rules fo.
+Print all.
+Section GRP2_sec.
+Context (axs : Fo -> Type).
+Context (ctx:list Fo).
+(*Context (lrules:list (Rules Fo)).*)
+Context (useMP:Prop).
+Theorem gh (H: useMP): nat. Abort.
+Inductive inhab (A:Prop) : Prop :=
+| c1 (p:A) : inhab A.
+Theorem gh (H: inhab useMP): nat.
+destruct H.
+Abort.
+Context (isMP:bool).
+Theorem gh (H: isMP=false): nat.
+destruct isMP.
+inversion H.
+exact 0.
+Show Proof.
+Abort.
+Inductive DER : Fo -> Type :=
+| Hyp (A : Fo): (InL A ctx)-> DER A
+| Axi :> forall (A : Fo), (axs A) -> DER A
+(*| Infer R (A : Fo): (InL R lrules) -> DER A   bad*)
+(*| MPD (A B: Fo) : (DER A)->(DER (Impl A B))
+                 ->(DER B)
+| GEND (A : Fo) (xi:SetVars.t): (DER A)->(DER (Fora xi A))*)
+.
+End GRP2_sec.
+(*Print All.*)
 
 (* Provability in predicate calculus *)
-Definition PR := GPR AxiomH.
-
-(*Inductive PR (axi:list Fo) : Fo -> Type :=
-| hyp (A : Fo): (InL A axi)-> @PR axi A
-| Hax (A : Fo): (AxiomH A) -> @PR axi A
-(*| a1 (A B: Fo) : @PR axi (Impl A (Impl B A))
-| a2 (A B C: Fo) : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C)))*)
-(*| a12 (ph: Fo) (t:Terms) (xi:SetVars)
-: @PR axi (match (substF t xi ph) with 
-      | Some q => (Impl (Fora xi ph) q)
-      | None => Top
-      end)
-| b1 (ps ph: Fo) (xi:SetVars) (H:isParamF xi ps = false):
-@PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ) *)
-| MP (A B: Fo) : (@PR axi A)->(@PR axi (Impl A B))->(@PR axi B)
-| GEN (A : Fo) (xi:SetVars): (@PR axi A)->(@PR axi (Fora xi A))
-.*)
+Definition PR := GPR dcb PRECA. (*here*)
 
 Definition a1 axi A B : @PR axi (Impl A (Impl B A)).
-Proof. apply Hax, Ha1. Defined.
+Proof. apply Hax.
+(*
+Check Ha1 A B : PROCA (A --> (B --> A)).
+Check Ha1 A B : PRECA (A --> (B --> A)).
+(*Check (Ha1 A B: PRECA (A --> (B --> A))) : @PR axi (A --> (B --> A)).*)
+*)
+refine (Ha1 _ _). Defined.
 Definition a2 axi A B C : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C))).
-Proof. apply Hax, Ha2. Defined.
+Proof. apply Hax, PRO, Ha2. Defined.
 Definition b1 axi (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
 @PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax, Hb1, H. Defined.
+Theorem subcalc {ctx} (A:Fo) : 
+GPR {| useMP:= True; useGEN := False |} PROCA ctx A -> 
+GPR {| useMP:= True; useGEN := True |} PRECA ctx A.
+Proof.
+intro p.
+try apply PRO.
+induction p.
+apply hyp, i.
+apply Hax, PRO, a.
+apply @MP with (A:=A) (1:=I). apply IHp1. apply IHp2.
+destruct q.
+Defined.
+(* how to separate rules of inference?*)
 
 (*Arguments GPR {axs}.*)
+(*Notation newMP := (MP (1:=I)).*)
 Definition AtoA {ctx} (A:Fo) : PR ctx (A-->A).
 Proof.
-apply MP with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
+apply MP with (A:=(A-->(A-->A))) (1:=I).  (*(MP ctx (A-->(A-->A)) _).*)
 apply a1. (* apply (Hax _ _ (Ha1 _ _)).*)
-apply MP with (A:= A-->((A-->A)-->A)).
+apply MP with (A:= A-->((A-->A)-->A)) (1:=I).
 apply a1.
 apply a2.
 Defined.

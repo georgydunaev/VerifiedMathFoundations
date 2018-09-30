@@ -1,4 +1,6 @@
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
+Require Import Misc.
+Require Import Deduction.
 Require List.
 Require Bool.
 Require Import Coq.Structures.Equalities.
@@ -12,7 +14,9 @@ Module SetVars : UsualDecidableTypeFull :=PeanoNat.Nat.
 Module FuncSymb : UsualDecidableTypeFull := PeanoNat.Nat.
 Module PredSymb : UsualDecidableTypeFull := PeanoNat.Nat.
 
-Module X := Provability_mod SetVars FuncSymb PredSymb.
+(* Module X := Provability_mod SetVars FuncSymb PredSymb.
+Export X. *)
+Module X := Deduction_mod SetVars FuncSymb PredSymb.
 Export X.
 Module Facts := BoolEqualityFacts SetVars.
 
@@ -38,7 +42,7 @@ Coercion es:nat>->SetVars.t.
 Notation "( a 'e.' b )" := (Atom {| ps := en 1; psv := 2 |} [a:Terms; b:Terms]).
 
 Inductive AxiomAST : Fo -> Type :=
-| aPC  :> forall {A}, (AxiomH A) -> (AxiomAST A)
+| aPC  :> forall {A}, (PRECA A) -> (AxiomAST A)
 | aeq1 : forall (x:SetVars.t), AxiomAST (Fora 0 (0 == 0))
 (*AxiomAST (Atom (MPSV (en 0) 2) [FVC x ; FVC x])*)
 | aeq2 : forall (x y:SetVars.t) (f r:Fo)
@@ -58,7 +62,7 @@ Notation "( a 'e.' b )" := (Atom (MPSV (en 1) 2) [a:Terms ; b:Terms]).
 
 
 (* Provability in Ackermann set theory *)
-Definition APR := GPR AxiomAST.
+Definition APR := GPR dcb AxiomAST.
 (* Mendelson p.102/447 *)
 (*Coercion FVC : SetVars.t >-> Terms.*)
 (*Coercion Q : (Vector.t SetVars.t n) >-> (Vector.t Terms n).*)
@@ -73,7 +77,7 @@ Proof.
 (*apply MP with (A:= Fora x (x == x)).
 change (Atom {| ps := en 0; psv := 2 |} [FVC x; FVC x]) with (x == x).
 *)
-apply MP with (A:= Fora x ( x == x)).
+apply MP with (A:= Fora x ( x == x)) (1:=I).
 (*
 try fold (Fora x (x == x)).
 try rewrite <- q.
@@ -90,12 +94,14 @@ reflexivity.
 Defined.
 
 (*TODO Prove the completeness theorem. *)
-Definition swap ctx A B C: 
+(*Definition swap ctx A B C: 
 (PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
 Proof.
 Fail Check Ded.
 Fail intro b.
-Admitted.
+Admitted.*)
+Check swapSIMPL.
+
 Definition p2_23_b ctx (t s:Terms) (x y:SetVars.t):
 APR ctx ((t==s) --> (s==t) ).
 Proof.
@@ -105,8 +111,9 @@ pose (step2 := swap ctx (x == y) (x == x) (y == x)).
 (*apply MP with .
 apply MP with (A:= Fora x (x == x)).
 apply aeq2.*)
-
 Abort.
+
+
 End inf_sec.
 
 End Ackermann_mod.

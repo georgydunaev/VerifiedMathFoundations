@@ -1,0 +1,12 @@
+Misc.v
+Valuation.v
+eqb_nat.v
+UNIV_INST.v
+Terms.v
+Poly.v
+Formulas.v
+Provability.v
+Deduction.v
+PredicateCalculus.v
+cexamp.v
+Ackermann.v
