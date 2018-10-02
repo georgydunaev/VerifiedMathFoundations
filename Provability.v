@@ -58,7 +58,6 @@ Inductive GPR : Fo -> Type :=
                  ->(GPR B)
 | GEN (q:useGEN c) (A : Fo) (xi:SetVars.t): (GPR A)->(GPR (Fora xi A))
 .
-Print All.
 End GRP_sec.
 
 Record Rules fo := {
@@ -110,7 +109,7 @@ Definition PREPR := GPR {|useMP:=True;useGEN:=True|} PRECA.
 (*Definition PR := GPR dcb PRECA.  aka PREPR *)
 
 
-Definition a1 axi A B : @PREPR axi (Impl A (Impl B A)).
+Definition a1 axi A B : @PROPR axi (Impl A (Impl B A)).
 Proof. apply Hax.
 (*
 Check Ha1 A B : PROCA (A --> (B --> A)).

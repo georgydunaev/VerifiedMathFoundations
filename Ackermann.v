@@ -100,7 +100,6 @@ Proof.
 Fail Check Ded.
 Fail intro b.
 Admitted.*)
-Check swapSIMPL.
 
 Definition p2_23_b ctx (t s:Terms) (x y:SetVars.t):
 APR ctx ((t==s) --> (s==t) ).
@@ -112,7 +111,6 @@ pose (step2 := swap ctx (x == y) (x == x) (y == x)).
 apply MP with (A:= Fora x (x == x)).
 apply aeq2.*)
 Abort.
-
 
 End inf_sec.
 

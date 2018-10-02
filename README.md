@@ -19,13 +19,6 @@ Verified theorems about first-order theories.
    runme.bat
 ```
 ## Linux (1st variant)
-1. Change path in makefile
-2. Create /library/ folder
-3. Make the makefile
-```
-   make all
-```
-## Linux (2nd variant)
 1. Change path in compile.cpp
 2. Create /library/ folder
 3. Compile the program
@@ -36,3 +29,18 @@ g++ compile.cpp -o compile.o
 ```
 ./compile.o
 ```
+## Linux (2nd variant)
+1. Change path in compile.cpp
+2. Create /library/ folder
+3. Make the makefile
+```
+   make all
+```
+## Linux (3rd variant)
+1. Change path in makefile
+2. Create /library/ folder
+3. Make the makefile
+```
+   make all
+```
+

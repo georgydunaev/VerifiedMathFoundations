@@ -666,7 +666,7 @@ induction m (* eqn: meq *); intros lfi val.
 Defined.
 (** SOUNDNESS IS PROVED **)
 
-Check foI. 
+(*Check foI.*)
 
 (*
 Theorem completeness (f:Fo)

@@ -10,8 +10,12 @@ new:
 	for number in 1 2 3 4 ; do \
 	    ./a.out $$number ; \
 	done
- 
+
 all:
+	g++ compile.cpp -o compile.o && ./compile.o
+
+ 
+oldall:
 	cp *.v library/
 	cd library && echo "The output will be in /library/." && \
 	$(CC)Misc.v && \

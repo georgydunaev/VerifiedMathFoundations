@@ -13,6 +13,8 @@ using std::istream_iterator;
 using std::copy;
 using namespace std;
 
+const string pathCOQC = "/home/user/opam-coq.8.8.1/4.02.3/bin/coqc";
+/*
 #include <iostream>
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -20,10 +22,11 @@ int notmain()
 {
     std::cout << "Temp directory is " << fs::temp_directory_path() << '\n';
 }
+*/
 
 int main()
 {
-    notmain(); exit(0);
+    //notmain(); exit(0);
     // Store the words from the two files into these two vectors
     vector<string> DataArray;
     //vector<string> QueryArray;
@@ -49,7 +52,7 @@ int main()
          back_inserter(QueryArray));*/
     int len=DataArray.size();
     string command1 = "cp ";
-    string command2 = "/home/user/opam-coq.8.8.1/4.02.3/bin/coqc ./library/";
+    string command2 = pathCOQC+" ./library/";
     for(int i=0;i<len;++i) {
     string nm=DataArray[i];
     auto c1 = string("cp ")+nm+string(" ./library/")+nm;

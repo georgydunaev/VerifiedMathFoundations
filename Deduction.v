@@ -17,13 +17,6 @@ Notation PredSymb := PredSymb.t (only parsing).
 
 Module Facts := BoolEqualityFacts SetVars.
 
-Lemma ZX (xi:SetVars) :true = negb (SetVars.eqb xi xi) -> False.
-Proof.
-intro q.
-rewrite Facts.eqb_refl in q.
-inversion q.
-Defined.
-
 Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false): 
  PREPR nil (ps --> ph) -> PREPR nil (ps --> Fora xi ph).
 Proof.
@@ -49,7 +42,7 @@ apply MP with (A:= (Fora xi (Top --> A)))  (1:=I).
 * apply GEN with (1:=I).
   apply MP with (A:= A) (1:=I).
   + exact q.
-  + apply a1.
+  + apply subcalc, a1.
 * apply b1.
   trivial.
 Defined.
@@ -61,7 +54,7 @@ Proof.
 intros x.
 apply MP with (A:= B) (1:=I).
 exact x.
-apply a1.
+apply subcalc, a1.
 Defined.
 
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PREPR l F)) : (PREPR (A::l) F).
@@ -84,7 +77,6 @@ assumption. *)
 + apply GEN with (1:=I). (* Order is not important! *)
   apply weak. (* Order is not important! *)
   exact x.
-Show Proof.
 Abort.
 
 Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
@@ -106,7 +98,7 @@ simpl.
 simple refine (@weak f F (li ++ l) _).
 apply weaken.
 exact x.
-Show Proof.
+(*Show Proof.*)
 Abort.
 
 Fixpoint weaken (F : Fo) (li l : list Fo) (x : PREPR l F) {struct li} :
@@ -143,7 +135,6 @@ destruct a.
 trivial.
 inversion G.
 Defined.
-
 
 Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons A il) B)) 
 (H:forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m))
@@ -198,10 +189,11 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
       fold r in U |- *.
       simpl in U.
       destruct (N r).
-      pose (C:= lm _ _(U H0)).
-      exfalso.
-      exact (ZX xi C).
-      exact H0.
+      - pose (C:= lm _ _(U H0)).
+        exfalso.
+        rewrite Facts.eqb_refl in C.
+        inversion C.
+      - exact H0.
 Defined.
 
 Definition lm3 (a b :bool)(A: true = a)(B: true = b):true = (a && b) 
@@ -263,7 +255,6 @@ intros xi H.
 rewrite -> NP in H.
 inversion H.
 Defined.
-Check orb_elim.
 
 Definition swapSIMPL ctx A B C
 (HA : forall xi : SetVars.t, isParamF xi A = false)
@@ -289,7 +280,6 @@ Definition swap ctx A B C :
 (PREPR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
-
 Admitted.
 
 
