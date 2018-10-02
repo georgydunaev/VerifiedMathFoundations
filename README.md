@@ -15,11 +15,24 @@ Verified theorems about first-order theories.
    CD /d C:\your\path\to\VerifiedMathFoundations-master
 ```
 5. Execute the batch file.
+```
    runme.bat
-
-## Linux
-1. Create /library/ folder
-2. Make the makefile
+```
+## Linux (1st variant)
+1. Change path in makefile
+2. Create /library/ folder
+3. Make the makefile
 ```
    make all
+```
+## Linux (2nd variant)
+1. Change path in compile.cpp
+2. Create /library/ folder
+3. Compile the program
+```
+g++ compile.cpp -o compile.o
+```
+4. Run the program
+```
+./compile.o
 ```

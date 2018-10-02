@@ -6,6 +6,10 @@ Terms:
 Formulas:
 	$(CC) Formulas.v
 
+new:
+	for number in 1 2 3 4 ; do \
+	    ./a.out $$number ; \
+	done
  
 all:
 	cp *.v library/
