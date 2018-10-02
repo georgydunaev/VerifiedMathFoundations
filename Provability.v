@@ -47,7 +47,6 @@ useMP:Prop;
 useGEN:Prop;
 }.
 
-Definition dcb := {|useMP:=True;useGEN:=True|}.
 (*Context (useGEN:Prop).*)
 Context (c:checks).
 Context (axs : Fo -> Type).
@@ -68,11 +67,12 @@ conclusion : fo;
 condition : Prop;
 }.
 
+(* <EXPERIMENTAL> *)
 Import ListNotations.
 Definition rMP A B := Build_Rules Fo [A ; A-->B] B.
 Definition rGEN A xi := Build_Rules Fo [A] (Fora xi A).
 Definition RulesScheme fo := list fo * list SetVars.t -> Rules fo.
-Print all.
+(*Print all.*)
 Section GRP2_sec.
 Context (axs : Fo -> Type).
 Context (ctx:list Fo).
@@ -89,7 +89,6 @@ Theorem gh (H: isMP=false): nat.
 destruct isMP.
 inversion H.
 exact 0.
-Show Proof.
 Abort.
 Inductive DER : Fo -> Type :=
 | Hyp (A : Fo): (InL A ctx)-> DER A
@@ -100,12 +99,18 @@ Inductive DER : Fo -> Type :=
 | GEND (A : Fo) (xi:SetVars.t): (DER A)->(DER (Fora xi A))*)
 .
 End GRP2_sec.
-(*Print All.*)
+(* </EXPERIMENTAL> *)
 
-(* Provability in predicate calculus *)
-Definition PR := GPR dcb PRECA. (*here*)
+Definition dcb := {|useMP:=True;useGEN:=True|}.
 
-Definition a1 axi A B : @PR axi (Impl A (Impl B A)).
+(* Provability in the propositional calculus. *)
+Definition PROPR := GPR {|useMP:=True;useGEN:=False|} PROCA.
+(* Provability in predicate calculus. *)
+Definition PREPR := GPR {|useMP:=True;useGEN:=True|} PRECA.
+(*Definition PR := GPR dcb PRECA.  aka PREPR *)
+
+
+Definition a1 axi A B : @PREPR axi (Impl A (Impl B A)).
 Proof. apply Hax.
 (*
 Check Ha1 A B : PROCA (A --> (B --> A)).
@@ -113,14 +118,13 @@ Check Ha1 A B : PRECA (A --> (B --> A)).
 (*Check (Ha1 A B: PRECA (A --> (B --> A))) : @PR axi (A --> (B --> A)).*)
 *)
 refine (Ha1 _ _). Defined.
-Definition a2 axi A B C : @PR axi ((A-->(B-->C))-->((A-->B)-->(A-->C))).
+Definition a2 axi A B C : @PREPR axi ((A-->(B-->C))-->((A-->B)-->(A-->C))).
 Proof. apply Hax, PRO, Ha2. Defined.
 Definition b1 axi (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
-@PR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
+@PREPR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax, Hb1, H. Defined.
-Theorem subcalc {ctx} (A:Fo) : 
-GPR {| useMP:= True; useGEN := False |} PROCA ctx A -> 
-GPR {| useMP:= True; useGEN := True |} PRECA ctx A.
+
+Theorem subcalc {ctx} (A:Fo) : PROPR ctx A -> PREPR ctx A.
 Proof.
 intro p.
 try apply PRO.
@@ -130,20 +134,21 @@ apply Hax, PRO, a.
 apply @MP with (A:=A) (1:=I). apply IHp1. apply IHp2.
 destruct q.
 Defined.
-(* how to separate rules of inference?*)
+
+Coercion subcalc : PROPR >-> PREPR.
 
 (*Arguments GPR {axs}.*)
 (*Notation newMP := (MP (1:=I)).*)
-Definition AtoA {ctx} (A:Fo) : PR ctx (A-->A).
+Definition AtoA {ctx} (A:Fo) : PROPR ctx (A-->A).
 Proof.
 apply MP with (A:=(A-->(A-->A))) (1:=I).  (*(MP ctx (A-->(A-->A)) _).*)
-apply a1. (* apply (Hax _ _ (Ha1 _ _)).*)
+apply Hax, Ha1. (* apply (Hax _ _ (Ha1 _ _)).*)
 apply MP with (A:= A-->((A-->A)-->A)) (1:=I).
-apply a1.
-apply a2.
+apply Hax, Ha1.
+apply Hax, Ha2.
 Defined.
 
-Definition a12 axi ph t xi : @PR axi (match (substF t xi ph) with 
+Definition a12 axi ph t xi : @PREPR axi (match (substF t xi ph) with 
       | Some q => (Impl (Fora xi ph) q)
       | None => Top
       end).

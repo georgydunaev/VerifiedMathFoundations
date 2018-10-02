@@ -25,7 +25,7 @@ inversion q.
 Defined.
 
 Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false): 
- PR nil (ps --> ph) -> PR nil (ps --> Fora xi ph).
+ PREPR nil (ps --> ph) -> PREPR nil (ps --> Fora xi ph).
 Proof.
 intro q.
 apply MP with (A:=(Fora xi (ps --> ph))) (1:=I).
@@ -36,13 +36,15 @@ apply MP with (A:=(Fora xi (ps --> ph))) (1:=I).
   exact H.
 Defined.
 
-Definition gen (A:Fo) (xi:SetVars) (*Generalization from Bernay's rule*)
-: PR nil (A) -> PR nil (Fora xi A).
+Definition gen (A:Fo) (xi:SetVars) ctx
+(*Generalization from Bernay's rule*)
+: PREPR ctx (A) -> PREPR ctx (Fora xi A).
 Proof.
 intro q.
 apply MP with (A:= Top) (1:=I).
 unfold Top.
-exact (AtoA Bot).
+fold PREPR.
+exact (@AtoA ctx Bot).
 apply MP with (A:= (Fora xi (Top --> A)))  (1:=I).
 * apply GEN with (1:=I).
   apply MP with (A:= A) (1:=I).
@@ -54,7 +56,7 @@ Defined.
 
 Definition neg (f:Fo):= (Impl f Bot).
 
-Definition a1i (A B : Fo)(l : list Fo):(PR l B)->(PR l (Impl A B)).
+Definition a1i (A B : Fo)(l : list Fo):(PREPR l B)->(PREPR l (Impl A B)).
 Proof.
 intros x.
 apply MP with (A:= B) (1:=I).
@@ -62,7 +64,7 @@ exact x.
 apply a1.
 Defined.
 
-Fixpoint weak (A F:Fo) (l :list Fo) (x: (PR l F)) : (PR (A::l) F).
+Fixpoint weak (A F:Fo) (l :list Fo) (x: (PREPR l F)) : (PREPR (A::l) F).
 Proof.
 destruct x as [a b|a b|i a b|a b].
 + apply hyp.
@@ -85,9 +87,9 @@ assumption. *)
 Show Proof.
 Abort.
 
-Fixpoint weak (A F : Fo) (l : list Fo) (x : PR l F) {struct x} :
-   PR (A :: l) F :=
-   match x in (GPR _ _ _ f) return (PR (A :: l) f) with
+Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
+   PREPR (A :: l) F :=
+   match x in (GPR _ _ _ f) return (PREPR (A :: l) f) with
    | hyp _ _ _ a b => hyp dcb PRECA (A :: l) a (inr b)
    | Hax _ _ _ a b => Hax dcb PRECA (A :: l) a b
    | MP _ _ _ _ a b x1 x2 =>
@@ -95,7 +97,7 @@ Fixpoint weak (A F : Fo) (l : list Fo) (x : PR l F) {struct x} :
    | GEN _ _ _ _ a b x0 => GEN dcb PRECA (A :: l) I a b (weak A a l x0)
    end.
 
-Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PR l F)) {struct li}: (PR (li ++ l) F).
+Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PREPR l F)) {struct li}: (PREPR (li ++ l) F).
 Proof.
 destruct li.
 simpl.
@@ -107,15 +109,15 @@ exact x.
 Show Proof.
 Abort.
 
-Fixpoint weaken (F : Fo) (li l : list Fo) (x : PR l F) {struct li} :
-   PR (li ++ l) F :=
-   match li as l0 return (PR (l0 ++ l) F) with
+Fixpoint weaken (F : Fo) (li l : list Fo) (x : PREPR l F) {struct li} :
+   PREPR (li ++ l) F :=
+   match li as l0 return (PREPR (l0 ++ l) F) with
    | Datatypes.nil => x
    | f :: li0 => weak f F (li0 ++ l) (weaken F li0 l x)
    end.
 
 (*Export List Notations.*)
-Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PR l B)){struct m}:bool.
+Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PREPR l B)){struct m}:bool.
 Proof.
 destruct m eqn: o.
 exact true.
@@ -143,9 +145,9 @@ inversion G.
 Defined.
 
 
-Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PR (cons A il) B)) 
+Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons A il) B)) 
 (H:forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m))
-{struct m}:(PR il (A-->B)).
+{struct m}:(PREPR il (A-->B)).
 Proof.
 destruct m. (*as [i|i|i|i|i|i|i].*)
 + unfold In in i.
@@ -227,7 +229,7 @@ Show Proof.
 Defined.*)
 
 
-Fixpoint forClosed (A B:Fo)(m:(PR (cons A nil) B)):
+Fixpoint forClosed (A B:Fo)(m:(PREPR (cons A nil) B)):
 (forall xi:SetVars, (false = isParamF xi A))
 ->
 (forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m)).
@@ -250,9 +252,9 @@ simpl. try reflexivity.
   inversion U.
 Defined.
 
-Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PR (cons A il) B))
+Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PREPR (cons A il) B))
 (NP:forall xi:SetVars, (isParamF xi A = false)) 
-{struct m}:(PR il (A-->B)).
+{struct m}:(PREPR il (A-->B)).
 Proof.
 (*unshelve eapply Ded.*)
 simple refine (Ded _ _ _ _ _).
@@ -267,7 +269,7 @@ Definition swapSIMPL ctx A B C
 (HA : forall xi : SetVars.t, isParamF xi A = false)
 (HB : forall xi : SetVars.t, isParamF xi B = false)
 (HC : forall xi : SetVars.t, isParamF xi C = false) :
-(PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+(PREPR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
 2 : { intro xi. simpl.
@@ -284,7 +286,7 @@ apply hyp; firstorder.
 Defined.
 
 Definition swap ctx A B C :
-(PR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+(PREPR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
 

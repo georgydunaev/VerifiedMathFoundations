@@ -624,7 +624,7 @@ apply H0.
 Defined.
 
 (* PROOF OF THE SOUNDNESS *)
-Theorem correct (f:Fo) (l:list Fo) (m:PR l f) 
+Theorem correct (f:Fo) (l:list Fo) (m : PREPR l f) 
 (lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars.t->X), 
 (@foI X fsI prI val h)) : 
 forall (val:SetVars.t->X), @foI X fsI prI val f.
@@ -674,7 +674,7 @@ Theorem completeness (f:Fo)
  : 
 exists  (l:list Fo)
 (lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars.t->X), 
-(@foI X fsI prI val h)), PR l f
+(@foI X fsI prI val h)), PREPR l f
 .
 Proof.
 Defined. *)
