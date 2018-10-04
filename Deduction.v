@@ -77,8 +77,9 @@ assumption. *)
 + apply GEN with (1:=I). (* Order is not important! *)
   apply weak. (* Order is not important! *)
   exact x.
-Abort.
+Defined.
 
+(*
 Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
    PREPR (A :: l) F :=
    match x in (GPR _ _ _ f) return (PREPR (A :: l) f) with
@@ -88,6 +89,7 @@ Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
        MP dcb PRECA (A :: l) I a b (weak A a l x1) (weak A (a --> b) l x2)
    | GEN _ _ _ _ a b x0 => GEN dcb PRECA (A :: l) I a b (weak A a l x0)
    end.
+*)
 
 Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PREPR l F)) {struct li}: (PREPR (li ++ l) F).
 Proof.
