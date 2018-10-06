@@ -34,6 +34,10 @@ Inductive Fo :=
  |Exis(x:SetVars.t)(f:Fo): Fo
 .
 
+Notation " x --> y ":=(Impl x y) (at level 80).
+Notation " x -/\ y ":=(Conj x y) (at level 80).
+Notation " x -\/ y ":=(Disj x y) (at level 80).
+
 (* Substitution *)
 Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
    match f with
@@ -89,7 +93,7 @@ Defined.
 
 Definition Top:Fo := Impl Bot Bot.
 
-Notation " x --> y ":=(Impl x y) (at level 80).
+
 (*
 Notation " u '[' t >> xi ] ":=(substT t xi u ) (at level 10).
 Set Warnings "-notation-overridden".

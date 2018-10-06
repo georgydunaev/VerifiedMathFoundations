@@ -145,10 +145,25 @@ Show Proof.
 Defined.
 Instance CMP_1 {ctx} : CMP (PROPR ctx) := MP_1.
 
+
 Definition IR_GEN := Build_IR (Fo * SetVars.t) [fst]
-(fun x => (Fora (snd x) (fst x))) True
-.
+(fun x => (Fora (snd x) (fst x))) True.
+
 Definition PREPR := PR [IR_MP;IR_GEN] PRECA.
+
+Definition GEN {ctx} x A:
+PREPR ctx A -> PREPR ctx (Fora x A).
+Proof.
+intros.
+unshelve eapply (Hrule [IR_MP;IR_GEN] PRECA ctx (Fora x A) IR_GEN) .
+ simpl. exact (pair A x).
+ simpl; right; left; reflexivity.
+ intros.
+ simpl in X0;
+ destruct X0. 2: destruct f.
+rewrite <- e.
+exact X.
+Defined.
 
 Definition MP_2 {ctx} A B:
 PREPR ctx A -> PREPR ctx (A-->B) -> PREPR ctx B.
@@ -232,6 +247,20 @@ Proof. apply Hax, Hb1, H. Defined.
 (* Enriched with axioms calculus  contatains the old one. *)
 Section subcalc_ax.
 Context (ctx : list Fo)  .
+Theorem subcalc (A:Fo) (ax0 ax1 : Fo -> Type) (lr0 lr1 : list IR)
+(H:forall f, ax0 f -> ax1 f)
+(J:forall r, InL r lr0  -> InL r lr1)
+(p : PR lr0 ax0 ctx A) : PR lr1 ax1 ctx A.
+Proof.
+induction p (*eqn:g*).
++ apply hyp, i.
++ apply Hax, H, a.
++ (* p = Hrule lr ax0 ctx A r u p0 Q *)
+ Check Hrule lr1 ax1 ctx A r (J _ u) p X.
+exact (Hrule lr1 ax1 ctx A r (J _ u) p X).
+Defined.
+
+(* it works, but it's useless
 Theorem subcalc_ax (A:Fo) (ax0 ax1 : Fo -> Type) (lr : list IR)
 (H:forall f, ax0 f -> ax1 f)
 (p : PR lr ax0 ctx A) : PR lr ax1 ctx A.
@@ -252,11 +281,20 @@ induction p (*eqn:g*).
 + apply Hax. exact a.
 + Check (H _ u).
 exact (Hrule lr1 ax ctx A r (H _ u) p X).
-Defined.
+Defined.*)
 End subcalc_ax.
-Theorem subcalc ctx (A:Fo) : PROPR ctx A -> PREPR ctx A.
+
+Theorem subcalc_OE ctx (A:Fo) : PROPR ctx A -> PREPR ctx A.
 Proof.
+apply subcalc.
+apply OtoE.
+simpl.
+intuition.
+Defined.
+
+(*intros.
 intro p.
+PRECA
 (* apply  Hax, OtoE. *)
 induction p eqn:g.
 + apply hyp, i.
@@ -286,11 +324,12 @@ admit.
 
   apply IHp1. apply IHp2.
 + destruct q.
-Defined.
-Coercion subcalc : PROPR >-> PREPR.
+Defined.*)
+Coercion subcalc_OE : PROPR >-> PREPR.
 
 (*Arguments GPR {axs}.*)
 (*Notation newMP := (MP (1:=I)).*)
+(*
 Definition AtoA {ctx} (A:Fo) : PROPR ctx (A-->A).
 Proof.
 apply MP with (A:=(A-->(A-->A))) (1:=I).  (*(MP ctx (A-->(A-->A)) _).*)
@@ -299,7 +338,7 @@ apply MP with (A:= A-->((A-->A)-->A)) (1:=I).
 apply Hax, Ha1.
 apply Hax, Ha2.
 Defined.
-
+*)
 
 
 
