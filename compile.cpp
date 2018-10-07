@@ -54,14 +54,13 @@ int main()
     string command1 = "cp ";
     string command2 = pathCOQC+" ./library/";
     for(int i=0;i<len;++i) {
-    string nm=DataArray[i];
-    auto c1 = string("cp ")+nm+string(" ./library/")+nm;
-    cout<<c1<<endl;
-    system(c1.c_str());
-    auto c2 = command2+nm;
-    cout<<c2<<endl;
-    system(c2.c_str());
-
+        string nm=DataArray[i];
+        auto c1 = string("cp ")+nm+string(" ./library/")+nm;
+        cout<<c1<<endl;
+        system(c1.c_str());
+        auto c2 = command2+nm;
+        cout<<c2<<endl;
+        system(c2.c_str());
     }
     try {
 
