@@ -9,6 +9,14 @@ Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module XPro := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
 Export XPro.
 
+
+(*Local Notation SetVars := SetVars.t (*only parsing*).
+Local Notation FuncSymb := FuncSymb.t (*only parsing*). 
+Local Notation PredSymb := PredSymb.t (*only parsing*).*)
+
+(*Notation " x --> y ":=(Impl x y) (at level 80).*)
+
+(*Open Scope list_scope.*)
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
   match l with
@@ -60,6 +68,8 @@ useGEN:Prop;
 (*Context (c:checks).*)
 Context (rules : list IR).
 Context (axs : Fo -> Type).
+Check map.
+
 Definition proof (PR : Fo -> Type) 
 (r:IR) (p : paramT r)
 :=
@@ -69,19 +79,20 @@ True.
 Definition rtype (PR : Fo -> Type):= forall (A:Fo) (r:IR) (u: InL r rules) (p : paramT r) 
 (Q: forall u:Fo, InL u (map (fun f => (f p)) (premi r)) -> PR u)
 , PR A.
-Context (ctx:list Fo).
+
 Inductive PR : Fo -> Type :=
-| hyp (A : Fo): (InL A ctx) -> PR A
-| Hax :> forall (A : Fo), (axs A) -> PR A
-| Hrule : rtype PR
+| Hax_O :> forall (A : Fo), (axs A) -> PR A
+| Hrule_PR : rtype PR
 .
 (*| MP_O (q:useMP c) (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
 | GEN_O (q:useGEN c) (A : Fo) (xi:SetVars.t): (PR A)->(PR (Fora xi A))
 .*)
-(* IT WORKS BUT USELES
 Class CHRULE (X : Fo -> Type) : Type :=
   Hrule : rtype X.
 Instance CHRULE_1 : CHRULE  PR := Hrule_PR.
+
+
+
 Context (ctx:list Fo).
 (* Derivation from a context. *)
 Inductive CPR : Fo -> Type :=
@@ -89,8 +100,9 @@ Inductive CPR : Fo -> Type :=
 | Hax_C :> forall (A : Fo), (axs A) -> CPR A
 | Hrule_CPR : rtype CPR
 .
+
 Instance CHRULE_2 : CHRULE CPR := Hrule_CPR.
-*)
+
 (*Inductive GPR : Fo -> Type :=
 | hyp (A : Fo): (InL A ctx) -> GPR A
 (*| HPR :> forall (A : Fo), (PR A) -> GPR A*)
@@ -101,8 +113,9 @@ Instance CHRULE_2 : CHRULE CPR := Hrule_CPR.
 .*)
 End GRP_sec.
 
-(*Class CHAX (X : Fo -> Type) (axs : Fo -> Type): Type :=
-  Hax :> forall (A : Fo), (axs A) -> X A.*)
+Class CHAX (X : Fo -> Type) (axs : Fo -> Type): Type :=
+  Hax :> forall (A : Fo), (axs A) -> X A.
+
 
 Record Rules fo := {
 premises : list fo;
@@ -112,22 +125,20 @@ condition : Prop;
 
 Import ListNotations.
 
-(*Inductive only_mp : IR -> Type :=|*)
-
 (* Provability in the propositional calculus. *)
 (*Definition PROPR := GPR {|useMP:=True;useGEN:=False|} PROCA.*)
 Definition PROPR := PR [IR_MP] PROCA.
-(*Instance CHAX_1 : CHAX (PR [IR_MP] PROCA) PROCA 
-:= Hax_O [IR_MP] PROCA. *)
+Instance CHAX_1 : CHAX (PR [IR_MP] PROCA) PROCA := Hax_O [IR_MP] PROCA.
+
+
 (*Instance CHAX_2 : CHAX CPR := Hax_C./*)
 Class CMP (X : Fo -> Type) : Type :=
   MP A B :X A -> X (A-->B) -> X B.
 (* Instance CMP_1 : CMP PROPR. intros A B.*)
-Definition MP_1 {ctx} A B:
-PROPR ctx A -> PROPR ctx (A-->B) -> PROPR ctx B.
+Definition MP_1 A B :PROPR A -> PROPR (A-->B) -> PROPR B.
 Proof.
 intros X0 X1.
-pose(t:= Hrule [IR_MP] PROCA ctx B).
+pose(t:= Hrule_PR [IR_MP] PROCA B).
 unshelve eapply t.
 exact IR_MP.
 exact (pair A B).
@@ -143,33 +154,7 @@ exact X1.
 destruct f.
 Show Proof.
 Defined.
-Instance CMP_1 {ctx} : CMP (PROPR ctx) := MP_1.
-
-Definition IR_GEN := Build_IR (Fo * SetVars.t) [fst]
-(fun x => (Fora (snd x) (fst x))) True
-.
-Definition PREPR := PR [IR_MP;IR_GEN] PRECA.
-
-Definition MP_2 {ctx} A B:
-PREPR ctx A -> PREPR ctx (A-->B) -> PREPR ctx B.
-Proof.
-intros X0 X1.
-pose(t:= Hrule [IR_MP;IR_GEN] PRECA ctx B).
-unshelve eapply t.
-exact IR_MP.
-exact (pair A B).
-left;reflexivity.
-intros u H.
-simpl in H.
-destruct H.
-rewrite <- e.
-exact X0.
-destruct s.
-rewrite <- e.
-exact X1.
-destruct f.
-Defined.
-Instance CMP_2 {ctx} : CMP (PREPR ctx) := MP_2.
+Instance CMP_1 : CMP PROPR := MP_1.
 
 (*trivial.
 unfold paramT.
@@ -181,7 +166,7 @@ Class CA1 (X : Fo -> Type) : Type :=
    a2 : forall (A B C: Fo), X ((A-->(B-->C))-->((A-->B)-->(A-->C)))
 }.
 
-Instance CHA1_1 {ctx}: CA1 (PROPR ctx).
+Instance CHA1_1 : CA1 PROPR.
 Proof.
 apply Build_CA1.
 (*unfold CA1.*)
@@ -191,7 +176,7 @@ intros.
 apply Hax, Ha2.
 Defined.
 
-Definition AtoA {ctx} (A:Fo) : PROPR ctx (A-->A).
+Definition AtoA (A:Fo) : PROPR (A-->A).
 Proof.
 apply MP with (A-->(A-->A)).
 apply a1. (* apply (Hax _ _ (Ha1 _ _)).*)
@@ -200,93 +185,53 @@ apply a1.
 apply a2.
 Defined.
 
+
 (* Provability in predicate calculus. *)
 (*Definition PREPR := GPR {|useMP:=True;useGEN:=True|} PRECA.*)
 Check True.
+Definition IR_GEN := Build_IR (Fo * SetVars.t) [fst]
+(fun x => (Fora (snd x) (fst x))) True
+.
 
-(*Instance CHAX_2 : CHAX (PR [IR_MP;IR_GEN] PRECA) PRECA.
+Definition PREPR := PR [IR_MP;IR_GEN] PRECA.
+Instance CHAX_2 : CHAX (PR [IR_MP;IR_GEN] PRECA) PRECA.
 Proof.
 unfold CHAX.
 intros.
 eapply Hax_O.
 exact X.
-Defined.*)
+Defined.
 (*:= Hax_O [IR_MP] PRECA.*)
 
-Instance CHA1_2 {ctx} : CA1 (PREPR ctx).
+Instance CHA1_2 : CA1 PREPR.
 Proof.
 apply Build_CA1.
 (*unfold CA1.*)
-+ intros. apply Hax, OtoE, Ha1.
++ intros. apply Hax_O, OtoE, Ha1.
 + intros. apply Hax, OtoE, Ha2.
 Defined.
 
 (*useless*)
-Definition Ma1 ctx A B : PREPR ctx (Impl A (Impl B A)).
+Definition Ma1 A B : PREPR (Impl A (Impl B A)).
 Proof. apply a1. Defined.
-Definition Ma2 ctx A B C : PREPR ctx ((A-->(B-->C))-->((A-->B)-->(A-->C))).
+Definition Ma2 A B C : PREPR ((A-->(B-->C))-->((A-->B)-->(A-->C))).
 Proof. apply a2. Defined.
-Definition b1 ctx (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
-PREPR ctx (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
+Definition b1 (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
+PREPR(Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax, Hb1, H. Defined.
-(* Enriched with axioms calculus  contatains the old one. *)
-Section subcalc_ax.
-Context (ctx : list Fo)  .
-Theorem subcalc_ax (A:Fo) (ax0 ax1 : Fo -> Type) (lr : list IR)
-(H:forall f, ax0 f -> ax1 f)
-(p : PR lr ax0 ctx A) : PR lr ax1 ctx A.
-Proof.
-induction p (*eqn:g*).
-+ apply hyp, i.
-+ apply Hax, H, a.
-+ (* p = Hrule lr ax0 ctx A r u p0 Q *)
- Check Hrule lr ax1 ctx A r u p X.
-exact (Hrule lr ax1 ctx A r u p X).
-Defined.
-Theorem subcalc_ru (A:Fo) (ax : Fo -> Type) (lr0 lr1 : list IR)
-(H:forall r, InL r lr0  -> InL r lr1)
-(p : PR lr0 ax ctx A) : PR lr1 ax ctx A.
-Proof.
-induction p (*eqn:g*).
-+ apply hyp, i.
-+ apply Hax. exact a.
-+ Check (H _ u).
-exact (Hrule lr1 ax ctx A r (H _ u) p X).
-Defined.
-End subcalc_ax.
-Theorem subcalc ctx (A:Fo) : PROPR ctx A -> PREPR ctx A.
+
+Theorem subcalc (*{ctx}*) (A:Fo) : PROPR (*ctx *)A -> PREPR (*ctx*) A.
 Proof.
 intro p.
-(* apply  Hax, OtoE. *)
-induction p eqn:g.
-+ apply hyp, i.
+try apply PRO.
+induction p.
+(*+ apply hyp, i.*)
 + apply  Hax, OtoE. exact a.
-+ fold PROPR in Q.
-simpl in * |- *.
-simpl in u.
-destruct u.
-2 : destruct f.
-
-(*rewrite <- e in Q.*)
-Check X A.
-  unshelve eapply X.
-2 : exact p.
-2 : {
-apply Q.
-}
-change (premi r) with (premi IR_MP).
-Compute premi IR_MP.
-(*rewrite <- e in p.*)
-apply MP_2 with A.
-unfold PR.
-(*apply  Hax, OtoE.*)
-apply MP with (A0:=A).
-apply (@CMP_2 ctx).
-admit.
-
++ apply MP with (A0:=A) .
   apply IHp1. apply IHp2.
 + destruct q.
 Defined.
+
 Coercion subcalc : PROPR >-> PREPR.
 
 (*Arguments GPR {axs}.*)
