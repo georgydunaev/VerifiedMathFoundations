@@ -632,8 +632,8 @@ Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi val.
 + exact (lfi A i _).
-+ destruct a eqn:k.
-  ++ destruct p.
++ destruct p eqn:k.
+  ++ destruct p0.
      * simpl.
        intros a0 b.
        exact a0.

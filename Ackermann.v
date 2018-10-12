@@ -62,7 +62,17 @@ Notation "( a 'e.' b )" := (Atom (MPSV (en 1) 2) [a:Terms ; b:Terms]).
 
 
 (* Provability in Ackermann set theory *)
-Definition APR := GPR dcb AxiomAST.
+(*Definition APR := GPR dcb AxiomAST.*)
+Section APR.
+Context (ctx:list Fo).
+Inductive APR : Fo -> Type :=
+| hyp_A (A : Fo): (InL A ctx)-> APR A
+| Hax_A :> forall (A : Fo), (AxiomAST A) -> APR A
+| MP_A (A B: Fo) : (APR A)->(APR (Impl A B))->(APR B)
+| GEN_A (A : Fo) (xi:SetVars.t): (APR A)->(APR (Fora xi A))
+.
+End APR.
+
 (* Mendelson p.102/447 *)
 (*Coercion FVC : SetVars.t >-> Terms.*)
 (*Coercion Q : (Vector.t SetVars.t n) >-> (Vector.t Terms n).*)
@@ -77,7 +87,7 @@ Proof.
 (*apply MP with (A:= Fora x (x == x)).
 change (Atom {| ps := en 0; psv := 2 |} [FVC x; FVC x]) with (x == x).
 *)
-apply MP with (A:= Fora x ( x == x)) (1:=I).
+apply MP_A with (A:= Fora x ( x == x)).
 (*
 try fold (Fora x (x == x)).
 try rewrite <- q.
@@ -85,8 +95,8 @@ pose (q:= (x == x)).
 replace (Atom {| ps := en 0; psv := 2 |} [FVC x; FVC x]) with (x == x).
 *)
 (*apply GEN.*)
-apply Hax, (aeq1 x).
-apply Hax, aPC.
+apply Hax_A, (aeq1 x).
+apply Hax_A, aPC.
 apply Ha12 with (t:=t).
 simpl.
 rewrite -> Facts.eqb_refl.

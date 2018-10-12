@@ -21,9 +21,9 @@ Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false):
  PREPR nil (ps --> ph) -> PREPR nil (ps --> Fora xi ph).
 Proof.
 intro q.
-apply MP with (A:=(Fora xi (ps --> ph))) (1:=I).
-(*apply (MP nil (Fora xi (ps --> ph))).*)
-+ apply (GEN) with (1:=I).
+apply MP_E with (A:=(Fora xi (ps --> ph))).
+(*apply (MP_E nil (Fora xi (ps --> ph))).*)
++ apply (GEN_E).
   exact q.
 + apply (b1 _).
   exact H.
@@ -34,13 +34,13 @@ Definition gen (A:Fo) (xi:SetVars) ctx
 : PREPR ctx (A) -> PREPR ctx (Fora xi A).
 Proof.
 intro q.
-apply MP with (A:= Top) (1:=I).
+apply MP_E with (A:= Top).
 unfold Top.
-fold PREPR.
+(*fold PREPR.*)
 exact (@AtoA ctx Bot).
-apply MP with (A:= (Fora xi (Top --> A)))  (1:=I).
-* apply GEN with (1:=I).
-  apply MP with (A:= A) (1:=I).
+apply MP_E with (A:= (Fora xi (Top --> A))).
+* apply GEN_E.
+  apply MP_E with (A:= A).
   + exact q.
   + apply subcalc, a1.
 * apply b1.
@@ -52,7 +52,7 @@ Definition neg (f:Fo):= (Impl f Bot).
 Definition a1i (A B : Fo)(l : list Fo):(PREPR l B)->(PREPR l (Impl A B)).
 Proof.
 intros x.
-apply MP with (A:= B) (1:=I).
+apply MP_E with (A:= B).
 exact x.
 apply subcalc, a1.
 Defined.
@@ -60,34 +60,34 @@ Defined.
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PREPR l F)) : (PREPR (A::l) F).
 Proof.
 destruct x as [a b|a b|i a b|a b].
-+ apply hyp.
++ apply hyp_E.
   right. (* apply inr. or_intror *)
   exact b.
-+ apply Hax,b.
++ apply Hax_E,b.
 (*apply a1.
 apply a2.
 apply a12.
 apply b1.
 assumption. *)
-+ apply MP with (A:= a) (1:=I).
++ apply MP_E with (A:= i).
+  * apply weak.
+    exact b.
   * apply weak.
     exact x1.
-  * apply weak.
-    exact x2.
-+ apply GEN with (1:=I). (* Order is not important! *)
++ apply GEN_E. (* Order is not important! *)
   apply weak. (* Order is not important! *)
   exact x.
-Abort.
+Defined.
 
-Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
+(*Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
    PREPR (A :: l) F :=
    match x in (GPR _ _ _ f) return (PREPR (A :: l) f) with
    | hyp _ _ _ a b => hyp dcb PRECA (A :: l) a (inr b)
    | Hax _ _ _ a b => Hax dcb PRECA (A :: l) a b
-   | MP _ _ _ _ a b x1 x2 =>
-       MP dcb PRECA (A :: l) I a b (weak A a l x1) (weak A (a --> b) l x2)
-   | GEN _ _ _ _ a b x0 => GEN dcb PRECA (A :: l) I a b (weak A a l x0)
-   end.
+   | MP_E _ _ _ _ a b x1 x2 =>
+       MP_E dcb PRECA (A :: l) I a b (weak A a l x1) (weak A (a --> b) l x2)
+   | GEN_E _ _ _ _ a b x0 => GEN_E dcb PRECA (A :: l) I a b (weak A a l x0)
+   end.*)
 
 Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PREPR l F)) {struct li}: (PREPR (li ++ l) F).
 Proof.
@@ -150,11 +150,11 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     exact J.
   * simpl in H.
     apply a1i.
-    apply hyp with (ctx:=il) (1:=i).
+    apply hyp_E with (ctx:=il) (1:=i).
     (*exact (hyp _ il _ i).*)
 + apply a1i.
-  apply Hax, p.
-+ apply MP with (A:= (A-->A0)) (1:=I).
+  apply Hax_E, p.
++ apply MP_E with (A:= (A-->A0)).
 - simple refine (@Ded _ _ _ _ _).
   exact m1.
   intros xi H0.
@@ -165,7 +165,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   fold J.
   fold J in W.
   apply (lm _ _ W).
-- apply MP with (A:= (A-->(A0-->B))) (1:=I).
+- apply MP_E with (A:= (A-->(A0-->B))).
   simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
@@ -174,8 +174,8 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   apply (lm2 _ _ W).
  (*Last part about GEN*)
   apply a2.
-  + apply MP with (A:= (Fora xi (A-->A0))) (1:=I).
-    apply GEN with (1:=I).
+  + apply MP_E with (A:= (Fora xi (A-->A0))).
+    apply GEN_E.
     simple refine (@Ded _ _ _ _ _).
     exact m.
     intros xi0 H0.
@@ -269,11 +269,11 @@ apply orb_intro. split. apply HB. apply HC.
 }
 unshelve eapply SimplDed. 2 : apply HB.
 unshelve eapply SimplDed. 2 : apply HA.
-apply MP with (A:=B) (1:=I). apply hyp.
+apply MP_E with (A:=B) . apply hyp_E.
 simpl. firstorder. (*apply inr.*)
-apply MP with (A:=A) (1:=I).
-apply hyp; firstorder.
-apply hyp; firstorder.
+apply MP_E with (A:=A) .
+apply hyp_E; firstorder.
+apply hyp_E; firstorder.
 Defined.
 
 Definition swap ctx A B C :
