@@ -21,9 +21,9 @@ Definition B1 (ps ph:Fo) (xi:SetVars) (H:isParamF xi ps = false):
  PREPR nil (ps --> ph) -> PREPR nil (ps --> Fora xi ph).
 Proof.
 intro q.
-apply MP with (A:=(Fora xi (ps --> ph))) (*1:=I*).
+apply MP with (A:=(Fora xi (ps --> ph))) (1:=I).
 (*apply (MP nil (Fora xi (ps --> ph))).*)
-+ apply (GEN). (*with (1:=I).*)
++ apply (GEN) with (1:=I).
   exact q.
 + apply (b1 _).
   exact H.
@@ -34,15 +34,15 @@ Definition gen (A:Fo) (xi:SetVars) ctx
 : PREPR ctx (A) -> PREPR ctx (Fora xi A).
 Proof.
 intro q.
-apply MP with Top.
+apply MP with (A:= Top) (1:=I).
 unfold Top.
 fold PREPR.
 exact (@AtoA ctx Bot).
-apply MP with (A0:= (Fora xi (Top --> A))).
-* apply GEN.
-  apply MP with (A0:= A).
+apply MP with (A:= (Fora xi (Top --> A)))  (1:=I).
+* apply GEN with (1:=I).
+  apply MP with (A:= A) (1:=I).
   + exact q.
-  + apply subcalc_OE, a1.
+  + apply subcalc, a1.
 * apply b1.
   trivial.
 Defined.
@@ -52,15 +52,14 @@ Definition neg (f:Fo):= (Impl f Bot).
 Definition a1i (A B : Fo)(l : list Fo):(PREPR l B)->(PREPR l (Impl A B)).
 Proof.
 intros x.
-apply MP with (A0:= B).
+apply MP with (A:= B) (1:=I).
 exact x.
-apply subcalc_OE, a1.
+apply subcalc, a1.
 Defined.
-(*PREPR*)
-Fixpoint weak (lr:list IR) (axs:Fo -> Type)
-(A F:Fo) (l :list Fo) (x: (PR lr axs l F)) : (PR lr axs (A::l) F).
+
+Fixpoint weak (A F:Fo) (l :list Fo) (x: (PREPR l F)) : (PREPR (A::l) F).
 Proof.
-destruct x as [a b|a b|i a b] eqn:j.
+destruct x as [a b|a b|i a b|a b].
 + apply hyp.
   right. (* apply inr. or_intror *)
   exact b.
@@ -70,20 +69,15 @@ apply a2.
 apply a12.
 apply b1.
 assumption. *)
-+ fold PREPR in Q.
-pose(Q2:=fun u v => weak _ _ A u _ (Q u v)).
-pose(m:=Hrule lr axs (A::l) i a b p).
-exact (m Q2).
-(*OLD
-+ apply MP with (A0:= i).
++ apply MP with (A:= a) (1:=I).
   * apply weak.
     exact x1.
   * apply weak.
     exact x2.
-+ apply GEN.
-  apply weak.
-  exact x.*)
-Defined. (*(IR_MP :: IR_GEN :: Datatypes.nil) PRECA*)
++ apply GEN with (1:=I). (* Order is not important! *)
+  apply weak. (* Order is not important! *)
+  exact x.
+Defined.
 
 (*
 Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
@@ -103,7 +97,7 @@ destruct li.
 simpl.
 exact x.
 simpl.
-simple refine (@weak _ _ f F (li ++ l) _).
+simple refine (@weak f F (li ++ l) _).
 apply weaken.
 exact x.
 (*Show Proof.*)
@@ -113,51 +107,20 @@ Fixpoint weaken (F : Fo) (li l : list Fo) (x : PREPR l F) {struct li} :
    PREPR (li ++ l) F :=
    match li as l0 return (PREPR (l0 ++ l) F) with
    | Datatypes.nil => x
-   | f :: li0 => weak _ _ f F (li0 ++ l) (weaken F li0 l x)
+   | f :: li0 => weak f F (li0 ++ l) (weaken F li0 l x)
    end.
 
 (*Export List Notations.*)
 Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PREPR l B)){struct m}:bool.
 Proof.
-destruct m (*eqn: o*).
-+ exact true.
-+ destruct p eqn:j.
-  * exact true.
-  * exact true.
-  * exact true.
-+ fold PREPR in Q.
- revert p Q . (*o*)
-  destruct u as [H|[H|H]]; try rewrite <- H; intros. clear r H.
- simpl in * |- *.
-(*  destruct u as [H1|[H2|H3]].*)
-  3 : destruct H. (*H3*)
-  *
-(*pose (pnew:=p).
-rewrite <- H1 in pnew.
-assert(Qnew : forall u : Fo,
-    InL u (map (fun f : paramT IR_MP -> Fo => f pnew) (premi IR_MP)) ->
-    PR (IR_MP :: IR_GEN :: Datatypes.nil) PRECA l u).
-(*admit.*)
-2 : { *)
- apply andb.
- - unshelve eapply (notGenWith xi l (fst p)). 
-   (*fold PREPR in Qnew. ; apply Qnew.*) apply Q.
-   simpl; left; reflexivity.
- - unshelve eapply ((notGenWith xi l (fst p --> snd p))).
-   apply Q.
-   simpl. right; left; reflexivity.
-* clear r H.
-simpl in * |- *.
-pose(xi0:=snd p).
-refine (andb (negb (SetVars.eqb xi xi0)) _).
-refine (notGenWith xi l (fst p) _ ).
-apply Q.
-left;trivial.
-(*Compute paramT IR_MP.*)
-(* OLD
-exact (andb (notGenWith xi l _ (fst p)) (notGenWith xi l _ p2)).
+destruct m eqn: o.
+exact true.
+destruct p eqn:j.
+exact true.
+exact true.
+exact true.
+exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
 exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ).
-*)
 Defined.
 
 Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
@@ -193,17 +156,8 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     (*exact (hyp _ il _ i).*)
 + apply a1i.
   apply Hax, p.
-+
-simpl in u. revert p Q H.
-destruct u as [Hq|[Hq|Hq]]; try rewrite <- Hq; intros. 3 : destruct Hq.
- * (*clear r Hq.*)
-   fold PREPR in Q.
-   simpl in p,Q.
-simple refine (@Ded _ _ _ _ _).  ???
-   apply Q.
++ apply MP with (A:= (A-->A0)) (1:=I).
 - simple refine (@Ded _ _ _ _ _).
-{ apply Q. }    apply MP with (A-->A0).
-
   exact m1.
   intros xi H0.
   pose (W:=H xi H0).
@@ -213,7 +167,7 @@ simple refine (@Ded _ _ _ _ _).  ???
   fold J.
   fold J in W.
   apply (lm _ _ W).
-- apply MP with (A0:= (A-->(A0-->B))).
+- apply MP with (A:= (A-->(A0-->B))) (1:=I).
   simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
@@ -222,8 +176,8 @@ simple refine (@Ded _ _ _ _ _).  ???
   apply (lm2 _ _ W).
  (*Last part about GEN*)
   apply a2.
-  + apply MP with (A0:= (Fora xi (A-->A0))).
-    apply GEN.
+  + apply MP with (A:= (Fora xi (A-->A0))) (1:=I).
+    apply GEN with (1:=I).
     simple refine (@Ded _ _ _ _ _).
     exact m.
     intros xi0 H0.
@@ -317,9 +271,9 @@ apply orb_intro. split. apply HB. apply HC.
 }
 unshelve eapply SimplDed. 2 : apply HB.
 unshelve eapply SimplDed. 2 : apply HA.
-apply MP with (A0:=B). apply hyp.
+apply MP with (A:=B) (1:=I). apply hyp.
 simpl. firstorder. (*apply inr.*)
-apply MP with (A0:=A).
+apply MP with (A:=A) (1:=I).
 apply hyp; firstorder.
 apply hyp; firstorder.
 Defined.
