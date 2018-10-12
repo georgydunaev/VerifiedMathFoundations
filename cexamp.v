@@ -63,10 +63,10 @@ Check Atom (MPSV 0 2)
 Definition xeqy := Atom (MPSV 0 2) 
 (Vector.cons _ (FVC 1) _ (Vector.cons _ (FVC 0) _ (Vector.nil _ ))).
 
-Theorem upr : PR (xeqy::nil) (Fora 2 xeqy).
+Theorem upr : PREPR (xeqy::nil) (Fora 2 xeqy).
 Proof.
-apply GEN with (1:=I).
-apply hyp.
+apply GEN_E.
+apply hyp_E.
 simpl.
 apply inl.
 reflexivity.
@@ -82,7 +82,7 @@ Print Implicit foI.
 Check foI.*)
 Definition foIn := @foI X fsI prI.
 Theorem badcorrect (x1 x2 : X) (nequ : ~(x1=x2))
-(f:Fo) (l:list Fo) (m:PR l f) :
+(f:Fo) (l:list Fo) (m : PREPR l f) :
 ~ (forall(val:SetVars.t->X) (lfi : forall h:Fo, (InL h l)->(foIn val h)), foIn val f).
 Proof.
 intro H.

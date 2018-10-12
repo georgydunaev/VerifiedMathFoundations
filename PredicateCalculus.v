@@ -624,7 +624,7 @@ apply H0.
 Defined.
 
 (* PROOF OF THE SOUNDNESS *)
-Theorem correct (f:Fo) (l:list Fo) (m:PR l f) 
+Theorem correct (f:Fo) (l:list Fo) (m : PREPR l f) 
 (lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars.t->X), 
 (@foI X fsI prI val h)) : 
 forall (val:SetVars.t->X), @foI X fsI prI val f.
@@ -632,8 +632,8 @@ Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi val.
 + exact (lfi A i _).
-+ destruct a eqn:k.
-  ++ destruct p.
++ destruct p eqn:k.
+  ++ destruct p0.
      * simpl.
        intros a0 b.
        exact a0.
@@ -666,7 +666,7 @@ induction m (* eqn: meq *); intros lfi val.
 Defined.
 (** SOUNDNESS IS PROVED **)
 
-Check foI. 
+(*Check foI.*)
 
 (*
 Theorem completeness (f:Fo)
@@ -674,7 +674,7 @@ Theorem completeness (f:Fo)
  : 
 exists  (l:list Fo)
 (lfi : forall  (h:Fo), (InL h l)-> forall (val:SetVars.t->X), 
-(@foI X fsI prI val h)), PR l f
+(@foI X fsI prI val h)), PREPR l f
 .
 Proof.
 Defined. *)
