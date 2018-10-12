@@ -114,9 +114,9 @@ destruct f.
   eapply (@Vector.map Terms X (@teI _ fsI val)).
   exact t.
 + exact OFalse.
-+ exact ( OConj (foI val f1) (foI val f2)).
-+ exact ( ODisj (foI val f1) (foI val f2)).
-+ exact ( OImpl (foI val f1) (foI val f2)).
++ exact ( OAnd (foI val f1) (foI val f2)).
++ exact (  OOr (foI val f1) (foI val f2)).
++ exact ( OImp (foI val f1) (foI val f2)).
 + exact (forall m:X, foI (cng val x m) f).
 + exact (Osig (fun m:X => foI (fun r:SetVars.t =>
    match SetVars.eqb r x with

@@ -4,13 +4,17 @@ Require Import Coq.Structures.Equalities.
 Require Formulas.
 Export Formulas.
 Export Coq.Lists.List.
-Require Import Poly.
 
 Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module XPro := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
 Export XPro.
 
-
+Definition InL { A : Type } :=
+fix InL (a : A) (l : list A) {struct l} : Type :=
+  match l with
+  | Datatypes.nil => False
+  | b :: m => (sum (b = a) (InL a m))
+  end.
 
 (* PROpositional Calculus Axioms *)
 Inductive PROCA : Fo -> Type :=
