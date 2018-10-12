@@ -199,10 +199,16 @@ destruct u as [Hq|[Hq|Hq]]; try rewrite <- Hq; intros. 3 : destruct Hq.
  * (*clear r Hq.*)
    fold PREPR in Q.
    simpl in p,Q.
-simple refine (@Ded _ _ _ _ _).  ???
-   apply Q.
+simple refine (@Ded _ _ _ _ _).
+2 : exact H.
+* simpl in *|-*.
+unfold PREPR.
+(*  apply Hax.
+   apply Q.*)
 - simple refine (@Ded _ _ _ _ _).
-{ apply Q. }    apply MP with (A-->A0).
+{ apply Q. 
+left. simpl in H.
+}    apply MP with (A-->A0).
 
   exact m1.
   intros xi H0.
