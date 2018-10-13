@@ -14,6 +14,7 @@ using std::copy;
 using namespace std;
 
 const string pathCOQC = "/home/user/opam-coq.8.8.1/4.02.3/bin/coqc";
+const string pathlib = "/home/user/0my/GITHUB/VerifiedMathFoundations/library";
 /*
 #include <iostream>
 #include <experimental/filesystem>
@@ -55,9 +56,34 @@ int main()
     string command2 = pathCOQC+" ./library/";
     for(int i=0;i<len;++i) {
     string nm=DataArray[i];
-    auto c1 = string("cp ")+nm+string(" ./library/")+nm;
+    auto c1 = string("ADD_PATH&COPY "/*"cp "*/)+nm+string(" ./library/")+nm;
     cout<<c1<<endl;
-    system(c1.c_str());
+
+    // HERE COPY AND ADD STRING.
+    //system(c1.c_str());
+
+{
+    std::string line;
+    vector<string> code; // all file 
+    ifstream qfile(nm);
+
+    if(!qfile) //Always test the file open.
+    {
+        cout<<"Error opening input file"<<endl;
+        //system("pause"); return -1;
+    }
+    code.push_back(string("Add LoadPath \"")+pathlib+string("\"."));
+    while (std::getline(qfile, line))
+    {
+        code.push_back(line);
+    }
+    cout<<"Print here: "<<string("./library/")+nm<<endl;
+    ofstream outfile(string("./library/")+nm);
+    int le = code.size();
+    for(unsigned int i=0; i<le; i++)
+      outfile << code[i] << endl;
+}
+
     auto c2 = command2+nm;
     cout<<c2<<endl;
     system(c2.c_str());

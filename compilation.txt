@@ -10,3 +10,5 @@ Deduction.v
 PredicateCalculus.v
 cexamp.v
 Ackermann.v
+Propositional.v
+Translation.v

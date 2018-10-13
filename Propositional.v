@@ -19,8 +19,17 @@ Require Poly.
 Export Poly.
 (*Export Poly.ModProp.*)
 
-Module  Formulas_mod (PropVars : UsualDecidableTypeFull).
+Module Prop_mod (PropVars : UsualDecidableTypeFull).
 
+(*
+Inductive Fm_O :=
+ |Atom_O (p:PropVars.t) :> Fm_O
+ |Bot_O :Fm_O
+ |Conj_O:Fm_O->Fm_O->Fm_O
+ |Disj_O:Fm_O->Fm_O->Fm_O
+ |Impl_O:Fm_O->Fm_O->Fm_O
+.
+*)
 Inductive Fo :=
  |Atom (p:PropVars.t) :> Fo
  |Bot :Fo
@@ -149,8 +158,8 @@ induction H.
     - exact H0.
     - exact H1.
   * simpl. intros.
-Show Proof.
-Check (H0 y1 _ _ y1).
+(*Show Proof.
+Check (H0 y1 _ _ y1).*)
 eapply (H0 y1 _ _ y1).
 apply R_reflexive.
 apply H2.
@@ -184,7 +193,7 @@ exact (R_transitive y y0 y1 H1 H3).
 exact H4.
 Defined.
 
-Check nil%list.
+(*Check nil%list.*)
 Fixpoint CONJ (l:list Fo) : Fo :=
 match l return Fo with
 | List.nil  => Top
@@ -335,8 +344,8 @@ apply MP with (s-\/(DISJ D)).
   simpl.
   firstorder.
 Defined.
-Locate prod.
-Print Scopes.
+(*Locate prod.
+Print Scopes.*)
 Open Scope type_scope.
 
 Section Completeness.
@@ -378,4 +387,4 @@ R:W->W->Prop;
 }.*)
 
 End OmegaInterpretation.
-End Formulas_mod.
+End Prop_mod.
