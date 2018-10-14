@@ -44,3 +44,20 @@ g++ compile.cpp -o compile.o
    make all
 ```
 
+# Description
+
+Misc.v 
+Valuation.v
+eqb_nat.v
+UNIV_INST.v - universal instantiation for vectors
+Terms.v - terms for predicate calculus (PC)
+Poly.v - experimental polymorphism for semantics
+Formulas.v - formuli of the PC
+Provability.v - provability predicate for PC
+Deduction.v - deduction theorem for PC
+PredicateCalculus.v - soundness theorem for PC
+cexamp.v - (not finished)
+Ackermann.v - set theory implementation (work in progress)
+Propositional.v - deduction, soundness of intuitionistic propositional logic (IProL)
+Translation.v - for using theorems from IProL in PC
+

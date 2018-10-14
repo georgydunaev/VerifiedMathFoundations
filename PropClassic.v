@@ -1,11 +1,4 @@
-(* Here will be theorems about propositional logic.
-Then I'll decide how to unite it with the rest. *)
-
-(* TODO RENAME and UNIFY *)
-Require Import Relations.
-Require Import Classes.RelationClasses.
-Require Export Coq.Vectors.Vector.
-Require Import Coq.Structures.Equalities.
+(* Here will be theorems about classical propositional logic. *)
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export Coq.Lists.List.
 Definition InL { A : Type } :=
@@ -14,22 +7,100 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | Datatypes.nil => False
   | b :: m => (sum (b = a) (InL a m))
   end.
+Require Import Coq.Structures.Equalities.
+Module Lang (PropVars : UsualDecidableTypeFull).
+ Inductive Fo :=
+ |Atom (p:PropVars.t) :> Fo
+ |Bot :Fo
+ |Conj:Fo->Fo->Fo
+ |Disj:Fo->Fo->Fo
+ |Impl:Fo->Fo->Fo
+ .
+ Notation " x --> y ":=(Impl x y) (at level 80, right associativity). 
+(*81, right associativity*)
+ Notation " x -/\ y ":=(Conj x y) (at level 80).
+ Notation " x -\/ y ":=(Disj x y) (at level 80).
+ Notation " -. x " :=(Impl x Bot) (at level 80).
+ Definition Top:Fo := Impl Bot Bot.
+
+ Inductive PROCAI : Fo -> Type :=
+ | Ha1  : forall A B, PROCAI (A-->(B-->A))
+ | Ha2  : forall A B C, PROCAI ((A-->(B-->C))-->((A-->B)-->(A-->C)))
+ | Ha3  : forall A B, PROCAI ((A-/\ B)--> A)
+ | Ha4  : forall A B, PROCAI ((A-/\ B)--> B)
+ | Ha5  : forall A B, PROCAI (A-->(B-->(A-/\B)))
+ | Ha6  : forall A B, PROCAI (A-->(A-\/ B))
+ | Ha7  : forall A B, PROCAI (B-->(A-\/ B))
+ | Ha8  : forall A B C, PROCAI ((A-->C)-->((B-->C)-->((A-\/ B)-->C)))
+ | Ha9  : forall A B, PROCAI (-.A --> A --> B )
+ .
+ Inductive PROCA : Fo -> Type :=
+ | Intui :> forall f, PROCAI f -> PROCA f
+ | Ha10  : forall A, PROCA (A -\/ -.A)
+ .
+End Lang.
+
+Module ProCl (PropVars : UsualDecidableTypeFull).
+ Module XLang := Lang PropVars. (* Export XLang. *)
+ (*Check XLang.Fo.*)
+ Import XLang.
+ (*Check Fo.*)
+ Section PR.
+  Context (ctx:list Fo).
+  Context (axs:Fo -> Type).
+  Inductive PR : Fo -> Type :=
+  | hyp (A : Fo) : (InL A ctx) -> PR A
+  | Hax :> forall (A : Fo), (axs A) -> PR A
+  | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
+  .
+ End PR.
+ Section foI_dn. (* Entails for double negation. *)
+  Context (val:PropVars.t->Prop).
+  Fixpoint foI_dn (f:Fo) : Prop := 
+  match f with 
+   | Atom p => (((val p)->False)->False)
+   | Bot => False
+   | f1 -/\ f2 => foI_dn f1 /\ foI_dn f2
+   | f1 -\/ f2 => (((foI_dn f1 \/ foI_dn f2)->False)->False)
+   | f1 --> f2 => (foI_dn f1) -> (foI_dn f2)
+  end.
+ End foI_dn.
+ Section sou.
+  Context (val:PropVars.t->Prop).
+  Check PROCA.
+  Export List.ListNotations.
+  Theorem sou f (H:PR [] PROCA f) : foI_dn val f.
+  Proof.
+  induction H;firstorder.
+  (*+ inversion i.*)
+  + induction a;firstorder.
+    * induction p; firstorder.
+      (*- simpl. intros x y. exact x.
+      - simpl. intros x y z. exact (x z (y z)).*)
+        simpl. intros.
+        induction C ;firstorder.
+ (*-- simpl in * |- *. intros. simpl in * |- *.
+    exact (H1 (fun y=> (or_ind H H0) y H2)).
+ -- exact (H1 (or_ind H H0)).
+ -- firstorder.
+ -- firstorder.
+ -- firstorder.
+ * firstorder.
+ + firstorder.*)
+ Defined.
+ End sou.
+End ProCl.
+(*
+(* TODO RENAME and UNIFY *)
+Require Import Relations.
+Require Import Classes.RelationClasses.
+Require Export Coq.Vectors.Vector.
 
 Require Poly.
 Export Poly.
 (*Export Poly.ModProp.*)
 
 Module Prop_mod (PropVars : UsualDecidableTypeFull).
-
-(*
-Inductive Fm_O :=
- |Atom_O (p:PropVars.t) :> Fm_O
- |Bot_O :Fm_O
- |Conj_O:Fm_O->Fm_O->Fm_O
- |Disj_O:Fm_O->Fm_O->Fm_O
- |Impl_O:Fm_O->Fm_O->Fm_O
-.
-*)
 Inductive Fo :=
  |Atom (p:PropVars.t) :> Fo
  |Bot :Fo
@@ -38,17 +109,11 @@ Inductive Fo :=
  |Impl:Fo->Fo->Fo
 .
 
-Notation " x --> y ":=(Impl x y) (at level 80, right associativity). 
-(*81, right associativity*)
-Notation " x -/\ y ":=(Conj x y) (at level 80).
-Notation " x -\/ y ":=(Disj x y) (at level 80).
-Notation " -. x " :=(Impl x Bot) (at level 80).
 (* Substitution *)
 Fixpoint subPF (t:Fo) (xi: PropVars.t) (u : Fo): Fo.
 Proof.
 Abort. (*Defined.*)
 
-Definition Top:Fo := Impl Bot Bot.
 
 Section OmegaInterpretation.
 Definition Omega := Prop.
@@ -73,28 +138,9 @@ Fixpoint foI (f : Fo) : Omega :=
    | f1 --> f2 => foI f1 =-> foI f2
    end.
 *)
-Inductive PROCA : Fo -> Type :=
-| Ha1  : forall A B, PROCA (A-->(B-->A))
-| Ha2  : forall A B C, PROCA ((A-->(B-->C))-->((A-->B)-->(A-->C)))
-| Ha3  : forall A B, PROCA ((A-/\ B)--> A)
-| Ha4  : forall A B, PROCA ((A-/\ B)--> B)
-| Ha5  : forall A B, PROCA (A-->(B-->(A-/\B)))
-| Ha6  : forall A B, PROCA (A-->(A-\/ B))
-| Ha7  : forall A B, PROCA (B-->(A-\/ B))
-| Ha8  : forall A B C, PROCA ((A-->C)-->((B-->C)-->((A-\/ B)-->C)))
-| Ha9  : forall A B, PROCA (-.A --> A --> B )
-.
+
 (*Check Ha9.*)
 
-Section PR.
-Context (ctx:list Fo).
-Context (axs:Fo -> Type).
-Inductive PR : Fo -> Type :=
-| hyp (A : Fo) : (InL A ctx) -> PR A
-| Hax :> forall (A : Fo), (axs A) -> PR A
-| MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
-.
-End PR.
 Section WR.
 Context (W:Set) (R:W->W->Prop) (R_transitive : transitive W R)
 (R_reflexive : reflexive W R).
@@ -388,4 +434,4 @@ R:W->W->Prop;
 }.*)
 
 End OmegaInterpretation.
-End Prop_mod.
+End Prop_mod.*)
