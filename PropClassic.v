@@ -46,10 +46,11 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Import XLang.
  (*Check Fo.*)
  Section PR.
-  Context (ctx:list Fo).
+  (*Context (ctx:list Fo).*)
+  Context (ctx:Fo -> Type).
   Context (axs:Fo -> Type).
   Inductive PR : Fo -> Type :=
-  | hyp (A : Fo) : (InL A ctx) -> PR A
+  | hyp (A : Fo) : (*InL A ctx*) ctx A -> PR A
   | Hax :> forall (A : Fo), (axs A) -> PR A
   | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
   .
@@ -65,12 +66,13 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
    | f1 --> f2 => (foI_dn f1) -> (foI_dn f2)
   end.
  End foI_dn.
- Section sou.
+ Export List.ListNotations.
+ (*Section sou.
   Context (val:PropVars.t->Prop).
-  Check PROCA.
-  Export List.ListNotations.
-  Theorem sou f (H:PR [] PROCA f) : foI_dn val f.
-  Proof.
+  Check PROCA.*)
+  Theorem sou_dn f (H:PR (*[]*) (fun x=>False) PROCA f) : 
+    forall (val:PropVars.t->Prop), foI_dn val f.
+  Proof. intro val.
   induction H;firstorder.
   (*+ inversion i.*)
   + induction a;firstorder.
@@ -88,7 +90,156 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  * firstorder.
  + firstorder.*)
  Defined.
- End sou.
+ (*End sou.*)
+ Definition Empt := fun x:Fo => False.
+ Theorem com_dn f (H : forall (val:PropVars.t->Prop), foI_dn val f) : 
+  PR Empt PROCA f.
+ Proof.
+ Abort.
+ Section foI_bo.
+  Context (val:PropVars.t->bool).
+  Fixpoint foI_bo (f:Fo) : bool := 
+  match f with 
+   | Atom p => (val p)
+   | Bot => false
+   | f1 -/\ f2 => andb (foI_bo f1) (foI_bo f2)
+   | f1 -\/ f2 => orb (foI_bo f1) (foI_bo f2)
+   | f1 --> f2 => implb (foI_bo f1) (foI_bo f2)
+  end.
+ End foI_bo.
+
+ Definition Consis (G:Fo -> Type) := (PR G PROCA Bot)->False.
+
+ Definition MaxCon (G:Fo -> Type) (Y:Consis G) :=
+  (forall F:Fo, sum (G F) (G (-.F)) ).
+ Definition conca (A:Fo) (G:Fo -> Type) :Fo -> Type 
+:= fun X :Fo => sum (X=A) (G A).
+
+ Theorem lem1_0 G (H:Consis G) A :
+  (Consis (conca A G))+(Consis (conca (-.A) G)).
+ Admitted.
+ Section assump. (*temporary*)
+ Context (enu: nat -> Fo).
+ Context (surj: forall f:Fo, sig (fun n:nat=> f = enu n)).
+ Inductive steps : forall (G:Fo->Type) (H:Consis G), Fo -> Type :=
+ | base : forall (f:Fo) (G:Fo->Type) (H:Consis G), G f -> steps G H f
+ | addl : forall A G (H:(Consis (conca A G))),
+   steps (conca A G) H A
+ | addr : forall A G (H:(Consis (conca (-.A) G))),
+   steps (conca (-.A) G) H (-.A)
+ .
+(* | addi : forall A G 
+  (H:sum (Consis (conca A G)) (Consis (conca (-.A) G))),
+  match H with 
+  | inl HL => MaxC (conca A G) HL A
+  | inr HR => MaxC (conca (-.A) G) HR A
+  end.*)
+
+ Definition isMax (G:Fo->Type) := prod (Consis G) 
+(forall f:Fo, (Consis (conca f G)) -> G f).
+
+ Definition isMax' (G:Fo->Type) := prod (Consis G) 
+((exists f:Fo , ((Consis (conca f G)) -> G f) -> False)->False).
+
+ (* *)
+ Definition MaxC (acc : Fo->Type) (H:Consis acc) (n:nat) : 
+  sig (fun Q : Fo->Type => Consis Q).
+ Proof.
+ induction n as [|n].
+ - exists acc. exact H.
+ - destruct IHn as [Q K].
+   destruct (lem1_0 Q K (enu n)) as [HL|HR].
+   exists (conca (enu n) Q). exact HL.
+   exists (conca (-.(enu n)) Q). exact HR.
+ Defined.
+
+ (* Maximal & consistent type.*)
+ Section Delta.
+ Context (acc : Fo->Type) (H:Consis acc).
+ Definition Delta  : Fo->Type.
+ Proof.
+ intros f.
+ refine (sigT (fun n:nat=> _)).
+ exact ((proj1_sig (MaxC acc H n)) f).
+ Defined.
+
+ (* Property 1*)
+ Theorem py1 : Consis Delta.
+ Proof.
+unfold Consis.
+unfold Delta.
+ Abort.
+ End Delta.
+
+ induction (surj f).
+
+ Definition MaxC (acc : Fo->Type) (H:Consis acc) (n:nat) : 
+  sig (fun Q : Fo->Type => Consis Q).
+ Proof.
+ induction n as [|n].
+ - exists acc. exact H.
+ - destruct IHn as [Q K].
+   destruct (lem1_0 Q K (enu n)) as [HL|HR].
+   exists (conca (enu n) Q). exact HL.
+   exists (conca (-.(enu n)) Q). exact HR.
+ Defined.
+
+
+(*
+Check sig.
+Check proj1_sig.
+Context (acc:Fo->Type) (H :Consis acc).
+ forall f:Fo, (proj1_sig (MaxC acc H (enu f)))
+*)
+ Definition unio (acc : Fo->Type) (H:Consis acc) : Fo->Type.
+ Proof. intros f.
+ destruct (surj f).
+ pose (m:= MaxC acc H (S x)).
+ destruct m.
+ exact exists
+
+refine (sigT (fun n=>)).
+
+ Definition MaxC' (acc : Fo->Type) (H:Consis acc) (n:nat) : 
+ sigT (fun Q : Fo->Type => 
+   prod (Consis Q) (forall F:Fo, sum (Q F) (Q (-.F)))).
+ Proof.
+ induction n.
+ - exists acc. 
+   split.
+   exact H.
+ Abort.
+
+ Definition MaxC'' (acc : Fo->Type) (H:Consis acc) : 
+  exists Q : Fo->Type, Consis Q.
+
+ induction n.
+
+admit.
+
+ Definition MaxC (acc : Fo->Type) (H:Consis acc) (n:nat) : Fo->Type.
+ Proof.
+ intros f.
+ induction f.
+ unfold Consis in H.
+ Check lem1_0 acc (H:Consis G) A 
+  (*Consis (conca A G))+(Consis (conca (-.A) G)*)
+
+ induction n.
+ + 
+ Theorem thm (G:Fo->Type) (H:Consis G) : isMax (MaxC G H).
+ Proof.
+ 
+ Definition MaxC : forall (G:Fo->Type) (H:Consis G),
+
+ Theorem com_bo f
+  (H : forall (val:PropVars.t->bool), foI_bo val f = true) :
+  PR [] PROCA f.
+ Proof.
+  induction f.
+  simpl in * |- *.
+ Abort.
+ End assump.
 End ProCl.
 (*
 (* TODO RENAME and UNIFY *)
