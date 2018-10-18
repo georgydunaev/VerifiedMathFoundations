@@ -13,7 +13,7 @@ Proof.
   reflexivity.
 Defined.
 
-Theorem eq_equ (A B:Prop) : A=B -> (A <-> B).
+(*Theorem eq_equ (A B:Prop) : A=B -> (A <-> B).
 Proof.
 intro p. 
 destruct p.
@@ -26,14 +26,17 @@ Theorem disj_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 \/ B0) = (A1 \/ B1).
 Proof. destruct pA, pB; reflexivity. Defined.
 Theorem impl_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 -> B0) = (A1 -> B1).
 Proof. destruct pA, pB; reflexivity. Defined.
+*)
 
 Lemma EqualThenEquiv A B: A=B -> (A<->B). intro H. rewrite H. exact (iff_refl B). Defined.
 
+(*
 Lemma ix W (P Q:W->Prop) (H: P = Q):(forall x, P x)=(forall y, Q y).
 Proof.
 rewrite H.
 reflexivity.
 Defined.
+*)
 
 Lemma AND_EQV : forall A0 B0 A1 B1 : Prop, 
 (A0 <-> A1) -> (B0 <-> B1) -> ((A0 /\ B0) <-> (A1 /\ B1)).
