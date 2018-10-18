@@ -10,7 +10,7 @@ Export Coq.Lists.List.
 Import Bool.Bool.
 
 Module Ackermann_mod (*SetVars FuncSymb PredSymb: UsualDecidableTypeFull*).
-Module SetVars : UsualDecidableTypeFull :=PeanoNat.Nat.
+Module SetVars  : UsualDecidableTypeFull := PeanoNat.Nat.
 Module FuncSymb : UsualDecidableTypeFull := PeanoNat.Nat.
 Module PredSymb : UsualDecidableTypeFull := PeanoNat.Nat.
 

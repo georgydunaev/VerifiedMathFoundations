@@ -121,13 +121,13 @@ exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
 exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ).
 Defined.
 
-Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
+(*Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
 Proof.
 destruct xi.
 reflexivity.
 simpl.
 exact (HA xi).
-Defined.
+Defined.*)
 
 Theorem lm (a b :bool)(G:true = (a && b) ): true = a.
 Proof.

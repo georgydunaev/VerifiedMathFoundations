@@ -1,6 +1,6 @@
 Require Import Arith.Peano_dec.
 Require Import Bool.Bool.
-
+(*
 Lemma eqb_comm x xi : PeanoNat.Nat.eqb xi x =  PeanoNat.Nat.eqb x xi.
 Proof.
 destruct (PeanoNat.Nat.eqb xi x) eqn:e1.
@@ -22,3 +22,4 @@ apply n5.
 apply not_true_iff_false.
 exact e1.
 Defined.
+*)
