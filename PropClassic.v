@@ -16,8 +16,8 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  |Disj:Fo->Fo->Fo
  |Impl:Fo->Fo->Fo
  .
- Notation " x --> y ":=(Impl x y) (at level 80, right associativity). 
-(*81, right associativity*)
+
+ Notation " x --> y ":=(Impl x y) (at level 80, right associativity).
  Notation " x -/\ y ":=(Conj x y) (at level 80).
  Notation " x -\/ y ":=(Disj x y) (at level 80).
  Notation " -. x " :=(Impl x Bot) (at level 80).
@@ -42,11 +42,8 @@ End Lang.
 
 Module ProCl (PropVars : UsualDecidableTypeFull).
  Module XLang := Lang PropVars. (* Export XLang. *)
- (*Check XLang.Fo.*)
  Import XLang.
- (*Check Fo.*)
  Section PR.
-  (*Context (ctx:list Fo).*)
   Context (ctx:Fo -> Type).
   Context (axs:Fo -> Type).
   Inductive PR : Fo -> Type :=
@@ -67,31 +64,21 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
   end.
  End foI_dn.
  Export List.ListNotations.
- (*Section sou.
-  Context (val:PropVars.t->Prop).
-  Check PROCA.*)
-  Theorem sou_dn f (H:PR (*[]*) (fun x=>False) PROCA f) : 
+
+ (*Empty context*)
+ Definition Empt := fun x:Fo => False.
+
+ (*Soundness of the double-negation semantics *)
+ Theorem sou_dn f (H:PR Empt PROCA f) :
     forall (val:PropVars.t->Prop), foI_dn val f.
-  Proof. intro val.
+ Proof. intro val.
   induction H;firstorder.
-  (*+ inversion i.*)
   + induction a;firstorder.
     * induction p; firstorder.
-      (*- simpl. intros x y. exact x.
-      - simpl. intros x y z. exact (x z (y z)).*)
         simpl. intros.
         induction C ;firstorder.
- (*-- simpl in * |- *. intros. simpl in * |- *.
-    exact (H1 (fun y=> (or_ind H H0) y H2)).
- -- exact (H1 (or_ind H H0)).
- -- firstorder.
- -- firstorder.
- -- firstorder.
- * firstorder.
- + firstorder.*)
  Defined.
- (*End sou.*)
- Definition Empt := fun x:Fo => False.
+
  Theorem com_dn f (H : forall (val:PropVars.t->Prop), foI_dn val f) : 
   PR Empt PROCA f.
  Proof.
@@ -107,6 +94,19 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
    | f1 --> f2 => implb (foI_bo f1) (foI_bo f2)
   end.
  End foI_bo.
+
+ (*Soundness of the boolean semantics *)
+ Theorem sou_bo f (H:PR Empt PROCA f) :
+    forall (val:PropVars.t->bool), (foI_bo val f)=true.
+ Proof. intro val.
+ induction H.
+ + destruct c.
+ + induction a.
+   * induction p; simpl; destruct (foI_bo val A), (foI_bo val B); 
+     try destruct (foI_bo val C); firstorder.
+   * simpl; destruct (foI_bo val A); firstorder.
+ + simpl in * |- *; destruct (foI_bo val A), (foI_bo val B); firstorder.
+ Defined.
 
  Definition Consis (G:Fo -> Type) := (PR G PROCA Bot)->False.
 
@@ -171,9 +171,9 @@ unfold Delta.
  Abort.
  End Delta.
 
- induction (surj f).
+ (*induction (surj f).*)
 
- Definition MaxC (acc : Fo->Type) (H:Consis acc) (n:nat) : 
+ Definition MaxCe (acc : Fo->Type) (H:Consis acc) (n:nat) : 
   sig (fun Q : Fo->Type => Consis Q).
  Proof.
  induction n as [|n].
@@ -196,9 +196,9 @@ Context (acc:Fo->Type) (H :Consis acc).
  destruct (surj f).
  pose (m:= MaxC acc H (S x)).
  destruct m.
- exact exists
-
-refine (sigT (fun n=>)).
+ (*exact exists
+refine (sigT (fun n=>)).*)
+ Abort.
 
  Definition MaxC' (acc : Fo->Type) (H:Consis acc) (n:nat) : 
  sigT (fun Q : Fo->Type => 
@@ -212,24 +212,23 @@ refine (sigT (fun n=>)).
 
  Definition MaxC'' (acc : Fo->Type) (H:Consis acc) : 
   exists Q : Fo->Type, Consis Q.
+ (* induction n.
+ admit. *)
+ Abort.
 
- induction n.
-
-admit.
-
- Definition MaxC (acc : Fo->Type) (H:Consis acc) (n:nat) : Fo->Type.
+ Definition MaxCx (acc : Fo->Type) (H:Consis acc) (n:nat) : Fo->Type.
  Proof.
  intros f.
  induction f.
  unfold Consis in H.
- Check lem1_0 acc (H:Consis G) A 
-  (*Consis (conca A G))+(Consis (conca (-.A) G)*)
+ (*Check lem1_0 acc (H:Consis G) A.
+ Consis (conca A G))+(Consis (conca (-.A) G)*)
+ (*induction n.
+ + *)
+ Abort.
 
- induction n.
- + 
- Theorem thm (G:Fo->Type) (H:Consis G) : isMax (MaxC G H).
+ (*Theorem thm (G:Fo->Type) (H:Consis G) : isMax (MaxC G H).
  Proof.
- 
  Definition MaxC : forall (G:Fo->Type) (H:Consis G),
 
  Theorem com_bo f
@@ -238,7 +237,7 @@ admit.
  Proof.
   induction f.
   simpl in * |- *.
- Abort.
+ Abort.*)
  End assump.
 End ProCl.
 (*
