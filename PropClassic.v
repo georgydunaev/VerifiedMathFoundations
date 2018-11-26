@@ -1,6 +1,6 @@
 (* Here will be theorems about classical propositional logic. *)
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
-Require Export Coq.Lists.List.
+Require Import Coq.Lists.List.
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
   match l with
@@ -8,6 +8,7 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | b :: m => (sum (b = a) (InL a m))
   end.
 Require Import Coq.Structures.Equalities.
+(* Language of the propositional logic. *)
 Module Lang (PropVars : UsualDecidableTypeFull).
  Inductive Fo :=
  |Atom (p:PropVars.t) :> Fo
@@ -22,7 +23,7 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  Notation " x -\/ y ":=(Disj x y) (at level 80).
  Notation " -. x " :=(Impl x Bot) (at level 80).
  Definition Top:Fo := Impl Bot Bot.
-
+ (* Proposional calculus' axioms (Intuitionistic) *)
  Inductive PROCAI : Fo -> Type :=
  | Ha1  : forall A B, PROCAI (A-->(B-->A))
  | Ha2  : forall A B C, PROCAI ((A-->(B-->C))-->((A-->B)-->(A-->C)))
@@ -41,7 +42,7 @@ Module Lang (PropVars : UsualDecidableTypeFull).
 End Lang.
 
 Module ProCl (PropVars : UsualDecidableTypeFull).
- Module XLang := Lang PropVars. (* Export XLang. *)
+ Module XLang := Lang PropVars.
  Import XLang.
  Section PR.
   Context (ctx:Fo -> Type).
@@ -52,6 +53,7 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
   | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
   .
  End PR.
+ (*Double negation semantics for classical propositional logic (CPRoL).*)
  Section foI_dn. (* Entails for double negation. *)
   Context (val:PropVars.t->Prop).
   Fixpoint foI_dn (f:Fo) : Prop := 
@@ -79,10 +81,7 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
         induction C ;firstorder.
  Defined.
 
- Theorem com_dn f (H : forall (val:PropVars.t->Prop), foI_dn val f) : 
-  PR Empt PROCA f.
- Proof.
- Abort.
+ (* Boolean semantics for classical propositional logic. *)
  Section foI_bo.
   Context (val:PropVars.t->bool).
   Fixpoint foI_bo (f:Fo) : bool := 
@@ -108,6 +107,29 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  + simpl in * |- *; destruct (foI_bo val A), (foI_bo val B); firstorder.
  Defined.
 
+ (* lem3, page 47 *)
+ Section lem3.
+ Context (A:Fo).
+ Fixpoint vblesoffm (F:Fo) (v:PropVars.t) : Type :=
+ match F with
+ | Atom p => (v=p)
+ | Bot => False
+ | Conj f0 f1 | Disj f0 f1 | Impl f0 f1 =>
+    sum (vblesoffm f0 v) (vblesoffm f1 v)
+ end.
+
+ destruct F.
+
+ Definition 
+ Theorem 
+ End lem3.
+ (* Completeness theorem for DN semantics of the CProL*)
+ Theorem com_dn f (H : forall (val:PropVars.t->Prop), foI_dn val f) : 
+  PR Empt PROCA f.
+ Proof.
+ Abort.
+
+ (* Unfinished completeness theorem. *)
  Definition Consis (G:Fo -> Type) := (PR G PROCA Bot)->False.
 
  Definition MaxCon (G:Fo -> Type) (Y:Consis G) :=

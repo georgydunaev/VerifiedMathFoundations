@@ -51,8 +51,9 @@ Definition Terms_ind (T : Terms -> Prop)
         end in
       H_FSC f v (loopv _ v)
     end.
+(*Check Terms_ind.*)
 
-Fixpoint substT (t:Terms) (xi: SetVars.t) (u:Terms): Terms. 
+Fixpoint substT (t:Terms) (xi: SetVars.t) (u:Terms): Terms.
 Proof.
 destruct u as [s|f t0].
 2 : {
@@ -64,6 +65,7 @@ destruct u as [s|f t0].
  exact t.
  exact s.
 }
+(*Show Proof.*)
 Defined.
 
 Fixpoint isParamT (xi : SetVars.t) (t : Terms) {struct t} : bool :=

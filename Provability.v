@@ -20,6 +20,7 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
 Inductive PROCA : Fo -> Type :=
 | Ha1  : forall A B, PROCA (A-->(B-->A))
 | Ha2  : forall A B C, PROCA ((A-->(B-->C))-->((A-->B)-->(A-->C)))
+(*| Ha3  : forall A B, PROCA (Conj A B --> A)*)
 .
 
 (* PREdicate Calculus Axioms *)
@@ -138,5 +139,12 @@ Proof. induction (substF t xi ph) eqn:g. eapply Hax_E, Ha12, g.
 unfold Top.
 exact (AtoA  Bot).
 Defined.
+
+(* page 155 *)
+Theorem reverse_subst (xi eta:SetVars.t) (ph ps:Fo)
+(H: (substF eta xi ph) = Some ps) : (substF xi eta ps) = Some ph.
+Proof.
+unfold substF in H.
+Abort.
 
 End Provability_mod.

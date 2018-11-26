@@ -1,9 +1,9 @@
 Require List.
 Require Bool.
 Require Import Coq.Structures.Equalities.
-
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Import Misc.
+(*From VerifiedMathFoundations.library Require Import Misc.*)
 Require Export Provability.
 
 Module Deduction_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
@@ -109,16 +109,21 @@ Fixpoint weaken (F : Fo) (li l : list Fo) (x : PREPR l F) {struct li} :
    end.
 
 (*Export List Notations.*)
-Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PREPR l B)){struct m}:bool.
+Fixpoint notGenWith (xi:SetVars)(l:list Fo)
+(B:Fo)(m:(PREPR l B)){struct m}:bool.
 Proof.
-destruct m eqn: o.
+(*induction m.  eqn: o.*)
+destruct m  eqn: o.
+(*Show Proof.*)
 exact true.
 destruct p eqn:j.
 exact true.
 exact true.
 exact true.
+(*exact (andb IHm1 IHm2).
+exact (andb (negb (SetVars.eqb xi xi0)) IHm).*)
 exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
-exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ).
+exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ). 
 Defined.
 
 (*Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
