@@ -39,41 +39,6 @@ Inductive PRECA : Fo -> Type :=
 PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .
 
-(*Coercion PRO : PROCA >-> PRECA.*)
-
-(*Section GRP_sec.
-Record checks := {
-useMP:Prop;
-useGEN:Prop;
-}.*)
-
-(*Context (useGEN:Prop).*)
-(*Context (c:checks).*)
-(*
-Inductive GPR : Fo -> Type :=
-| hyp (A : Fo): (InL A ctx)-> GPR A
-| Hax :> forall (A : Fo), (axs A) -> GPR A
-| MP (q:useMP c) (A B: Fo) : (GPR A)->(GPR (Impl A B))
-                 ->(GPR B)
-| GEN (q:useGEN c) (A : Fo) (xi:SetVars.t): (GPR A)->(GPR (Fora xi A))
-.
-End GRP_sec.
-
-
-Definition dcb := {|useMP:=True;useGEN:=True|}.
-
-(* Provability in the propositional calculus. *)
-Definition PROPR := GPR {|useMP:=True;useGEN:=False|} PROCA.
-(* Provability in predicate calculus. *)
-Definition PREPR := GPR {|useMP:=True;useGEN:=True|} PRECA.
-(*Definition PR := GPR dcb PRECA.  aka PREPR *)
-*)
-
-(* TODO: Fo divide into Fm_O and Fm_E. *)
-(*Class cMP (PR:Fo-> Type) := 
-MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
-.*)
-
 (***** MISLEADING THING *****)
 Section PROPR.
 (*Context (axs : Fo -> Type).*)
@@ -84,8 +49,6 @@ Inductive PROPR : Fo -> Type :=
 | MP_O (A B: Fo) : (PROPR A)->(PROPR (Impl A B))
                  ->(PROPR B)
 .
-(*Check cMP PROPR.
-Instance cMPo : (cMP PROPR) := MP_O.*)
 End PROPR.
 
 
