@@ -16,14 +16,21 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | b :: m => (sum (b = a) (InL a m))
   end.
 
-(* PROpositional Calculus Axioms *)
+(* intuitionistic "PROpositional" Calculus Axioms *)
 Inductive PROCA : Fo -> Type :=
 | Ha1  : forall A B, PROCA (A-->(B-->A))
 | Ha2  : forall A B C, PROCA ((A-->(B-->C))-->((A-->B)-->(A-->C)))
-(*| Ha3  : forall A B, PROCA (Conj A B --> A)*)
+| Ha3  : forall A B, PROCA (Conj A B --> A)
+| Ha4  : forall A B, PROCA (Conj A B --> B)
+| Ha5  : forall A B, PROCA (A --> (B --> Conj A B))
+| Ha6  : forall A B, PROCA (A --> Disj A B)
+| Ha7  : forall A B, PROCA (B --> Disj A B)
+| Ha8  : forall A B C, PROCA ((A --> C) --> ((B --> C) --> (Disj A B --> C)))
+| Ha9  : forall A B, PROCA (Neg A --> (A --> B))
+| Ha10  : forall A B, PROCA ((A --> B) --> ((A --> Neg B) --> Neg A))
 .
 
-(* PREdicate Calculus Axioms *)
+(* intuitionistic PREdicate Calculus Axioms *)
 Inductive PRECA : Fo -> Type :=
 | PRO  :> forall A, (PROCA A) -> (PRECA A)
 | Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
@@ -67,6 +74,7 @@ Definition PREPR := GPR {|useMP:=True;useGEN:=True|} PRECA.
 MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
 .*)
 
+(***** MISLEADING THING *****)
 Section PROPR.
 (*Context (axs : Fo -> Type).*)
 Context (ctx:list Fo).
@@ -79,6 +87,7 @@ Inductive PROPR : Fo -> Type :=
 (*Check cMP PROPR.
 Instance cMPo : (cMP PROPR) := MP_O.*)
 End PROPR.
+
 
 Section PREPR.
 (*Context (axs : Fo -> Type).*)

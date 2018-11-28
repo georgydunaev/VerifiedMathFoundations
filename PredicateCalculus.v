@@ -640,6 +640,14 @@ induction m (* eqn: meq *); intros lfi val.
      * simpl.
        intros a0 b c.
        exact (a0 c (b c)).
+     * simpl. intros [i0 i1]. assumption.
+     * simpl. intros [i0 i1]. assumption.
+     * simpl. intros m1 m2. split; assumption.
+     * simpl. intros n. left. assumption.
+     * simpl. intros n. right. assumption.
+     * simpl. intros f1 f2 [h|h]. exact (f1 h). exact (f2 h).
+     * simpl. intros i0 i1. destruct (i0 i1).
+     * simpl. intros i0 i1 i2. apply (i1 i2). apply (i0 i2).
   ++ simpl in *|-*.
   (*destruct (substF t xi ph) eqn: j.*)
   apply (UnivInst ph val xi t r s).

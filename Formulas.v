@@ -87,7 +87,9 @@ refine (match (isParamF xi (Exis x u)) with
 | false => Some (Exis x u) end).
 Defined.
 
-Definition Top:Fo := Impl Bot Bot.
+Definition Neg (A:Fo):Fo := Impl A Bot.
+
+Definition Top:Fo := Neg Bot.
 
 Notation " x --> y ":=(Impl x y) (at level 80).
 (*
