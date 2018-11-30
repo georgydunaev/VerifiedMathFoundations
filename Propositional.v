@@ -8,6 +8,7 @@ Require Export Coq.Vectors.Vector.
 Require Import Coq.Structures.Equalities.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Export Coq.Lists.List.
+
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
   match l with
@@ -87,10 +88,10 @@ Inductive PROCA : Fo -> Type :=
 (*Check Ha9.*)
 
 Section PR.
-Context (ctx:list Fo).
+Context (ctx:Fo -> Type). (*Context (ctx:list Fo).*)
 Context (axs:Fo -> Type).
 Inductive PR : Fo -> Type :=
-| hyp (A : Fo) : (InL A ctx) -> PR A
+| hyp (A : Fo) : (ctx A) -> PR A
 | Hax :> forall (A : Fo), (axs A) -> PR A
 | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
 .
@@ -147,10 +148,16 @@ Defined.
 
 (* Soundness of IPro *)
 Export List.ListNotations.
-Theorem sou f (H:PR [] PROCA f) : forall x, foI x f.
+Theorem lf2ft :(list Fo) -> (Fo->Type).
+Proof. intros lf f. exact (InL f lf). Defined.
+
+(*Coercion lf2ft. : (list Fo) >-> (Fo->Type).*)
+
+Inductive empctx : Fo -> Type :=.
+Theorem sou f (H:PR empctx PROCA f) : forall x, foI x f.
 Proof.
 induction H.
-+ simpl in i. destruct i.
++ destruct c. (*simpl in i. destruct i.*)
 + induction a.
   * simpl. intros.
     simpl in * |- *.
@@ -206,10 +213,10 @@ match l return Fo with
 end.
 (*Consistent Pair*)
 Definition conpa (G D:list Fo) : Type
-:= (PR [] PROCA ((CONJ G) --> (DISJ D))) -> False.
+:= (PR empctx PROCA ((CONJ G) --> (DISJ D))) -> False.
 
 Definition incpa (G D:list Fo) : Type
-:=  PR [] PROCA ((CONJ G) --> (DISJ D)).
+:=  PR empctx PROCA ((CONJ G) --> (DISJ D)).
 
 
 Inductive SubFo (f:Fo): Fo -> Type :=
@@ -231,36 +238,49 @@ apply Hax, Ha1.
 apply Hax, Ha2.
 Defined.
 
+Definition add2ctx (A:Fo) (l:Fo->Type) : Fo->Type 
+:= fun f=> sum (A=f) (l f). (* add head *)
+
+Definition cnctctx (l1 l2:Fo->Type) : Fo->Type 
+:= fun f=> sum (l1 f) (l2 f). (* concat *)
 
 (*Fixpoint *)
 Theorem weak (axs:Fo -> Type)
-(A F:Fo) (l :list Fo) (x: (PR l axs F)) : (PR (A::l) axs F).
+(A F:Fo) (*l :list Fo*) (l:Fo->Type)
+(x: (PR l axs F)) : (PR (add2ctx A l) axs F).
 Proof.
 induction x.
 + apply hyp.
   right.
-  exact i.
+  assumption.
 + apply Hax, a.
-+ exact (MP (A::l) axs A0 B IHx1 IHx2).
++ exact (MP (add2ctx A l) axs A0 B IHx1 IHx2).
 Defined.
 
-Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PR l PROCA F)) {struct li}:
- (PR (li ++ l) PROCA F).
+(*Fixpoint*)
+Definition weaken (F:Fo) (li l :Fo->Type) (x: (PR l PROCA F)) 
+(*{struct li}*): (PR (cnctctx li l) PROCA F).
 Proof.
-destruct li.
+induction x.
++ apply hyp.
+  right.
+  assumption.
++ apply Hax, a.
++ exact (MP (cnctctx li l) _ A B IHx1 IHx2).
+(*destruct li.
 simpl.
 exact x.
 simpl.
 simple refine (@weak _ f F (li ++ l)%list _).
 apply weaken.
-exact x.
+exact x.*)
 Defined.
 
 Export Coq.Lists.List.
 
 Definition neg (f:Fo):= (Impl f Bot).
 
-Definition a1i (A B : Fo)(l : list Fo):
+Definition a1i (A B : Fo)(l : Fo->Type):
 (PR l PROCA B)->(PR l PROCA (Impl A B)).
 Proof.
 intros x.
@@ -269,18 +289,34 @@ exact x.
 eapply (*subcalc_OE,*) Hax,Ha1.
 Defined.
 
+Lemma addempeqv (il:Fo->Type) : forall (f:Fo), 
+(cnctctx il empctx) f -> il f.
+Proof. intros f q. destruct q. exact i. destruct e. Defined.
+
+(*
+PR (cnctctx il empctx) PROCA (A --> A)
+PR il PROCA (A --> A)
+*)
+
 (* Deduction *)
-Theorem Ded (A B:Fo)(il:list Fo)(m:(PR (A::il) PROCA B)) 
+Theorem Ded (A B:Fo)(il:Fo->Type)(m:(PR (add2ctx A il) PROCA B)) 
 :(PR il PROCA (A-->B)).
 Proof.
 induction m.
-+ unfold InL in i.
-  simpl in i .
-  destruct i .
++ (*unfold InL in c.*)
+  simpl in c .
+  destruct c .
   * rewrite <- e.
-    pose (J:=weaken _ il [] (AtoA A )).
-    rewrite app_nil_r in J.
-    exact J.
+    pose (J:=weaken _ il empctx (AtoA A )).
+    (* rewrite app_nil_r in J.*)
+    induction J.
+    - destruct c.
+      apply hyp. assumption.
+      destruct e0.
+    - apply Hax. assumption.
+    - apply MP with (A:=A1); assumption.
+    (*rewrite - addempeqv in J.
+    exact J.*)
   * simpl in i.
     apply a1i.
     apply hyp with (ctx:=il) (1:=i).
@@ -294,11 +330,11 @@ induction m.
   apply Ha2.
 Defined.
 
-Theorem invDed (A B:Fo)(il:list Fo)(m:(PR il PROCA (A-->B)))
-:(PR (A::il) PROCA B).
+Theorem invDed (A B:Fo)(il:Fo->Type)(m:(PR il PROCA (A-->B)))
+:(PR (add2ctx A il) PROCA B).
 Proof.
 pose(U:=(weak PROCA A _ il m)).
-assert (N:PR (A :: il) PROCA A).
+assert (N:PR (add2ctx A il) PROCA A).
 apply hyp. simpl. left. reflexivity.
 apply MP with A.
 exact N.
@@ -306,14 +342,23 @@ exact U.
 Defined.
 
 (* Order of the context is not important. *)
-Lemma permut axs L1 L2 A (H: forall x, InL x L1 -> InL x L2)
+Lemma permut axs L1 L2 A (H: forall x, L1 x -> L2 x)
 : (PR L1 axs A) -> (PR L2 axs A).
 Proof.
 intro m.
 induction m.
-+ apply hyp. apply (H A i).
++ apply hyp. apply (H A c).
 + apply Hax. apply a.
 + apply MP with A. exact IHm1. exact IHm2.
+Defined.
+
+Lemma PR_eqv C1 C2 A F (Q:forall x,C1 x <-> C2 x) (H:PR C1 A F) 
+ : PR C2 A F.
+Proof.
+induction H.
+- apply Q in c. apply hyp. assumption.
+- apply Hax. assumption.
+- apply MP with (A:=A0); assumption.
 Defined.
 
 (* Both are inconsistent then (G,D) is inconsistent*)
@@ -331,19 +376,38 @@ apply MP with (s-\/(DISJ D)).
   apply AtoA.
   apply MP with (s --> DISJ D).
   2 : {apply Hax. apply Ha8. }
-  pose (r:=Hax [] PROCA _ (Ha5 s (CONJ G))).
+  pose (r:=Hax empctx PROCA _ (Ha5 s (CONJ G))).
   apply invDed in r.  apply invDed in r.
   apply weak with (A:=s) in a1.
   apply weak with (A:=CONJ G) in a1.
-  assert (K:PR [CONJ G;s] PROCA (DISJ D)).
+
+  assert (K:PR (lf2ft [CONJ G;s]) PROCA (DISJ D)). (*[CONJ G;s]*)
   apply MP with (A:=s-/\ CONJ G).
+
+ unfold lf2ft. simpl.
+Abort.
+(*
+-- destruct r. unfold add2ctx in a.
+apply hyp.
+destruct a as [a|[a|a]].
+left. assumption.
+right. left. assumption.
+destruct a.
+apply Hax. assumption.
+apply MP with (A:=A). assumption.
+STOP HERE 
+unfold empctx in a.
+ simpl in a.
+ simpl in r.
+ unshelve eapply PR_eqv. *)
+(* good for "list Fo"
   exact r. exact a1.
   apply Ded.
   apply permut with (L1:=[CONJ G;s]).
   2 : exact K.
   simpl.
   firstorder.
-Defined.
+Defined.*)
 (*Locate prod.
 Print Scopes.*)
 Open Scope type_scope.
