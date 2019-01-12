@@ -15,7 +15,7 @@ Export cn.
 Export XFo.
 
 (*Local Notation SetVars := SetVars.t (*only parsing*).
-Local Notation FuncSymb := FuncSymb.t (*only parsing*). 
+Local Notation FuncSymb := FuncSymb.t (*only parsing*).
 Local Notation PredSymb := PredSymb.t (*only parsing*).*)
 (*Notation PredSymbQQ := PredSymb.t.*)
 
@@ -25,7 +25,7 @@ Record PSV := MPSV{
 }.
 
 Inductive Fo :=
- |Atom (p:PSV) : (Vector.t Terms (psv p)) ->  Fo
+ |Atom (p:PSV) : (Vector.t Terms (psv p)) -> Fo
  |Bot :Fo
  |Conj:Fo->Fo->Fo
  |Disj:Fo->Fo->Fo
@@ -44,7 +44,7 @@ Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
        if SetVars.eqb x xi then false else isParamF xi f0
    end.
 
-Fixpoint substF (t:Terms) (xi: SetVars.t) (u : Fo): option Fo. 
+Fixpoint substF (t:Terms) (xi: SetVars.t) (u : Fo): option Fo.
 Proof.
 pose(f := substF t xi).
 destruct u.
@@ -116,13 +116,14 @@ destruct f.
 + exact (  OOr (foI val f1) (foI val f2)).
 + exact ( OImp (foI val f1) (foI val f2)).
 + exact (forall m:X, foI (cng val x m) f).
-+ exact (Osig (fun m:X => foI (fun r:SetVars.t =>
++ exact (exists m:X, foI (cng val x m) f).
+(*+ exact (Osig (fun m:X => foI (fun r:SetVars.t =>
    match SetVars.eqb r x with
    | true => m
    | false => (val r)
    end
 ) f)
-).
+).*)
 Defined.
 (*
 Fixpoint foI (val:SetVars->X) (f:Fo): Omega.

@@ -34,7 +34,7 @@ Inductive PROCA : Fo -> Type :=
 Inductive PRECA : Fo -> Type :=
 | PRO  :> forall A, (PROCA A) -> (PRECA A)
 | Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
- (r:Fo) (s:(substF t xi ph)=Some r), PRECA (Impl (Fora xi ph) r)
+ (r:Fo) (s:(substF t xi ph)=Some r), PRECA ((Fora xi ph) --> r)
 | Hb1  : forall (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false),
 PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .
