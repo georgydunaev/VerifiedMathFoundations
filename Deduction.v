@@ -9,6 +9,8 @@ Require Export Provability.
 Module Deduction_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module X := Provability_mod SetVars FuncSymb PredSymb.
 Export X.
+Import FormulasNotationsASCII.
+
 Export Coq.Lists.List.
 Import Bool.Bool.
 Notation SetVars := SetVars.t (only parsing).
@@ -265,7 +267,7 @@ Definition swapSIMPL ctx A B C
 (HA : forall xi : SetVars.t, isParamF xi A = false)
 (HB : forall xi : SetVars.t, isParamF xi B = false)
 (HC : forall xi : SetVars.t, isParamF xi C = false) :
-(PREPR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
 2 : { intro xi. simpl.
@@ -282,7 +284,7 @@ apply hyp_E; firstorder.
 Defined.
 
 Definition swap ctx A B C :
-(PREPR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
 Admitted.

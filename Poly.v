@@ -4,7 +4,10 @@ Definition OFalse := False.
 Definition OAnd := and.
 Definition OOr := or.
 Definition OImp := (fun x y:Omega => x->y).
+(*
 Notation Osig := ex.
+Notation Opi := ?.
+*)
 End ModProp.
 
 Module ModType.
