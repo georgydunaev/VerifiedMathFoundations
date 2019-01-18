@@ -94,7 +94,7 @@ Proof. induction u.
   trivial.
 Defined.
 
-Lemma NPthenNCAST_vec:forall p xi t ts (H:(isParamF xi (Atom p ts)=false)), 
+Lemma NPthenNCAST_vec:forall p xi t ts (H:(isParamF xi (Atom p ts)=false)),
   (Vector.map (substT t xi) ts) = ts.
 Proof.
 intros p xi t1 ts H.
@@ -673,8 +673,6 @@ induction m (* eqn: meq *); intros lfi val.
   exact B.
 Defined.
 (** SOUNDNESS IS PROVED **)
-
-(*Check foI.*)
 
 (*
 Theorem completeness (f:Fo)

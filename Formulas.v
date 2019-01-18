@@ -33,24 +33,33 @@ Definition Neg (A:Fo):Fo := Impl A Bot.
 Definition Top:Fo := Neg Bot.
 
 Module FormulasNotationsUnicode.
- Notation " '⊥' "   :=(Bot) (at level 80).
- Notation " x '∧' y ":=(Conj x y) (at level 80).
- Notation " x '∨' y ":=(Disj x y) (at level 80).
- Notation " x '→' y ":=(Impl x y) (at level 80, right associativity).
- Notation "'∀' x f " :=(Fora x f) (at level 80).
- Notation "'∃' x f " :=(Exis x f) (at level 80).
- Notation " ¬ x "   :=(Neg x) (at level 80).
+ Notation " '⊥' "   :=(Bot) (at level 80) : uninot.
+ Notation " x '∧' y ":=(Conj x y) (at level 80) : uninot.
+ Notation " x '∨' y ":=(Disj x y) (at level 80) : uninot.
+ Notation " x '→' y ":=(Impl x y) (at level 80, right associativity) : uninot.
+ Notation " '∀' x f " :=(Fora x f) (at level 80) : uninot.
+ Notation " '∃' x f " :=(Exis x f) (at level 80) : uninot.
+ Notation " '¬' x "   :=(Neg x) (at level 80)  : uninot.
+Delimit Scope uninot with unidel.
+(* Example :
+Fail Check (¬ ⊥).
+Check (¬ ⊥)%unidel.
+Local Open Scope uninot.
+Check (¬ ⊥).
+Local Close Scope uninot.
+*)
 End FormulasNotationsUnicode.
 
 Module FormulasNotationsASCII.
- Notation " x --> y ":=(Impl x y) (at level 80, right associativity).
- Notation " x -/\ y ":=(Conj x y) (at level 80).
- Notation " x -\/ y ":=(Disj x y) (at level 80).
+ Notation " x --> y ":=(Impl x y) (at level 80, right associativity) : txtnot.
+ Notation " x -/\ y ":=(Conj x y) (at level 80) : txtnot.
+ Notation " x -\/ y ":=(Disj x y) (at level 80) : txtnot.
 (*
- Notation " '(A.' x ')(' f ')' " :=(Fora x f) (at level 80).
- Notation " '(E.' x ')(' f ')' " :=(Exis x f) (at level 80).
+ Notation " '(A.' x ')(' f ')' " :=(Fora x f) (at level 80) : txtnot.
+ Notation " '(E.' x ')(' f ')' " :=(Exis x f) (at level 80) : txtnot.
 *)
- Notation " -. x "   :=(Neg x) (at level 80).
+ Notation " -. x "   :=(Neg x) (at level 80) : txtnot.
+ Delimit Scope txtnot with txtdel.
 End FormulasNotationsASCII.
 
 (* Substitution *)

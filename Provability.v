@@ -8,7 +8,9 @@ Export Coq.Lists.List.
 Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module XPro := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
 Export XPro.
+
 Import FormulasNotationsASCII.
+Local Open Scope txtnot.
 
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
