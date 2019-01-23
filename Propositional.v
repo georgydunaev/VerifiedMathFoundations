@@ -15,39 +15,13 @@ Export Poly.
 
 Module Prop_mod (PropVars : UsualDecidableTypeFull).
 
-(*
-Inductive Fm_O :=
- |Atom_O (p:PropVars.t) :> Fm_O
- |Bot_O :Fm_O
- |Conj_O:Fm_O->Fm_O->Fm_O
- |Disj_O:Fm_O->Fm_O->Fm_O
- |Impl_O:Fm_O->Fm_O->Fm_O
-.
-*)
  Module XLang := Lang PropVars.
  Import XLang.
-(*
-Check Fo.
-Inductive Fo :=
- |Atom (p:PropVars.t) :> Fo
- |Bot :Fo
- |Conj:Fo->Fo->Fo
- |Disj:Fo->Fo->Fo
- |Impl:Fo->Fo->Fo
-.
 
-Notation " x --> y ":=(Impl x y) (at level 80, right associativity). 
-(*81, right associativity*)
-Notation " x -/\ y ":=(Conj x y) (at level 80).
-Notation " x -\/ y ":=(Disj x y) (at level 80).
-Notation " -. x " :=(Impl x Bot) (at level 80).
-*)
 (* Substitution *)
 Fixpoint subPF (t:Fo) (xi: PropVars.t) (u : Fo): Fo.
 Proof.
 Abort. (*Defined.*)
-
-Definition Top:Fo := Impl Bot Bot.
 
 Section OmegaInterpretation.
 Definition Omega := Prop.
@@ -83,57 +57,6 @@ Inductive PR : Fo -> Type :=
 .
 End PR.
 
-Section WR.
-Context (W:Set) (R:W->W->Prop) (R_transitive : transitive W R)
-(R_reflexive : reflexive W R).
-Context (vf:PropVars.t -> W -> Prop) 
-(mvf: forall (x y : W)(p:PropVars.t), vf p x -> R x y -> vf p y).
-
-Section foI_kr. (* Entails *)
-Fixpoint foI_kr (x:W) (f:Fo) : Prop := 
-match f with 
-   | Atom p => (vf p x)
-   | Bot => False
-   | f1 -/\ f2 => foI_kr x f1 /\ foI_kr x f2
-   | f1 -\/ f2 => foI_kr x f1 \/ foI_kr x f2
-   | f1 --> f2 => 
-(forall y:W, R x y -> ((foI_kr y f1) -> (foI_kr y f2)))
-end. (*foI x f1 =-> foI x f2*)
-End foI_kr.
-
-Theorem utv1 x f: foI_kr x (f-->Bot) <-> forall y, R x y -> not (foI_kr y f).
-Proof.
-simpl. unfold not. reflexivity.
-(* split.
-+ intros.
-simpl in H. destruct (H y H0).
-* exact H1.
-* destruct H1.
-+ intros. left. exact (H y H0).*)
-Defined.
-
-Theorem utv2 x y f : foI_kr x f -> R x y -> foI_kr y f.
-Proof.
-intros H1 H2.
-induction f.
-+ simpl in * |- *.
-  apply mvf with x. apply H1. apply H2. (* , H2, H1 *)
-+ exact H1.
-+ simpl in * |- *.
-  destruct H1 as [u1 u2].
-  exact (conj (IHf1 u1) (IHf2 u2)).
-+ simpl in * |- *.
-  destruct H1 as [u1|u2].
-  left. exact (IHf1 u1).
-  right. exact (IHf2 u2).
-+ simpl in * |- *.
-  intros.
-  apply H1.
-  * apply (R_transitive x y y0 H2 H). (* !!! "transitivity y." *)
-  * exact H0.
-Defined.
-
-(* Soundness of IPro *)
 Export List.ListNotations.
 Theorem lf2ft :(list Fo) -> (Fo->Type).
 Proof. intros lf f. exact (InL f lf). Defined.
@@ -141,52 +64,6 @@ Proof. intros lf f. exact (InL f lf). Defined.
 (*Coercion lf2ft. : (list Fo) >-> (Fo->Type).*)
 
 Inductive empctx : Fo -> Type :=.
-Theorem sou f (H:PR empctx PROCAI f) : forall x, foI_kr x f.
-Proof.
-induction H.
-+ destruct c. (*simpl in i. destruct i.*)
-+ induction a.
-  * simpl. intros.
-    simpl in * |- *.
-    apply utv2 with (x:=y).
-    - exact H0.
-    - exact H1.
-  * simpl. intros.
-(*Show Proof.
-Check (H0 y1 _ _ y1).*)
-eapply (H0 y1 _ _ y1).
-apply R_reflexive.
-apply H2.
-apply H3.
-apply H4.
-(*unshelve eapply (H0 y0 _ _ y1 H3).
-- exact H1.
-- apply utv2 with y1.
-  exact H4.
-simpl in * |- *.
-admit.*)
-  * simpl. intros. destruct H0 as [LH0 RH0]. exact LH0.
-  * simpl. intros. destruct H0 as [LH0 RH0]. exact RH0.
-  * simpl. intros x y pxy yA z pyz zB. split.
-    exact (utv2 y z A yA pyz).
-    exact zB.
-  * simpl. intros x y pxy H. left. exact H.
-  * simpl. intros x y pxy H. right. exact H.
-  * simpl. intros.
-    destruct H4.
-    - unshelve eapply H0. 2: exact H4. exact (R_transitive y y0 y1 H1 H3).
-    - unshelve eapply H2. exact H3. exact H4.
-  * simpl. intros. exfalso. eapply H0 with y0. exact H1. exact H2.
-+ simpl in * |- *.
-  intro x.
-  unshelve apply (IHPR2 x).
-  unshelve apply R_reflexive.
-  unshelve apply IHPR1.
-Unshelve.
-exact (R_transitive y y0 y1 H1 H3).
-exact H4.
-Defined.
-
 
 
 
@@ -402,6 +279,112 @@ Defined.*)
 (*Locate prod.
 Print Scopes.*)
 Open Scope type_scope.
+
+
+
+
+
+
+
+
+
+
+Section WR.
+Context (W:Set) (R:W->W->Prop) (R_transitive : transitive W R)
+(R_reflexive : reflexive W R).
+Context (vf:PropVars.t -> W -> Prop) 
+(mvf: forall (x y : W)(p:PropVars.t), vf p x -> R x y -> vf p y).
+
+Section foI_kr. (* Entails *)
+Fixpoint foI_kr (x:W) (f:Fo) : Prop := 
+match f with 
+   | Atom p => (vf p x)
+   | Bot => False
+   | f1 -/\ f2 => foI_kr x f1 /\ foI_kr x f2
+   | f1 -\/ f2 => foI_kr x f1 \/ foI_kr x f2
+   | f1 --> f2 => 
+(forall y:W, R x y -> ((foI_kr y f1) -> (foI_kr y f2)))
+end. (*foI x f1 =-> foI x f2*)
+End foI_kr.
+
+Theorem utv1 x f: foI_kr x (f-->Bot) <-> forall y, R x y -> not (foI_kr y f).
+Proof.
+simpl. unfold not. reflexivity.
+(* split.
++ intros.
+simpl in H. destruct (H y H0).
+* exact H1.
+* destruct H1.
++ intros. left. exact (H y H0).*)
+Defined.
+
+Theorem utv2 x y f : foI_kr x f -> R x y -> foI_kr y f.
+Proof.
+intros H1 H2.
+induction f.
++ simpl in * |- *.
+  apply mvf with x. apply H1. apply H2. (* , H2, H1 *)
++ exact H1.
++ simpl in * |- *.
+  destruct H1 as [u1 u2].
+  exact (conj (IHf1 u1) (IHf2 u2)).
++ simpl in * |- *.
+  destruct H1 as [u1|u2].
+  left. exact (IHf1 u1).
+  right. exact (IHf2 u2).
++ simpl in * |- *.
+  intros.
+  apply H1.
+  * apply (R_transitive x y y0 H2 H). (* !!! "transitivity y." *)
+  * exact H0.
+Defined.
+
+(* Soundness of IPro *)
+Theorem sou f (H:PR empctx PROCAI f) : forall x, foI_kr x f.
+Proof.
+induction H.
++ destruct c. (*simpl in i. destruct i.*)
++ induction a.
+  * simpl. intros.
+    simpl in * |- *.
+    apply utv2 with (x:=y).
+    - exact H0.
+    - exact H1.
+  * simpl. intros.
+(*Show Proof.
+Check (H0 y1 _ _ y1).*)
+eapply (H0 y1 _ _ y1).
+apply R_reflexive.
+apply H2.
+apply H3.
+apply H4.
+(*unshelve eapply (H0 y0 _ _ y1 H3).
+- exact H1.
+- apply utv2 with y1.
+  exact H4.
+simpl in * |- *.
+admit.*)
+  * simpl. intros. destruct H0 as [LH0 RH0]. exact LH0.
+  * simpl. intros. destruct H0 as [LH0 RH0]. exact RH0.
+  * simpl. intros x y pxy yA z pyz zB. split.
+    exact (utv2 y z A yA pyz).
+    exact zB.
+  * simpl. intros x y pxy H. left. exact H.
+  * simpl. intros x y pxy H. right. exact H.
+  * simpl. intros.
+    destruct H4.
+    - unshelve eapply H0. 2: exact H4. exact (R_transitive y y0 y1 H1 H3).
+    - unshelve eapply H2. exact H3. exact H4.
+  * simpl. intros. exfalso. eapply H0 with y0. exact H1. exact H2.
++ simpl in * |- *.
+  intro x.
+  unshelve apply (IHPR2 x).
+  unshelve apply R_reflexive.
+  unshelve apply IHPR1.
+Unshelve.
+exact (R_transitive y y0 y1 H1 H3).
+exact H4.
+Defined.
 
 Section Completeness.
 Context (phi:Fo).
