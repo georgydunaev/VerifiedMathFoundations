@@ -1,4 +1,6 @@
+(* This file is not for compilation! *)
 
+========
 (*Local Notation SetVars := SetVars.t (*only parsing*).
 Local Notation FuncSymb := FuncSymb.t (*only parsing*).
 Local Notation PredSymb := PredSymb.t (*only parsing*).*)

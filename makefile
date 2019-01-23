@@ -11,7 +11,16 @@ new:
 	    ./a.out $$number ; \
 	done
 
-all:
+build:
+	g++ compile.cpp -o compile.o
+
+prop:
+	./compile.o compilation1Prop.txt
+
+pred:
+	./compile.o compilation2Pred.txt
+
+all: build prop pred
 	g++ compile.cpp -o compile.o && ./compile.o
 
  

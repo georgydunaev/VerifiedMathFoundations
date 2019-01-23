@@ -1,0 +1,4 @@
+PropLang.v
+PropIntuit.v
+Propositional.v
+IntuitCompleteness.v

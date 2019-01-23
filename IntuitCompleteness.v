@@ -1,6 +1,14 @@
 (* Here will be theorems about classical propositional logic. *)
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
+
+Require Import FunctionalExtensionality.
+Require Import Logic.Classical_Prop.
+Require Import Logic.Classical_Pred_Type.
+Require Import Logic.ChoiceFacts.
+Require Import Logic.IndefiniteDescription.
+
 Require Import Coq.Lists.List.
+
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
   match l with
@@ -8,7 +16,9 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | b :: m => (sum (b = a) (InL a m))
   end.
 Require Import Coq.Structures.Equalities.
-(* Language of the propositional logic. *)
+
+
+(** Language of the propositional logic. **)
 Module Lang (PropVars : UsualDecidableTypeFull).
  Inductive Fo :=
  |Atom (p:PropVars.t) :> Fo
@@ -41,9 +51,15 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  .
 End Lang.
 
+
+(* Classical proposition interpretation *)
 Module ProCl (PropVars : UsualDecidableTypeFull).
  Module XLang := Lang PropVars.
  Import XLang.
+
+ (*Empty context*)
+ Definition Empt : Fo -> Prop := fun x:Fo => False.
+
  Section PR.
   Context (ctx:Fo -> Type).
   Context (axs:Fo -> Type).
@@ -53,7 +69,90 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
   | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
   .
  End PR.
- (*Double negation semantics for classical propositional logic (CPRoL).*)
+
+ (*
+    Classical semantics for the classical
+    propositional logic("CPRoL"). (definitions)
+ *)
+ Section foI_cl.
+  Context (val:PropVars.t->Prop).
+  Fixpoint foI_cl (f:Fo) : Prop := 
+  match f with 
+   | Atom p => (val p)
+   | Bot => False
+   | f1 -/\ f2 => (foI_cl f1) /\ (foI_cl f2)
+   | f1 -\/ f2 => (foI_cl f1) \/ (foI_cl f2)
+   | f1 --> f2 => (foI_cl f1) -> (foI_cl f2)
+  end.
+ End foI_cl.
+
+ (* Soundness of the double-negation semantics *)
+ Theorem sou_cl f (H:PR Empt PROCA f) :
+    forall (val:PropVars.t->Prop), foI_cl val f.
+ Proof. intro val.
+  induction H;firstorder.
+  + induction a;firstorder.
+    * induction p; firstorder.
+    * simpl.
+      destruct (classic (foI_cl val A)); firstorder.
+ Defined.
+
+ Section lem3.
+ Context (P Q:Fo).
+ Definition PandQ: Fo->Prop := fun f => (f=P)\/(f=Q).
+ Definition PandNQ: Fo->Prop := fun f => (f=P)\/(f=-.Q).
+ Definition NPandQ: Fo->Prop := fun f => (f=-.P)\/(f=Q).
+ Definition NPandNQ: Fo->Prop := fun f => (f=-.P)\/(f=-.Q).
+
+ Theorem lem3_1: PR PandQ PROCA (P -/\ Q).
+ Proof.
+ unshelve eapply MP.
+ exact Q.
+ unfold PandQ.
+ apply hyp. right. reflexivity.
+ 
+ unshelve eapply MP.
+ exact P.
+ unfold PandQ.
+ apply hyp. left. reflexivity.
+
+ apply Hax. apply Intui, Ha5.
+ Defined.
+
+ (* TODO: lem3_2*)
+ Section rule10. (*p.45*)
+ Context (Gamma:Fo->Prop).
+ Context (A B:Fo).
+ Theorem rule10 (H1:PR (fun x=>Gamma x \/ x=A) PROCA B )
+  (H2:PR (fun x=>Gamma x \/ x=A) PROCA (-.B) )
+ :
+ PR Gamma PROCA (-.A).
+ Proof.
+ 
+ Abort.
+ End rule10.
+
+ Theorem lem3_3: PR NPandQ PROCA (-.(P -/\ Q)).
+ Proof.
+ (*unshelve eapply MP.
+ exact Q.
+ unfold PandQ.
+ apply hyp. right. reflexivity.
+ 
+ unshelve eapply MP.
+ exact P.
+ unfold PandQ.
+ apply hyp. left. reflexivity.
+
+ apply Hax. apply Intui, Ha5.
+ Defined.*)
+ Abort.
+
+ End lem3.
+ (*
+    Double negation semantics for the classical
+    propositional logic("CPRoL"). (definitions)
+ *)
  Section foI_dn. (* Entails for double negation. *)
   Context (val:PropVars.t->Prop).
   Fixpoint foI_dn (f:Fo) : Prop := 
@@ -65,12 +164,10 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
    | f1 --> f2 => (foI_dn f1) -> (foI_dn f2)
   end.
  End foI_dn.
+
  Export List.ListNotations.
 
- (*Empty context*)
- Definition Empt := fun x:Fo => False.
-
- (*Soundness of the double-negation semantics *)
+ (* Soundness of the double-negation semantics *)
  Theorem sou_dn f (H:PR Empt PROCA f) :
     forall (val:PropVars.t->Prop), foI_dn val f.
  Proof. intro val.
@@ -81,7 +178,8 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
         induction C ;firstorder.
  Defined.
 
- (* Boolean semantics for classical propositional logic. *)
+ (* Boolean semantics for classical 
+    propositional logic. (definitions) *)
  Section foI_bo.
   Context (val:PropVars.t->bool).
   Fixpoint foI_bo (f:Fo) : bool := 
@@ -108,7 +206,7 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Defined.
 
  (* lem3, page 47 *)
- Section lem3.
+ Section lem3'.
  Context (A:Fo).
  Fixpoint vblesoffm (F:Fo) (v:PropVars.t) : Type :=
  match F with
@@ -117,12 +215,12 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  | Conj f0 f1 | Disj f0 f1 | Impl f0 f1 =>
     sum (vblesoffm f0 v) (vblesoffm f1 v)
  end.
-
+(*
  destruct F.
-
  Definition 
  Theorem 
- End lem3.
+*)
+ End lem3'.
  (* Completeness theorem for DN semantics of the CProL*)
  Theorem com_dn f (H : forall (val:PropVars.t->Prop), foI_dn val f) : 
   PR Empt PROCA f.

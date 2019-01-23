@@ -7,8 +7,9 @@ Require Import Classes.RelationClasses.
 Require Export Coq.Vectors.Vector.
 Require Import Coq.Structures.Equalities.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
-Require Export Coq.Lists.List.
+Require Import PropLang.
 
+Require Export Coq.Lists.List.
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
   match l with
@@ -74,16 +75,16 @@ Fixpoint foI (f : Fo) : Omega :=
    | f1 --> f2 => foI f1 =-> foI f2
    end.
 *)
-Inductive PROCA : Fo -> Type :=
-| Ha1  : forall A B, PROCA (A-->(B-->A))
-| Ha2  : forall A B C, PROCA ((A-->(B-->C))-->((A-->B)-->(A-->C)))
-| Ha3  : forall A B, PROCA ((A-/\ B)--> A)
-| Ha4  : forall A B, PROCA ((A-/\ B)--> B)
-| Ha5  : forall A B, PROCA (A-->(B-->(A-/\B)))
-| Ha6  : forall A B, PROCA (A-->(A-\/ B))
-| Ha7  : forall A B, PROCA (B-->(A-\/ B))
-| Ha8  : forall A B C, PROCA ((A-->C)-->((B-->C)-->((A-\/ B)-->C)))
-| Ha9  : forall A B, PROCA (-.A --> A --> B )
+Inductive PROCAI : Fo -> Type :=
+| Ha1  : forall A B, PROCAI (A-->(B-->A))
+| Ha2  : forall A B C, PROCAI ((A-->(B-->C))-->((A-->B)-->(A-->C)))
+| Ha3  : forall A B, PROCAI ((A-/\ B)--> A)
+| Ha4  : forall A B, PROCAI ((A-/\ B)--> B)
+| Ha5  : forall A B, PROCAI (A-->(B-->(A-/\B)))
+| Ha6  : forall A B, PROCAI (A-->(A-\/ B))
+| Ha7  : forall A B, PROCAI (B-->(A-\/ B))
+| Ha8  : forall A B C, PROCAI ((A-->C)-->((B-->C)-->((A-\/ B)-->C)))
+| Ha9  : forall A B, PROCAI (-.A --> A --> B )
 .
 (*Check Ha9.*)
 
@@ -96,25 +97,26 @@ Inductive PR : Fo -> Type :=
 | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
 .
 End PR.
+
 Section WR.
 Context (W:Set) (R:W->W->Prop) (R_transitive : transitive W R)
 (R_reflexive : reflexive W R).
 Context (vf:PropVars.t -> W -> Prop) 
 (mvf: forall (x y : W)(p:PropVars.t), vf p x -> R x y -> vf p y).
 
-Section foI. (* Entails *)
-Fixpoint foI (x:W) (f:Fo) : Prop := 
+Section foI_kr. (* Entails *)
+Fixpoint foI_kr (x:W) (f:Fo) : Prop := 
 match f with 
    | Atom p => (vf p x)
    | Bot => False
-   | f1 -/\ f2 => foI x f1 /\ foI x f2
-   | f1 -\/ f2 => foI x f1 \/ foI x f2
+   | f1 -/\ f2 => foI_kr x f1 /\ foI_kr x f2
+   | f1 -\/ f2 => foI_kr x f1 \/ foI_kr x f2
    | f1 --> f2 => 
-(forall y:W, R x y -> ((foI y f1) -> (foI y f2)))
+(forall y:W, R x y -> ((foI_kr y f1) -> (foI_kr y f2)))
 end. (*foI x f1 =-> foI x f2*)
-End foI.
+End foI_kr.
 
-Theorem utv1 x f: foI x (f-->Bot) <-> forall y, R x y -> not (foI y f).
+Theorem utv1 x f: foI_kr x (f-->Bot) <-> forall y, R x y -> not (foI_kr y f).
 Proof.
 simpl. unfold not. reflexivity.
 (* split.
@@ -125,7 +127,7 @@ simpl in H. destruct (H y H0).
 + intros. left. exact (H y H0).*)
 Defined.
 
-Theorem utv2 x y f :foI x f -> R x y -> foI y f.
+Theorem utv2 x y f : foI_kr x f -> R x y -> foI_kr y f.
 Proof.
 intros H1 H2.
 induction f.
@@ -154,7 +156,7 @@ Proof. intros lf f. exact (InL f lf). Defined.
 (*Coercion lf2ft. : (list Fo) >-> (Fo->Type).*)
 
 Inductive empctx : Fo -> Type :=.
-Theorem sou f (H:PR empctx PROCA f) : forall x, foI x f.
+Theorem sou f (H:PR empctx PROCAI f) : forall x, foI_kr x f.
 Proof.
 induction H.
 + destruct c. (*simpl in i. destruct i.*)
@@ -200,6 +202,13 @@ exact (R_transitive y y0 y1 H1 H3).
 exact H4.
 Defined.
 
+
+
+
+
+
+
+
 (*Check nil%list.*)
 Fixpoint CONJ (l:list Fo) : Fo :=
 match l return Fo with
@@ -213,10 +222,10 @@ match l return Fo with
 end.
 (*Consistent Pair*)
 Definition conpa (G D:list Fo) : Type
-:= (PR empctx PROCA ((CONJ G) --> (DISJ D))) -> False.
+:= (PR empctx PROCAI ((CONJ G) --> (DISJ D))) -> False.
 
 Definition incpa (G D:list Fo) : Type
-:=  PR empctx PROCA ((CONJ G) --> (DISJ D)).
+:=  PR empctx PROCAI ((CONJ G) --> (DISJ D)).
 
 
 Inductive SubFo (f:Fo): Fo -> Type :=
@@ -229,7 +238,7 @@ Inductive SubFo (f:Fo): Fo -> Type :=
 | sfir : forall (g1 g2 : Fo), (SubFo f g2) -> (SubFo f (g1 --> g2))
 .
 
-Definition AtoA {ctx} (A:Fo) : PR ctx PROCA (A-->A).
+Definition AtoA {ctx} (A:Fo) : PR ctx PROCAI (A-->A).
 Proof.
 apply MP with (A-->(A-->A)).
 apply Hax, Ha1. (* apply (Hax _ _ (Ha1 _ _)).*)
@@ -258,8 +267,8 @@ induction x.
 Defined.
 
 (*Fixpoint*)
-Definition weaken (F:Fo) (li l :Fo->Type) (x: (PR l PROCA F)) 
-(*{struct li}*): (PR (cnctctx li l) PROCA F).
+Definition weaken (F:Fo) (li l :Fo->Type) (x: (PR l PROCAI F)) 
+(*{struct li}*): (PR (cnctctx li l) PROCAI F).
 Proof.
 induction x.
 + apply hyp.
@@ -281,7 +290,7 @@ Export Coq.Lists.List.
 Definition neg (f:Fo):= (Impl f Bot).
 
 Definition a1i (A B : Fo)(l : Fo->Type):
-(PR l PROCA B)->(PR l PROCA (Impl A B)).
+(PR l PROCAI B)->(PR l PROCAI (Impl A B)).
 Proof.
 intros x.
 apply MP with (A:= B).
@@ -294,13 +303,13 @@ Lemma addempeqv (il:Fo->Type) : forall (f:Fo),
 Proof. intros f q. destruct q. exact i. destruct e. Defined.
 
 (*
-PR (cnctctx il empctx) PROCA (A --> A)
-PR il PROCA (A --> A)
+PR (cnctctx il empctx) PROCAI (A --> A)
+PR il PROCAI (A --> A)
 *)
 
 (* Deduction *)
-Theorem Ded (A B:Fo)(il:Fo->Type)(m:(PR (add2ctx A il) PROCA B)) 
-:(PR il PROCA (A-->B)).
+Theorem Ded (A B:Fo)(il:Fo->Type)(m:(PR (add2ctx A il) PROCAI B)) 
+:(PR il PROCAI (A-->B)).
 Proof.
 induction m.
 + (*unfold InL in c.*)
@@ -330,11 +339,11 @@ induction m.
   apply Ha2.
 Defined.
 
-Theorem invDed (A B:Fo)(il:Fo->Type)(m:(PR il PROCA (A-->B)))
-:(PR (add2ctx A il) PROCA B).
+Theorem invDed (A B:Fo)(il:Fo->Type)(m:(PR il PROCAI (A-->B)))
+:(PR (add2ctx A il) PROCAI B).
 Proof.
-pose(U:=(weak PROCA A _ il m)).
-assert (N:PR (add2ctx A il) PROCA A).
+pose(U:=(weak PROCAI A _ il m)).
+assert (N:PR (add2ctx A il) PROCAI A).
 apply hyp. simpl. left. reflexivity.
 apply MP with A.
 exact N.
@@ -376,12 +385,12 @@ apply MP with (s-\/(DISJ D)).
   apply AtoA.
   apply MP with (s --> DISJ D).
   2 : {apply Hax. apply Ha8. }
-  pose (r:=Hax empctx PROCA _ (Ha5 s (CONJ G))).
+  pose (r:=Hax empctx PROCAI _ (Ha5 s (CONJ G))).
   apply invDed in r.  apply invDed in r.
   apply weak with (A:=s) in a1.
   apply weak with (A:=CONJ G) in a1.
 
-  assert (K:PR (lf2ft [CONJ G;s]) PROCA (DISJ D)). (*[CONJ G;s]*)
+  assert (K:PR (lf2ft [CONJ G;s]) PROCAI (DISJ D)). (*[CONJ G;s]*)
   apply MP with (A:=s-/\ CONJ G).
 
  unfold lf2ft. simpl.
@@ -424,10 +433,10 @@ exists GG DD:list Fo, (incpa GG DD) *
 UNIVERSE INCONSISTENCY
 *)
 
-(*assert (asse:PR [CONJ G] PROCA (s -\/ DISJ D)).
+(*assert (asse:PR [CONJ G] PROCAI (s -\/ DISJ D)).
 admit.
 simpl in asse.
-pose (Q:= Hax [] PROCA _ (Ha5 s (CONJ G))).
+pose (Q:= Hax [] PROCAI _ (Ha5 s (CONJ G))).
 destruct asse.
 Abort.*)
 
