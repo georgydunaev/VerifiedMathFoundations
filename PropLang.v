@@ -1,3 +1,4 @@
+(* LC = Languages and Calculi (N.K. Vereschagin, A.Shen) *)
 Require Import FunctionalExtensionality.
 Require Import Logic.Classical_Prop.
 Require Import Logic.Classical_Pred_Type.
@@ -262,7 +263,7 @@ Module Lang (PropVars : UsualDecidableTypeFull).
   end.
  End foI_cl.
 
- (* Soundness of the classical semantics *)
+ (* Soundness of the classical semantics *) (*LC p.41 thm17*)
  Theorem sou_cl f (H:PR empctx PROCA f) :
     forall (val:PropVars.t->Prop), foI_cl val f.
  Proof. intro val.
@@ -418,11 +419,11 @@ Module Lang (PropVars : UsualDecidableTypeFull).
      - unshelve eapply H0. 2: exact H4. exact (R_transitive y y0 y1 H1 H3).
      - unshelve eapply H2. exact H3. exact H4.
    * simpl. intros. exfalso. eapply H0 with y0. exact H1. exact H2.
-   * simpl. intros. 
-(*eapply H2.
-exact H3.
-exact H4.*)
-admit.
+   * simpl. intros.
+     apply (H2 y1 H3 H4 y1).
+     apply R_reflexive.
+     apply H0.
+     eapply R_transitive. exact H1. exact H3. exact H4.
  + simpl in * |- *.
    intro x.
    unshelve apply (IHPR2 x).
@@ -431,7 +432,7 @@ admit.
    Unshelve.
    exact (R_transitive y y0 y1 H1 H3).
    exact H4.
- Admitted. (*Defined.*)
+ Defined.
  End WR.
 
 End Lang.

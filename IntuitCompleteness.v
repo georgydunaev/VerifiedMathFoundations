@@ -50,17 +50,18 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  :
  PR Gamma PROCA (-.A).
  Proof.
- Check Ded.
  apply Ded in H1.
  apply Ded in H2.
  1 : eapply MP.
  2 : eapply MP.
- 3 : apply Hax. Check Ha8.
- Abort.
+ 3 : apply Hax, Intui, Ha10.
+ exact H2. exact H1.
+ Defined.
  End rule10.
 
  Theorem lem3_3: PR NPandQ PROCA (-.(P -/\ Q)).
  Proof.
+ unfold NPandQ.
  (*unshelve eapply MP.
  exact Q.
  unfold PandQ.
