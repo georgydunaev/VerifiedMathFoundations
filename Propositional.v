@@ -1,5 +1,4 @@
-(* Here will be theorems about propositional logic.
-Then I'll decide how to unite it with the rest. *)
+(* Here is Kripke semantics and attempt to prove completeness *)
 
 (* TODO RENAME and UNIFY *)
 Require Import Relations.
@@ -9,17 +8,10 @@ Require Import Coq.Structures.Equalities.
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Import PropLang.
 
-Require Export Coq.Lists.List.
-Definition InL { A : Type } :=
-fix InL (a : A) (l : list A) {struct l} : Type :=
-  match l with
-  | Datatypes.nil => False
-  | b :: m => (sum (b = a) (InL a m))
-  end.
-
+(*
 Require Poly.
 Export Poly.
-(*Export Poly.ModProp.*)
+*) (*Export Poly.ModProp.*)
 
 Module Prop_mod (PropVars : UsualDecidableTypeFull).
 
@@ -32,6 +24,10 @@ Inductive Fm_O :=
  |Impl_O:Fm_O->Fm_O->Fm_O
 .
 *)
+ Module XLang := Lang PropVars.
+ Import XLang.
+(*
+Check Fo.
 Inductive Fo :=
  |Atom (p:PropVars.t) :> Fo
  |Bot :Fo
@@ -45,6 +41,7 @@ Notation " x --> y ":=(Impl x y) (at level 80, right associativity).
 Notation " x -/\ y ":=(Conj x y) (at level 80).
 Notation " x -\/ y ":=(Disj x y) (at level 80).
 Notation " -. x " :=(Impl x Bot) (at level 80).
+*)
 (* Substitution *)
 Fixpoint subPF (t:Fo) (xi: PropVars.t) (u : Fo): Fo.
 Proof.
@@ -75,18 +72,6 @@ Fixpoint foI (f : Fo) : Omega :=
    | f1 --> f2 => foI f1 =-> foI f2
    end.
 *)
-Inductive PROCAI : Fo -> Type :=
-| Ha1  : forall A B, PROCAI (A-->(B-->A))
-| Ha2  : forall A B C, PROCAI ((A-->(B-->C))-->((A-->B)-->(A-->C)))
-| Ha3  : forall A B, PROCAI ((A-/\ B)--> A)
-| Ha4  : forall A B, PROCAI ((A-/\ B)--> B)
-| Ha5  : forall A B, PROCAI (A-->(B-->(A-/\B)))
-| Ha6  : forall A B, PROCAI (A-->(A-\/ B))
-| Ha7  : forall A B, PROCAI (B-->(A-\/ B))
-| Ha8  : forall A B C, PROCAI ((A-->C)-->((B-->C)-->((A-\/ B)-->C)))
-| Ha9  : forall A B, PROCAI (-.A --> A --> B )
-.
-(*Check Ha9.*)
 
 Section PR.
 Context (ctx:Fo -> Type). (*Context (ctx:list Fo).*)
@@ -285,9 +270,6 @@ apply weaken.
 exact x.*)
 Defined.
 
-Export Coq.Lists.List.
-
-Definition neg (f:Fo):= (Impl f Bot).
 
 Definition a1i (A B : Fo)(l : Fo->Type):
 (PR l PROCAI B)->(PR l PROCAI (Impl A B)).
