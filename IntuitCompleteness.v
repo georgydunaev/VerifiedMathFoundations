@@ -2,75 +2,28 @@
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Import PropLang.
 
-Require Import FunctionalExtensionality.
-Require Import Logic.Classical_Prop.
-Require Import Logic.Classical_Pred_Type.
-Require Import Logic.ChoiceFacts.
-Require Import Logic.IndefiniteDescription.
+
 
 Require Import Coq.Structures.Equalities.
 
-(** Language of the propositional logic. **)
+(*
 Module Lang' (PropVars : UsualDecidableTypeFull).
  Module XLang := Lang PropVars.
  Export XLang.
- Inductive PROCA : Fo -> Type :=
- | Intui :> forall f, PROCAI f -> PROCA f
- | Ha10  : forall A, PROCA (A -\/ -.A)
- .
 End Lang'.
+*)
 
 (* Classical proposition interpretation *)
 Module ProCl (PropVars : UsualDecidableTypeFull).
- Module XLang := Lang' PropVars.
+ Module XLang := Lang PropVars.
  Import XLang.
-
- (*Empty context*)
- Definition Empt : Fo -> Prop := fun x:Fo => False.
-
- Section PR.
-  Context (ctx:Fo -> Type).
-  Context (axs:Fo -> Type).
-  Inductive PR : Fo -> Type :=
-  | hyp (A : Fo) : (*InL A ctx*) ctx A -> PR A
-  | Hax :> forall (A : Fo), (axs A) -> PR A
-  | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
-  .
- End PR.
-
- (*
-    Classical semantics for the classical
-    propositional logic("CPRoL"). (definitions)
- *)
- Section foI_cl.
-  Context (val:PropVars.t->Prop).
-  Fixpoint foI_cl (f:Fo) : Prop := 
-  match f with 
-   | Atom p => (val p)
-   | Bot => False
-   | f1 -/\ f2 => (foI_cl f1) /\ (foI_cl f2)
-   | f1 -\/ f2 => (foI_cl f1) \/ (foI_cl f2)
-   | f1 --> f2 => (foI_cl f1) -> (foI_cl f2)
-  end.
- End foI_cl.
-
- (* Soundness of the double-negation semantics *)
- Theorem sou_cl f (H:PR Empt PROCA f) :
-    forall (val:PropVars.t->Prop), foI_cl val f.
- Proof. intro val.
-  induction H;firstorder.
-  + induction a;firstorder.
-    * induction p; firstorder.
-    * simpl.
-      destruct (classic (foI_cl val A)); firstorder.
- Defined.
 
  Section lem3.
  Context (P Q:Fo).
- Definition PandQ: Fo->Prop := fun f => (f=P)\/(f=Q).
- Definition PandNQ: Fo->Prop := fun f => (f=P)\/(f=-.Q).
- Definition NPandQ: Fo->Prop := fun f => (f=-.P)\/(f=Q).
- Definition NPandNQ: Fo->Prop := fun f => (f=-.P)\/(f=-.Q).
+ Definition PandQ: Fo->Type := fun f => (f=P)\/(f=Q).
+ Definition PandNQ: Fo->Type := fun f => (f=P)\/(f=-.Q).
+ Definition NPandQ: Fo->Type := fun f => (f=-.P)\/(f=Q).
+ Definition NPandNQ: Fo->Type := fun f => (f=-.P)\/(f=-.Q).
 
  Theorem lem3_1: PR PandQ PROCA (P -/\ Q).
  Proof.
@@ -89,14 +42,20 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
 
  (* TODO: lem3_2*)
  Section rule10. (*p.45*)
- Context (Gamma:Fo->Prop).
+ Context (Gamma:Fo->Type).
  Context (A B:Fo).
- Theorem rule10 (H1:PR (fun x=>Gamma x \/ x=A) PROCA B )
-  (H2:PR (fun x=>Gamma x \/ x=A) PROCA (-.B) )
+ (*Check (fun x=>Gamma x \/ x=A).*)
+ Theorem rule10 (H1:PR (add2ctx A Gamma) PROCA B )
+  (H2:PR (add2ctx A Gamma) PROCA (-.B) )
  :
  PR Gamma PROCA (-.A).
  Proof.
- 
+ Check Ded.
+ apply Ded in H1.
+ apply Ded in H2.
+ 1 : eapply MP.
+ 2 : eapply MP.
+ 3 : apply Hax. Check Ha8.
  Abort.
  End rule10.
 
@@ -117,61 +76,6 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Abort.
 
  End lem3.
- (*
-    Double negation semantics for the classical
-    propositional logic("CPRoL"). (definitions)
- *)
- Section foI_dn. (* Entails for double negation. *)
-  Context (val:PropVars.t->Prop).
-  Fixpoint foI_dn (f:Fo) : Prop := 
-  match f with 
-   | Atom p => (((val p)->False)->False)
-   | Bot => False
-   | f1 -/\ f2 => foI_dn f1 /\ foI_dn f2
-   | f1 -\/ f2 => (((foI_dn f1 \/ foI_dn f2)->False)->False)
-   | f1 --> f2 => (foI_dn f1) -> (foI_dn f2)
-  end.
- End foI_dn.
-
- Export List.ListNotations.
-
- (* Soundness of the double-negation semantics *)
- Theorem sou_dn f (H:PR Empt PROCA f) :
-    forall (val:PropVars.t->Prop), foI_dn val f.
- Proof. intro val.
-  induction H;firstorder.
-  + induction a;firstorder.
-    * induction p; firstorder.
-        simpl. intros.
-        induction C ;firstorder.
- Defined.
-
- (* Boolean semantics for classical 
-    propositional logic. (definitions) *)
- Section foI_bo.
-  Context (val:PropVars.t->bool).
-  Fixpoint foI_bo (f:Fo) : bool := 
-  match f with 
-   | Atom p => (val p)
-   | Bot => false
-   | f1 -/\ f2 => andb (foI_bo f1) (foI_bo f2)
-   | f1 -\/ f2 => orb (foI_bo f1) (foI_bo f2)
-   | f1 --> f2 => implb (foI_bo f1) (foI_bo f2)
-  end.
- End foI_bo.
-
- (*Soundness of the boolean semantics *)
- Theorem sou_bo f (H:PR Empt PROCA f) :
-    forall (val:PropVars.t->bool), (foI_bo val f)=true.
- Proof. intro val.
- induction H.
- + destruct c.
- + induction a.
-   * induction p; simpl; destruct (foI_bo val A), (foI_bo val B); 
-     try destruct (foI_bo val C); firstorder.
-   * simpl; destruct (foI_bo val A); firstorder.
- + simpl in * |- *; destruct (foI_bo val A), (foI_bo val B); firstorder.
- Defined.
 
  (* lem3, page 47 *)
  Section lem3'.
@@ -191,7 +95,7 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  End lem3'.
  (* Completeness theorem for DN semantics of the CProL*)
  Theorem com_dn f (H : forall (val:PropVars.t->Prop), foI_dn val f) : 
-  PR Empt PROCA f.
+  PR empctx PROCA f.
  Proof.
  Abort.
 
