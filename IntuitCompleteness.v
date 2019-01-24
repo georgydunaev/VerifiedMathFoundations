@@ -1,8 +1,12 @@
 (* Here will be theorems about classical propositional logic. *)
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Import PropLang.
-
-
+Require Import Logic.Classical.
+Require Import Logic.ChoiceFacts.
+Require Import Logic.IndefiniteDescription.
+Require Import ClassicalDescription.
+Require Import FunctionalExtensionality.
+Require Import PropExtensionality.
 
 Require Import Coq.Structures.Equalities.
 
@@ -62,6 +66,18 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Theorem lem3_3: PR NPandQ PROCA (-.(P -/\ Q)).
  Proof.
  unfold NPandQ.
+ (* eapply permut. *)
+ 1 : eapply rule10.
+ (*instantiate (1:= fun e=> e=-.P).*)
+ (* intros x H. left. exact H.*)
+ eapply MP.
+ apply hyp.
+ left. reflexivity.
+ apply Hax. apply Intui. apply Ha3.
+ apply hyp.
+ right. left. reflexivity.
+(*(add2ctx A Gamma)).
+ specify (-.P).*)
  (*unshelve eapply MP.
  exact Q.
  unfold PandQ.
@@ -74,9 +90,183 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
 
  apply Hax. apply Intui, Ha5.
  Defined.*)
- Abort.
+ Defined.
 
+ (* case analysis *)
+ Theorem rule8 A B C Gamma (H1:PR (add2ctx A Gamma) PROCA C )
+  (H2:PR (add2ctx B Gamma) PROCA C )
+ :
+ PR (add2ctx (A-\/ B) Gamma) PROCA C.
+ Proof.
+ apply Ded in H1.
+ apply Ded in H2.
+ apply invDed.
+ 1 : eapply MP.
+ 2 : eapply MP.
+ 3 : apply Hax, Intui, Ha8.
+ exact H2.
+ exact H1.
+ Defined.
+
+ Theorem rule9 A B Gamma (H1:PR Gamma PROCA A )
+  (H2:PR Gamma PROCA (-.A) )
+ :
+ PR Gamma PROCA B.
+ Proof.
+ 1 : eapply MP.
+ 2 : eapply MP.
+ 3 : apply Hax, Intui, Ha9.
+ exact H1.
+ exact H2.
+ Defined.
+
+ Theorem lem3_8: PR NPandNQ PROCA (-.(P -\/ Q)).
+ Proof.
+ unfold NPandNQ.
+ eapply rule10.
+ instantiate (1:=Bot).
+ + apply rule8.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. left. reflexivity.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. right. reflexivity.
+ + eapply rule8.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. left. reflexivity.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. right. reflexivity.
+ Defined.
  End lem3.
+
+(*
+No result for Strong LEM:
+grep -rnw '/home/user/opam-coq.8.8.1/4.02.3/lib/coq/theories/' -e 'classicT'
+It mentioned here:
+https://github.com/coq/coq/wiki/CoqAndAxioms
+http://www.chargueraud.org/viewcoq.php?sFile=softs%2Ftlc%2Fsrc%2FUseClassic.v
+Check excluded_middle_informative.
+*)
+
+ Definition ttt0 : (PropVars.t -> Prop) -> (PropVars.t -> bool).
+ Proof.
+ intros P p.
+ destruct (excluded_middle_informative (P p)).
+ exact true.
+ exact false.
+ Defined.
+ Definition ttt1 : (PropVars.t -> bool) -> (PropVars.t -> Prop).
+ Proof.
+ intros f p.
+ destruct (f p). (* eqn:s.*)
+ exact True.
+ exact False.
+ Defined.
+ Theorem ttt01 P : (ttt1 (ttt0 P)) = P.
+ Proof.
+ apply functional_extensionality.
+ intro x.
+ unfold ttt0,ttt1.
+ apply propositional_extensionality.
+ destruct (excluded_middle_informative (P x)).
+ { split. intros _. exact p. intros _. constructor. }
+ { split. intros []. exact n. }
+ Defined.
+ Theorem ttt10 f : (ttt0 (ttt1 f)) = f.
+ Proof.
+ apply functional_extensionality; intro x.
+ unfold ttt0,ttt1.
+ destruct (f x).
+ + destruct (excluded_middle_informative True).
+   reflexivity. destruct n. constructor.
+ + destruct (excluded_middle_informative False).
+   destruct f0. reflexivity.
+ Defined.
+(* EXPERIMENT:
+Axiom type_extensionality : forall (A B:Type)
+ (f:A->B) (invf:B->A) (H1: forall b, (f (invf b)) = b)
+ (H2: forall a, (invf (f a)) = a), A = B.
+Theorem Q : (PropVars.t -> Prop)=(PropVars.t -> bool).
+Proof.
+eapply type_extensionality.
+exact ttt10.
+exact ttt01.
+Defined.
+*)
+ Definition fff0 : Prop -> bool.
+ Proof.
+ intros P.
+ destruct (excluded_middle_informative P).
+ exact true.
+ exact false.
+ Defined.
+ Definition fff1 : bool -> Prop.
+ Proof.
+ intros b.
+ destruct b. (* eqn:s.*)
+ exact True.
+ exact False.
+ Defined.
+ Theorem fff01 P : (fff1 (fff0 P)) = P.
+ Proof.
+ (* apply functional_extensionality.
+ intro x.*)
+ unfold fff0,fff1.
+ apply propositional_extensionality.
+ destruct (excluded_middle_informative P).
+ { split. intros _. exact p. intros _. constructor. }
+ { split. intros []. exact n. }
+ Defined.
+ Theorem fff10 b : (fff0 (fff1 b)) = b.
+ Proof.
+ (*apply functional_extensionality; intro x.*)
+ unfold fff0,fff1.
+ destruct b.
+ + destruct (excluded_middle_informative True).
+   reflexivity. destruct n. constructor.
+ + destruct (excluded_middle_informative False).
+   destruct f. reflexivity.
+ Defined.
+
+Inductive eq2 (A : Type) (x : A) : A -> Prop :=
+ eq2_refl : @eq2 A x x.
+
+Inductive paths {A : Type} (a : A) : A -> Type :=
+ idpath : paths a a.
+
+Theorem thm1 (A:Type) a b: (@paths A a b)-> a=b.
+Proof.
+intro H.
+destruct H.
+reflexivity.
+Defined.
+
+(*
+Check (PropVars.t -> Prop).
+Check (PropVars.t -> bool).
+*)
+ Section lem4. (* LC p.47 *)
+ Definition ne (b:bool) (A:Fo) : Fo := if b then A else -.A .
+ Inductive ctx_bld (str:PropVars.t -> bool) : Fo -> Type :=
+ | con : forall p:PropVars.t, ctx_bld str (ne (str p) (Atom p)).
+
+(* Definition ctx_bld (str:PropVars.t -> bool) : Fo -> Type.
+ Proof.
+ intro f.
+ Admitted. *)
+ Theorem lem4 (A:Fo) (str:PropVars.t -> bool) (eps:bool)
+  : 
+  PR (ctx_bld str) PROCA (ne (fff0 (foI_cl (ttt1 str) A)) A).
+ Proof.
+ induction A; simpl.
+ + unfold fff0,fff1, ne.
+   destruct (excluded_middle_informative (ttt1 str p)).
+
+ Abort.
+ End lem4.
 
  (* lem3, page 47 *)
  Section lem3'.

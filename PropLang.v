@@ -194,6 +194,16 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  exact U.
  Defined.
 
+ Theorem invDed (A B:Fo)(il:Fo->Type)(m:(PR il PROCA (A-->B)))
+ :(PR (add2ctx A il) PROCA B).
+ Proof.
+ pose(U:=(weak PROCA A _ il m)).
+ assert (N:PR (add2ctx A il) PROCA A).
+ apply hyp. simpl. left. reflexivity.
+ apply MP with A.
+ exact N.
+ exact U.
+ Defined.
 
  Theorem Ded (A B:Fo)(il:Fo->Type)(m:(PR (add2ctx A il) PROCA B)) 
  :(PR il PROCA (A-->B)).
@@ -240,10 +250,11 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  Lemma PR_eqv C1 C2 A F (Q:forall x,C1 x <-> C2 x) (H:PR C1 A F) 
   : PR C2 A F.
  Proof.
- induction H.
+ eapply permut. 2 : exact H. intros x D. apply Q, D.
+ (*induction H.
  - apply Q in c. apply hyp. assumption.
  - apply Hax. assumption.
- - apply MP with (A:=A0); assumption.
+ - apply MP with (A:=A0); assumption.*)
  Defined.
 
 
