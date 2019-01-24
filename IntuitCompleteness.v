@@ -264,7 +264,31 @@ Check (PropVars.t -> bool).
  induction A; simpl.
  + unfold fff0,fff1, ne.
    destruct (excluded_middle_informative (ttt1 str p)).
+   * unfold ttt1 in t.
+     destruct (str p) eqn:j. 2 : { destruct t. }
+     apply hyp.
+     assert (Q:(ne (str p) p) = Atom p).
+     rewrite j. reflexivity.
+     rewrite <- Q.
+     apply con.
+   * unfold ttt1 in n.
+     destruct (str p) eqn:j. destruct (n I).
+     apply hyp.
+     assert (Q:(ne (str p) p) = -.(Atom p)).
+     rewrite j. reflexivity.
+     rewrite <- Q.
+     apply con.
+  +  unfold fff0,fff1, ne.
+     destruct (excluded_middle_informative False).
+     destruct f.
+     apply AtoA.
+  +
+(*
+change (Neg Bot) with (Impl Bot Bot).
+unfold Neg.
+     change (Atom p) with (ne (str p) p).
 
+   simpl. *)
  Abort.
  End lem4.
 
