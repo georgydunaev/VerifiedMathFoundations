@@ -32,21 +32,41 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  Definition Neg (A:Fo):Fo := Impl A Bot.
  Definition Top:Fo := Neg Bot.
 
+ (* BEGIN experimental *)
+ Section exper_1.
+ Inductive PROCAI_1 : Fo -> Type :=
+ | eHa1  (A B:PropVars.t) :  PROCAI_1 (A-->(B-->A))
+ | eHa2  (A B:PropVars.t): forall (C:PropVars.t),
+          PROCAI_1 ((A-->(B-->C))-->((A-->B)-->(A-->C)))
+ | eHa3  (A B:PropVars.t): PROCAI_1 ((A-/\ B)--> A)
+ | eHa4  (A B:PropVars.t): PROCAI_1 ((A-/\ B)--> B)
+ | eHa5  (A B:PropVars.t): PROCAI_1 (A-->(B-->(A-/\B)))
+ | eHa6  (A B:PropVars.t): PROCAI_1 (A-->(A-\/ B))
+ | eHa7  (A B:PropVars.t): PROCAI_1 (B-->(A-\/ B))
+ | eHa8  (A B:PropVars.t): forall (C:PropVars.t),
+          PROCAI_1 ((A-->C)-->((B-->C)-->((A-\/ B)-->C)))
+ | eHa9  (A B:PropVars.t): PROCAI_1 (-.A --> (A --> B) )
+ | eHa10 (A B:PropVars.t) : PROCAI_1 ((A-->B)-->(A -->-.B)-->-.A)
+ .
+ End exper_1.
+ (* END experimental *)
+
+
 
  (** ==== Contexts ==== **)
  Theorem lf2ft :(list Fo) -> (Fo->Type).
  Proof. intros lf f. exact (InL f lf). Defined.
- (*Coercion lf2ft. : (list Fo) >-> (Fo->Type).*)
+ (* Coercion lf2ft. : (list Fo) >-> (Fo->Type). *)
 
- Inductive empctx : Fo -> Type :=. (*Empty context*)
+ Inductive empctx : Fo -> Type :=. (* empty context *)
 
  Definition add2ctx (A:Fo) (l:Fo->Type) : Fo->Type 
  := fun f=> sum (A=f) (l f). (* add head *)
 
- Definition cnctctx (l1 l2:Fo->Type) : Fo->Type 
+ Definition cnctctx (l1 l2:Fo->Type) : Fo->Type
  := fun f=> sum (l1 f) (l2 f). (* concat *)
 
- Lemma addempeqv (il:Fo->Type) : forall (f:Fo), 
+ Lemma addempeqv (il:Fo->Type) : forall (f:Fo),
  (cnctctx il empctx) f -> il f.
  Proof. intros f q. destruct q. exact i. destruct e. Defined.
 
@@ -65,6 +85,13 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  | Ha10  : forall A B, PROCAI ((A-->B)-->(A -->-.B)-->-.A)
  .
 
+ Theorem exper1 (A:Fo): (PROCAI_1 A) -> (PROCAI A).
+ Proof.
+ intro H.
+ destruct H; constructor.
+ Defined.
+
+ (* Proposional calculus' axioms (Classical) *)
  Inductive PROCA : Fo -> Type :=
  | Intui :> forall f, PROCAI f -> PROCA f
  | Ha11  : forall A, PROCA (A -\/ -.A)
@@ -79,6 +106,220 @@ Module Lang (PropVars : UsualDecidableTypeFull).
   | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
   .
  End PR.
+
+ Section LPR. (* Less than PR : no context *)
+  Context (axs:Fo -> Type).
+  Inductive LPR : Fo -> Type :=
+  | lHax :> forall (A : Fo), (axs A) -> LPR A
+  | lMP (A B: Fo) : (LPR A)->(LPR (Impl A B))->(LPR B)
+  .
+ End LPR.
+
+ (* trivial *)
+ Theorem LPR2PR axs A : LPR axs A -> PR empctx axs A.
+ Proof.
+ intro H. induction H.
+ + apply Hax. exact a.
+ + apply MP with A; assumption.
+ Defined.
+
+ Theorem PR2LPR axs A : PR empctx axs A -> LPR axs A.
+ Proof.
+ intro H. induction H.
+ + destruct c.
+ + apply lHax. exact a.
+ + apply lMP with A; assumption.
+ Defined.
+
+ (*
+ Section MPR. (* More than PR : add substitution *)
+  Context (ctx:Fo -> Type).
+  Context (axs:Fo -> Type).
+  Inductive MPR : Fo -> Type :=
+  | mhyp (A : Fo) : (*InL A ctx*) ctx A -> PR A
+  | mHax :> forall (A : Fo), (axs A) -> MPR A
+  | mMP (A B: Fo) : (MPR A)->(MPR (Impl A B))->(MPR B)
+  | mSub 
+  .
+ End LPR.
+ *)
+ Theorem experB1 {ctx} (A:Fo) :
+  (PR ctx PROCAI_1 A) -> (PR ctx PROCAI A).
+ Proof.
+ intro H.
+ induction H.
+ apply hyp. exact c.
+ apply Hax, exper1, a.
+ eapply MP. exact IHPR1. exact IHPR2.
+ Defined.
+
+Section subst_sec.
+ Context (p:PropVars.t) (B:Fo).
+
+Check p.
+Check PropVars.eq_dec p p.
+Locate "+".
+Check sumbool.
+ Fixpoint Sub (A:Fo) : Fo
+  := match A with
+   | Atom q => match (PropVars.eq_dec p q) with
+               | left u => B
+               | right v => (Atom q)
+               end
+   | Bot => Bot
+   | Conj x1 x2 => Conj (Sub x1) (Sub x2)
+   | Disj x1 x2 => Disj (Sub x1) (Sub x2)
+   | Impl x1 x2 => Impl (Sub x1) (Sub x2)
+   end.
+
+Section ctx_Sub_sec.
+Context (wct:Fo->Type).
+Inductive ctx_Sub : Fo->Type 
+:= | ctx_Sub_cons (f:Fo): wct f -> ctx_Sub (Sub f).
+End ctx_Sub_sec.
+
+(* REVERSE:
+ Definition Sub_ctx :(Fo->Type)->(Fo->Type).
+ Proof.
+ intros wct f.
+ exact (wct (Sub f)).
+ Defined.*)
+
+ Lemma PROCAI_Sub (A : Fo) (a : PROCAI A) : PROCAI (Sub A).
+ Proof.
+ destruct a; simpl; constructor.
+ Defined.
+
+ Lemma PROCA_Sub (A : Fo) (a : PROCA A) : PROCA (Sub A).
+ Proof.
+ destruct a as [g p0| A].
+ + apply Intui. eapply PROCAI_Sub, p0.
+ + simpl. apply Ha11.
+ Defined.
+
+Section ghj_sec.
+ Local Inductive ghj : Fo->Type := | ghj_c : ghj p.
+ Context (jkl: (p:Fo)<>B).
+ Local Lemma j1 : ~ forall (axs:Fo->Prop) (A : Fo), axs A -> axs (Sub A).
+ Proof.
+ intro H.
+ assert (Q:=H (ghj) p ghj_c).
+ inversion Q.
+ destruct (PropVars.eq_dec p p).
+ + compute in H1.
+   simpl in H1.
+   exact (jkl H1).
+ + apply n.
+   constructor.
+ Defined.
+End ghj_sec.
+
+ (* Calculus with*)
+ Theorem  PR_Sub' {ctx axs} (j1:forall A, (axs A)->axs (Sub A)) (A:Fo):
+  (PR ctx axs A) -> (PR (ctx_Sub ctx) axs (Sub A)) .
+ Proof.
+ intro a.
+ induction a.
+ + apply hyp. constructor. exact c.
+ + apply Hax. apply j1, a.
+ + eapply MP. exact IHa1. exact IHa2.
+ Defined.
+
+ Theorem  PR_Sub {ctx} (A:Fo) :
+  (PR ctx PROCAI A) -> (PR (ctx_Sub ctx) PROCAI (Sub A)) .
+ Proof.
+ intro a.
+ induction a.
+ + apply hyp. constructor. exact c.
+ + apply Hax. destruct a; simpl; constructor.
+ + eapply MP. exact IHa1. exact IHa2.
+ Defined.
+
+
+(* "ctx_Sub" preserve empty context *)
+Theorem empctx_fix (f:Fo) : ((ctx_Sub empctx) f)->False.
+Proof.
+intro H.
+destruct H as [g E].
+destruct E.
+Defined.
+
+End subst_sec.
+
+
+
+
+ Fixpoint experB2 {ctx} (A:Fo) :
+  (PR ctx PROCAI A) -> (PR ctx PROCAI_1 A).
+ Proof.
+(* intro H.
+ induction A.
+ + induction H.
+  (*assert (J:=H).
+   induction J.*)
+   apply hyp, c.
+   2 : eapply MP with A; assumption.
+   apply experB2.
+   apply Hax, a.
+
+ + induction H.
+ apply hyp, c.
+   2 : eapply MP with A; assumption.
+   apply experB2.
+   apply Hax, a.
+
+ + induction H.
+ apply hyp, c.
+   2 : eapply MP with A; assumption.
+   apply experB2.
+   apply Hax, a.
+ + induction H.
+ apply hyp, c.
+   2 : eapply MP with A; assumption.
+   apply experB2.
+   apply Hax, a.
+ + induction H.
+ apply hyp, c.
+   2 : eapply MP with A; assumption.
+   apply experB2.
+   apply Hax, a.
+Defined.
+ apply lemkk. exact a.
+ + inversion a.
+ + inversion a.
+*)
+Abort.
+
+(* EUREKA!
+Example ex001 ctx (p:PropVars.t) :
+PR ctx PROCAI_1 (p-->p).
+Proof.
+ apply MP with (p-->(p-->p)).
+ apply Hax, eHa1. (* apply (Hax _ _ (Ha1 _ _)).*)
+ apply MP with (p-->((p-->p)-->p)) (*1:=I*).
+ apply Hax, eHa1.
+ apply Hax, eHa2.
+*)
+ Lemma lemkk (ctx : Fo -> Type) (A : Fo) (a : PROCAI A) 
+  : PR ctx PROCAI_1 A.
+ Proof.
+ induction A.
+ + inversion a.
+ + inversion a.
+ + eapply MP.
+   2 : eapply MP.
+(*destruct a.*)
+ Admitted. (*bad*)
+
+ Theorem experB2' {ctx} (A:Fo) :
+  (PR ctx PROCAI A) -> (PR ctx PROCAI_1 A).
+ Proof.
+ intro H.
+ induction H.
+ apply hyp, c.
+ 2 : { eapply MP. exact IHPR1. exact IHPR2. }
+ apply lemkk. exact a.
+ Defined.
 
  Definition AtoA_I {ctx} (A:Fo) : PR ctx PROCAI (A-->A).
  Proof.

@@ -62,7 +62,7 @@ Module FormulasNotationsASCII.
  Delimit Scope txtnot with txtdel.
 End FormulasNotationsASCII.
 
-(* Substitution *)
+(* FFI *)
 Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
    match f with
    | Atom p t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
@@ -72,6 +72,7 @@ Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
        if SetVars.eqb x xi then false else isParamF xi f0
    end.
 
+(* Substitution *)
 Fixpoint substF (t : Terms) (xi : SetVars.t) (u : Fo)
  {struct u} : option Fo
  :=let f := (substF t xi) in
