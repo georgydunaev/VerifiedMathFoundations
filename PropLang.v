@@ -131,18 +131,6 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  + apply lMP with A; assumption.
  Defined.
 
- (*
- Section MPR. (* More than PR : add substitution *)
-  Context (ctx:Fo -> Type).
-  Context (axs:Fo -> Type).
-  Inductive MPR : Fo -> Type :=
-  | mhyp (A : Fo) : (*InL A ctx*) ctx A -> PR A
-  | mHax :> forall (A : Fo), (axs A) -> MPR A
-  | mMP (A B: Fo) : (MPR A)->(MPR (Impl A B))->(MPR B)
-  | mSub 
-  .
- End LPR.
- *)
  Theorem experB1 {ctx} (A:Fo) :
   (PR ctx PROCAI_1 A) -> (PR ctx PROCAI A).
  Proof.
@@ -185,6 +173,36 @@ End ctx_Sub_sec.
  exact (wct (Sub f)).
  Defined.*)
 
+ (*
+ Section MPR. (* More than PR : add substitution *)
+  Context (ctx:Fo -> Type).
+  Context (axs:Fo -> Type).
+  Inductive MPR : Fo -> Type :=
+  | mhyp (A : Fo) : (*InL A ctx*) ctx A -> MPR A
+  | mHax :> forall (A : Fo), (axs A) -> MPR A
+  | mMP (A B: Fo) : (MPR A)->(MPR (Impl A B))->(MPR B)
+  | mSub (A B:Fo) (p:PropVars.t) : (MPR A)->MPR (Sub A)
+  .
+ End MPR.
+ *)
+
+ Section MLPR. (* More than LPR : add substitution *)
+  Context (axs:Fo -> Type).
+  Inductive MLPR : Fo -> Type :=
+  | mlHax :> forall (A : Fo), (axs A) -> MLPR A
+  | mlMP (A B: Fo) : (MLPR A)->(MLPR (Impl A B))->(MLPR B)
+  | mlSub (A B:Fo) (p:PropVars.t) : (MLPR A)->MLPR (Sub A)
+  .
+ End MLPR.
+
+ (* trivial *)
+ Theorem LPR2MLPR axs A : LPR axs A -> MLPR axs A.
+ Proof.
+ intro H. induction H.
+ + apply mlHax. exact a.
+ + apply mlMP with A; assumption.
+ Defined.
+
  Lemma PROCAI_Sub (A : Fo) (a : PROCAI A) : PROCAI (Sub A).
  Proof.
  destruct a; simpl; constructor.
@@ -215,7 +233,9 @@ Section ghj_sec.
 End ghj_sec.
 
  (* Calculus with*)
- Theorem  PR_Sub' {ctx axs} (j1:forall A, (axs A)->axs (Sub A)) (A:Fo):
+ Section axs_resp_Sub.
+ Context {axs:Fo -> Type} (j1:forall A, (axs A)->axs (Sub A)).
+ Theorem  PR_Sub' {ctx} (A:Fo):
   (PR ctx axs A) -> (PR (ctx_Sub ctx) axs (Sub A)) .
  Proof.
  intro a.
@@ -224,6 +244,24 @@ End ghj_sec.
  + apply Hax. apply j1, a.
  + eapply MP. exact IHa1. exact IHa2.
  Defined.
+
+ Theorem  LPR_Sub'  (A:Fo):
+  (LPR axs A) -> (LPR axs (Sub A)) .
+ Proof.
+ intro a.
+ induction a.
+ + apply lHax. apply j1, a.
+ + eapply lMP. exact IHa1. exact IHa2.
+ Defined.
+
+ Theorem MLPR2LPR A : MLPR axs A -> LPR axs A.
+ Proof.
+ intro H. induction H.
+ + apply lHax. exact a.
+ + apply lMP with A; assumption.
+ + apply LPR_Sub'. assumption.
+ Defined.
+ End axs_resp_Sub.
 
  Theorem  PR_Sub {ctx} (A:Fo) :
   (PR ctx PROCAI A) -> (PR (ctx_Sub ctx) PROCAI (Sub A)) .
@@ -246,50 +284,6 @@ Defined.
 
 End subst_sec.
 
-
-
-
- Fixpoint experB2 {ctx} (A:Fo) :
-  (PR ctx PROCAI A) -> (PR ctx PROCAI_1 A).
- Proof.
-(* intro H.
- induction A.
- + induction H.
-  (*assert (J:=H).
-   induction J.*)
-   apply hyp, c.
-   2 : eapply MP with A; assumption.
-   apply experB2.
-   apply Hax, a.
-
- + induction H.
- apply hyp, c.
-   2 : eapply MP with A; assumption.
-   apply experB2.
-   apply Hax, a.
-
- + induction H.
- apply hyp, c.
-   2 : eapply MP with A; assumption.
-   apply experB2.
-   apply Hax, a.
- + induction H.
- apply hyp, c.
-   2 : eapply MP with A; assumption.
-   apply experB2.
-   apply Hax, a.
- + induction H.
- apply hyp, c.
-   2 : eapply MP with A; assumption.
-   apply experB2.
-   apply Hax, a.
-Defined.
- apply lemkk. exact a.
- + inversion a.
- + inversion a.
-*)
-Abort.
-
 (* EUREKA!
 Example ex001 ctx (p:PropVars.t) :
 PR ctx PROCAI_1 (p-->p).
@@ -300,6 +294,8 @@ Proof.
  apply Hax, eHa1.
  apply Hax, eHa2.
 *)
+
+(* MISTAKE!
  Lemma lemkk (ctx : Fo -> Type) (A : Fo) (a : PROCAI A) 
   : PR ctx PROCAI_1 A.
  Proof.
@@ -320,6 +316,7 @@ Proof.
  2 : { eapply MP. exact IHPR1. exact IHPR2. }
  apply lemkk. exact a.
  Defined.
+*)
 
  Definition AtoA_I {ctx} (A:Fo) : PR ctx PROCAI (A-->A).
  Proof.
@@ -329,6 +326,7 @@ Proof.
  apply Hax, Ha1.
  apply Hax, Ha2.
  Defined.
+
 
  Theorem subcalc {ctx} {B} : (PR ctx PROCAI B) -> (PR ctx PROCA B).
  Proof.
