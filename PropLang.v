@@ -173,18 +173,26 @@ End ctx_Sub_sec.
  exact (wct (Sub f)).
  Defined.*)
 
- (*
  Section MPR. (* More than PR : add substitution *)
-  Context (ctx:Fo -> Type).
   Context (axs:Fo -> Type).
-  Inductive MPR : Fo -> Type :=
-  | mhyp (A : Fo) : (*InL A ctx*) ctx A -> MPR A
-  | mHax :> forall (A : Fo), (axs A) -> MPR A
-  | mMP (A B: Fo) : (MPR A)->(MPR (Impl A B))->(MPR B)
-  | mSub (A B:Fo) (p:PropVars.t) : (MPR A)->MPR (Sub A)
+  Inductive MPR : forall (ctx:Fo -> Type), Fo -> Type :=
+  | mhyp (ctx:Fo -> Type) (A : Fo) : (*InL A ctx*) ctx A -> MPR ctx A
+  | mHax (ctx:Fo -> Type) : forall (A : Fo), (axs A) -> MPR ctx A
+  | mMP (ctx:Fo -> Type) (A B: Fo) :
+     (MPR ctx A)->(MPR ctx (Impl A B))->(MPR ctx B)
+  | mSub (ctx:Fo -> Type) (A B:Fo) (p:PropVars.t) :
+    (MPR ctx A)->MPR (ctx_Sub ctx) (Sub A)
   .
  End MPR.
- *)
+(*!!!
+ Theorem MPR2PR axs ctx A : MPR axs ctx A -> PR axs ctx A.
+ Proof.
+ intro H. induction H.
+ + apply mlHax. exact a.
+ + apply mlMP with A; assumption.
+ Defined.
+*)
+
 
  Section MLPR. (* More than LPR : add substitution *)
   Context (axs:Fo -> Type).
@@ -283,40 +291,6 @@ destruct E.
 Defined.
 
 End subst_sec.
-
-(* EUREKA!
-Example ex001 ctx (p:PropVars.t) :
-PR ctx PROCAI_1 (p-->p).
-Proof.
- apply MP with (p-->(p-->p)).
- apply Hax, eHa1. (* apply (Hax _ _ (Ha1 _ _)).*)
- apply MP with (p-->((p-->p)-->p)) (*1:=I*).
- apply Hax, eHa1.
- apply Hax, eHa2.
-*)
-
-(* MISTAKE!
- Lemma lemkk (ctx : Fo -> Type) (A : Fo) (a : PROCAI A) 
-  : PR ctx PROCAI_1 A.
- Proof.
- induction A.
- + inversion a.
- + inversion a.
- + eapply MP.
-   2 : eapply MP.
-(*destruct a.*)
- Admitted. (*bad*)
-
- Theorem experB2' {ctx} (A:Fo) :
-  (PR ctx PROCAI A) -> (PR ctx PROCAI_1 A).
- Proof.
- intro H.
- induction H.
- apply hyp, c.
- 2 : { eapply MP. exact IHPR1. exact IHPR2. }
- apply lemkk. exact a.
- Defined.
-*)
 
  Definition AtoA_I {ctx} (A:Fo) : PR ctx PROCAI (A-->A).
  Proof.
