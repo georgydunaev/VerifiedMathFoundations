@@ -29,7 +29,7 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Definition NPandQ: Fo->Type := fun f => (f=-.P)\/(f=Q).
  Definition NPandNQ: Fo->Type := fun f => (f=-.P)\/(f=-.Q).
 
- Theorem lem3_1: PR PandQ PROCA (P -/\ Q).
+ Theorem lem3_1: PR PROCA PandQ (P -/\ Q).
  Proof.
  unshelve eapply MP.
  exact Q.
@@ -49,10 +49,10 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Context (Gamma:Fo->Type).
  Context (A B:Fo).
  (*Check (fun x=>Gamma x \/ x=A).*)
- Theorem rule10 (H1:PR (add2ctx A Gamma) PROCA B )
-  (H2:PR (add2ctx A Gamma) PROCA (-.B) )
+ Theorem rule10 (H1:PR PROCA (add2ctx A Gamma) B )
+  (H2:PR PROCA (add2ctx A Gamma) (-.B) )
  :
- PR Gamma PROCA (-.A).
+ PR PROCA Gamma (-.A).
  Proof.
  apply Ded in H1.
  apply Ded in H2.
@@ -63,7 +63,7 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Defined.
  End rule10.
 
- Theorem lem3_3: PR NPandQ PROCA (-.(P -/\ Q)).
+ Theorem lem3_3: PR PROCA NPandQ (-.(P -/\ Q)).
  Proof.
  unfold NPandQ.
  (* eapply permut. *)
@@ -93,10 +93,10 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  Defined.
 
  (* case analysis *)
- Theorem rule8 A B C Gamma (H1:PR (add2ctx A Gamma) PROCA C )
-  (H2:PR (add2ctx B Gamma) PROCA C )
+ Theorem rule8 A B C Gamma (H1:PR PROCA (add2ctx A Gamma) C )
+  (H2:PR PROCA (add2ctx B Gamma) C )
  :
- PR (add2ctx (A-\/ B) Gamma) PROCA C.
+ PR PROCA (add2ctx (A-\/ B) Gamma) C.
  Proof.
  apply Ded in H1.
  apply Ded in H2.
@@ -108,10 +108,10 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  exact H1.
  Defined.
 
- Theorem rule9 A B Gamma (H1:PR Gamma PROCA A )
-  (H2:PR Gamma PROCA (-.A) )
+ Theorem rule9 A B Gamma (H1:PR PROCA Gamma A )
+  (H2:PR PROCA Gamma (-.A) )
  :
- PR Gamma PROCA B.
+ PR PROCA Gamma B.
  Proof.
  1 : eapply MP.
  2 : eapply MP.
@@ -120,7 +120,7 @@ Module ProCl (PropVars : UsualDecidableTypeFull).
  exact H2.
  Defined.
 
- Theorem lem3_8: PR NPandNQ PROCA (-.(P -\/ Q)).
+ Theorem lem3_8: PR PROCA NPandNQ (-.(P -\/ Q)).
  Proof.
  unfold NPandNQ.
  eapply rule10.
@@ -244,6 +244,16 @@ destruct H.
 reflexivity.
 Defined.
 
+Theorem rule5 A B Gamma (H1:PR PROCA Gamma A )
+  (H2:PR PROCA Gamma B )
+ :
+ PR PROCA Gamma (A-/\ B).
+Proof.
+eapply MP. exact H2.
+eapply MP. exact H1.
+apply Hax, Intui, Ha5.
+Defined.
+
 (*
 Check (PropVars.t -> Prop).
 Check (PropVars.t -> bool).
@@ -259,7 +269,7 @@ Check (PropVars.t -> bool).
  Admitted. *)
  Theorem lem4 (A:Fo) (str:PropVars.t -> bool) (eps:bool)
   : 
-  PR (ctx_bld str) PROCA (ne (fff0 (foI_cl (ttt1 str) A)) A).
+  PR PROCA (ctx_bld str) (ne (fff0 (foI_cl (ttt1 str) A)) A).
  Proof.
  induction A; simpl.
  + unfold fff0,fff1, ne.
@@ -282,7 +292,70 @@ Check (PropVars.t -> bool).
      destruct (excluded_middle_informative False).
      destruct f.
      apply AtoA.
-  +
+  +  simpl.
+Check fff0.
+  unfold fff0,fff1, ne.
+destruct (excluded_middle_informative
+       (foI_cl (ttt1 str) A1 /\ foI_cl (ttt1 str) A2)) as [[G1 G2]|G].
+  - unfold fff0 in *|-*.
+    destruct (excluded_middle_informative
+                (foI_cl (ttt1 str) A1)) , 
+             (excluded_middle_informative
+                (foI_cl (ttt1 str) A2)).
+    * simpl in IHA1, IHA2. apply rule5; assumption.
+    * simpl in IHA1, IHA2. destruct (n G2).
+    * simpl in IHA1, IHA2. destruct (n G1).
+    * simpl in IHA1, IHA2. destruct (n G1).
+  - apply not_and_or in G.
+unfold fff0,fff1, ne in *|-*.
+    destruct (excluded_middle_informative
+                (foI_cl (ttt1 str) A1)) , 
+             (excluded_middle_informative
+                (foI_cl (ttt1 str) A2)).
+
+Lemma and2prod (A B:Prop) : (A/\B)->(A*B).
+Proof.
+intro H.
+destruct H as [H1 H2].
+constructor; assumption.
+Defined.
+
+Lemma or2sum (A B:Prop) : (A\/B)->(A+B).
+Proof.
+intro H.
+destruct (fff0 A) eqn:mA.
++ unshelve eapply f_equal in mA.
+  2 : exact fff1.
+  simpl in mA.
+  rewrite fff01 in mA.
+  left.
+  rewrite mA. constructor.
++ destruct (fff0 B) eqn:mB.
+  - unshelve eapply f_equal in mB.
+    2 : exact fff1.
+    simpl in mB.
+    rewrite fff01 in mB.
+    right. rewrite mB. constructor.
+  - unshelve eapply f_equal in mA.
+    2 : exact fff1.
+    simpl in mA.
+    rewrite fff01 in mA.
+    unshelve eapply f_equal in mB.
+    2 : exact fff1.
+    simpl in mB.
+    rewrite fff01 in mB.
+    assert (Q:False).
+    {
+     destruct H.
+     * rewrite mA in H. destruct H.
+     * rewrite mB in H. destruct H.
+    }
+    destruct Q.
+Defined.
+(*ex
+sig
+destruct H as [J|J].
+    destruct G.*)
 (*
 change (Neg Bot) with (Impl Bot Bot).
 unfold Neg.

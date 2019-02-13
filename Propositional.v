@@ -63,15 +63,6 @@ End PR.*)
 
 
 
-
-
-
-
-
-
-
-
-
 (** ==== COMPLETENESS ==== **)
 (*Check nil%list.*)
 Fixpoint CONJ (l:list Fo) : Fo :=
@@ -86,10 +77,10 @@ match l return Fo with
 end.
 (*Consistent Pair*)
 Definition conpa (G D:list Fo) : Type
-:= (PR empctx PROCAI ((CONJ G) --> (DISJ D))) -> False.
+:= (PR PROCAI empctx ((CONJ G) --> (DISJ D))) -> False.
 
 Definition incpa (G D:list Fo) : Type
-:=  PR empctx PROCAI ((CONJ G) --> (DISJ D)).
+:=  PR PROCAI empctx ((CONJ G) --> (DISJ D)).
 
 
 Inductive SubFo (f:Fo): Fo -> Type :=
@@ -119,7 +110,7 @@ apply MP with (s-\/(DISJ D)).
   apply AtoA_I.
   apply MP with (s --> DISJ D).
   2 : {apply Hax. apply Ha8. }
-  pose (r:=Hax empctx PROCAI _ (Ha5 s (CONJ G))).
+  pose (r:=Hax PROCAI empctx _ (Ha5 s (CONJ G))).
   apply invDedI in r.  apply invDedI in r.
   apply weak with (A:=s) in a1.
   apply weak with (A:=CONJ G) in a1.

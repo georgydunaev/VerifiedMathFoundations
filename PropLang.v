@@ -98,8 +98,8 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  .
 
  Section PR.
-  Context (ctx:Fo -> Type).
   Context (axs:Fo -> Type).
+  Context (ctx:Fo -> Type).
   Inductive PR : Fo -> Type :=
   | hyp (A : Fo) : (*InL A ctx*) ctx A -> PR A
   | Hax :> forall (A : Fo), (axs A) -> PR A
@@ -116,14 +116,14 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  End LPR.
 
  (* trivial *)
- Theorem LPR2PR axs A : LPR axs A -> PR empctx axs A.
+ Theorem LPR2PR axs A : LPR axs A -> PR axs empctx A.
  Proof.
  intro H. induction H.
  + apply Hax. exact a.
  + apply MP with A; assumption.
  Defined.
 
- Theorem PR2LPR axs A : PR empctx axs A -> LPR axs A.
+ Theorem PR2LPR axs A : PR axs empctx A -> LPR axs A.
  Proof.
  intro H. induction H.
  + destruct c.
@@ -132,7 +132,7 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  Defined.
 
  Theorem experB1 {ctx} (A:Fo) :
-  (PR ctx PROCAI_1 A) -> (PR ctx PROCAI A).
+  (PR PROCAI_1 ctx A) -> (PR PROCAI ctx A).
  Proof.
  intro H.
  induction H.
@@ -244,7 +244,7 @@ End ghj_sec.
  Section axs_resp_Sub.
  Context {axs:Fo -> Type} (j1:forall A, (axs A)->axs (Sub A)).
  Theorem  PR_Sub' {ctx} (A:Fo):
-  (PR ctx axs A) -> (PR (ctx_Sub ctx) axs (Sub A)) .
+  (PR axs ctx A) -> (PR axs (ctx_Sub ctx) (Sub A)) .
  Proof.
  intro a.
  induction a.
@@ -272,7 +272,7 @@ End ghj_sec.
  End axs_resp_Sub.
 
  Theorem  PR_Sub {ctx} (A:Fo) :
-  (PR ctx PROCAI A) -> (PR (ctx_Sub ctx) PROCAI (Sub A)) .
+  (PR PROCAI ctx A) -> (PR PROCAI (ctx_Sub ctx) (Sub A)) .
  Proof.
  intro a.
  induction a.
@@ -292,7 +292,7 @@ Defined.
 
 End subst_sec.
 
- Definition AtoA_I {ctx} (A:Fo) : PR ctx PROCAI (A-->A).
+ Definition AtoA_I {ctx} (A:Fo) : PR PROCAI ctx (A-->A).
  Proof.
  apply MP with (A-->(A-->A)).
  apply Hax, Ha1. (* apply (Hax _ _ (Ha1 _ _)).*)
@@ -302,7 +302,7 @@ End subst_sec.
  Defined.
 
 
- Theorem subcalc {ctx} {B} : (PR ctx PROCAI B) -> (PR ctx PROCA B).
+ Theorem subcalc {ctx} {B} : (PR PROCAI ctx B) -> (PR PROCA ctx B).
  Proof.
  intro m.
  induction m.
@@ -311,11 +311,11 @@ End subst_sec.
  + eapply MP. exact IHm1. exact IHm2.
  Defined.
 
- Definition AtoA {ctx} (A:Fo) : PR ctx PROCA (A-->A) 
+ Definition AtoA {ctx} (A:Fo) : PR PROCA ctx (A-->A) 
   := subcalc (AtoA_I A).
 
  Definition a1i_I (A B : Fo)(l : Fo->Type):
- (PR l PROCAI B)->(PR l PROCAI (Impl A B)).
+ (PR PROCAI l B)->(PR PROCAI l (Impl A B)).
  Proof.
  intros x.
  apply MP with (A:= B).
@@ -324,7 +324,7 @@ End subst_sec.
  Defined.
 
  Definition a1i (A B : Fo)(l : Fo->Type):
- (PR l PROCA B)->(PR l PROCA (Impl A B)).
+ (PR PROCA l B)->(PR PROCA l (Impl A B)).
  Proof.
  intros x.
  apply MP with (A:= B).
@@ -335,26 +335,26 @@ End subst_sec.
  (*Fixpoint *)
  Theorem weak (axs:Fo -> Type)
  (A F:Fo) (*l :list Fo*) (l:Fo->Type)
- (x: (PR l axs F)) : (PR (add2ctx A l) axs F).
+ (x: (PR axs l F)) : (PR axs (add2ctx A l) F).
  Proof.
  induction x.
  + apply hyp.
    right.
    assumption.
  + apply Hax, a.
- + exact (MP (add2ctx A l) axs A0 B IHx1 IHx2).
+ + exact (MP axs (add2ctx A l) A0 B IHx1 IHx2).
  Defined.
 
  (*Fixpoint*)
- Definition weaken axs (F:Fo) (li l :Fo->Type) (x: (PR l axs F))
- (*{struct li}*): (PR (cnctctx li l) axs F).
+ Definition weaken axs (F:Fo) (li l :Fo->Type) (x: (PR axs l F))
+ (*{struct li}*): (PR axs (cnctctx li l) F).
  Proof.
  induction x.
  + apply hyp.
    right.
    assumption.
  + apply Hax, a.
- + exact (MP (cnctctx li l) _ A B IHx1 IHx2).
+ + exact (MP _ (cnctctx li l) A B IHx1 IHx2).
  (*destruct li.
  simpl.
  exact x.
@@ -365,8 +365,8 @@ End subst_sec.
  Defined.
 
  (* ==== Deduction ==== *)
- Theorem DedI (A B:Fo)(il:Fo->Type)(m:(PR (add2ctx A il) PROCAI B)) 
- :(PR il PROCAI (A-->B)).
+ Theorem DedI (A B:Fo)(il:Fo->Type)(m:(PR PROCAI (add2ctx A il) B)) 
+ :(PR PROCAI il (A-->B)).
  Proof.
  induction m.
  + (*unfold InL in c.*)
@@ -396,30 +396,30 @@ End subst_sec.
    apply Ha2.
  Defined.
 
- Theorem invDedI (A B:Fo)(il:Fo->Type)(m:(PR il PROCAI (A-->B)))
- :(PR (add2ctx A il) PROCAI B).
+ Theorem invDedI (A B:Fo)(il:Fo->Type)(m:(PR PROCAI il (A-->B)))
+ :(PR PROCAI (add2ctx A il) B).
  Proof.
  pose(U:=(weak PROCAI A _ il m)).
- assert (N:PR (add2ctx A il) PROCAI A).
+ assert (N:PR PROCAI (add2ctx A il) A).
  apply hyp. simpl. left. reflexivity.
  apply MP with A.
  exact N.
  exact U.
  Defined.
 
- Theorem invDed (A B:Fo)(il:Fo->Type)(m:(PR il PROCA (A-->B)))
- :(PR (add2ctx A il) PROCA B).
+ Theorem invDed (A B:Fo)(il:Fo->Type)(m:(PR PROCA il (A-->B)))
+ :(PR PROCA (add2ctx A il) B).
  Proof.
  pose(U:=(weak PROCA A _ il m)).
- assert (N:PR (add2ctx A il) PROCA A).
+ assert (N:PR PROCA (add2ctx A il) A).
  apply hyp. simpl. left. reflexivity.
  apply MP with A.
  exact N.
  exact U.
  Defined.
 
- Theorem Ded (A B:Fo)(il:Fo->Type)(m:(PR (add2ctx A il) PROCA B)) 
- :(PR il PROCA (A-->B)).
+ Theorem Ded (A B:Fo)(il:Fo->Type)(m:(PR PROCA (add2ctx A il) B)) 
+ :(PR PROCA il (A-->B)).
  Proof.
  induction m.
  + (*unfold InL in c.*)
@@ -451,7 +451,7 @@ End subst_sec.
 
  (* Order of the context is not important. *)
  Lemma permut axs L1 L2 A (H: forall x, L1 x -> L2 x)
- : (PR L1 axs A) -> (PR L2 axs A).
+ : (PR  axs L1 A) -> (PR axs L2 A).
  Proof.
  intro m.
  induction m.
@@ -460,8 +460,8 @@ End subst_sec.
  + apply MP with A. exact IHm1. exact IHm2.
  Defined.
 
- Lemma PR_eqv C1 C2 A F (Q:forall x,C1 x <-> C2 x) (H:PR C1 A F) 
-  : PR C2 A F.
+ Lemma PR_eqv C1 C2 A F (Q:forall x,C1 x <-> C2 x) (H:PR A C1 F)
+  : PR A C2 F.
  Proof.
  eapply permut. 2 : exact H. intros x D. apply Q, D.
  (*induction H.
@@ -488,7 +488,7 @@ End subst_sec.
  End foI_cl.
 
  (* Soundness of the classical semantics *) (*LC p.41 thm17*)
- Theorem sou_cl f (H:PR empctx PROCA f) :
+ Theorem sou_cl f (H:PR PROCA empctx f) :
     forall (val:PropVars.t->Prop), foI_cl val f.
  Proof. intro val.
   induction H;firstorder.
@@ -515,7 +515,7 @@ End subst_sec.
  End foI_dn.
 
  (* Soundness of the double-negation semantics *)
- Theorem sou_dn f (H:PR empctx PROCA f) :
+ Theorem sou_dn f (H:PR PROCA empctx f) :
     forall (val:PropVars.t->Prop), foI_dn val f.
  Proof. intro val.
   induction H;firstorder.
@@ -540,7 +540,7 @@ End subst_sec.
  End foI_bo.
 
  (*Soundness of the boolean semantics *)
- Theorem sou_bo f (H:PR empctx PROCA f) :
+ Theorem sou_bo f (H:PR PROCA empctx f) :
     forall (val:PropVars.t->bool), (foI_bo val f)=true.
  Proof. intro val.
  induction H.
@@ -609,7 +609,7 @@ End subst_sec.
  Defined.
 
  (* Soundness of the Kripke semantics of IPro *)
- Theorem sou_kr f (H:PR empctx PROCAI f) : forall x, foI_kr x f.
+ Theorem sou_kr f (H:PR PROCAI empctx f) : forall x, foI_kr x f.
  Proof.
  induction H.
  + destruct c. (*simpl in i. destruct i.*)
