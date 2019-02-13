@@ -103,7 +103,7 @@ Module Lang (PropVars : UsualDecidableTypeFull).
   Inductive PR : Fo -> Type :=
   | hyp (A : Fo) : (*InL A ctx*) ctx A -> PR A
   | Hax :> forall (A : Fo), (axs A) -> PR A
-  | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
+  | MP (A B: Fo) : (PR A)->(PR (A-->B))->(PR B)
   .
  End PR.
 
@@ -111,7 +111,7 @@ Module Lang (PropVars : UsualDecidableTypeFull).
   Context (axs:Fo -> Type).
   Inductive LPR : Fo -> Type :=
   | lHax :> forall (A : Fo), (axs A) -> LPR A
-  | lMP (A B: Fo) : (LPR A)->(LPR (Impl A B))->(LPR B)
+  | lMP (A B: Fo) : (LPR A)->(LPR (A-->B))->(LPR B)
   .
  End LPR.
 
@@ -658,5 +658,35 @@ End subst_sec.
    exact H4.
  Defined.
  End WR.
+ 
+ Lemma sile1 (A B:Prop) : (~~A)->A.
+ Proof.
+ intro H.
+ destruct (classic A).
+ trivial.
+ destruct (H H0).
+ Defined.
 
+ Lemma sile0 A : PR PROCA empctx ((-.-.A) --> A).
+ Proof.
+ eapply MP.
+ apply Hax, (Ha11 A).
+ eapply MP. (* with ((-.A) --> (-.(-.A)) --> A).*)
+ 2 :  eapply MP. (* with (A --> (-.(-.A)) --> A). *)
+ 3 : {
+eapply Hax, Intui.
+Check Ha8 A (-.A) ((-.(-.A))-->A).
+eapply Ha8.
+(*eapply (Ha8 A (-.A) ((-.(-.A))-->A)).*)
+}
+ +
+ eapply Ded, Ded.
+ Abort.
+
+ Lemma sile2 (A B:Prop) : ((A->B)->B)->A.
+ Proof.
+ intro H. PROCA
+ destruct (classic A).
+ trivial.
+ destruct (classic B).
 End Lang.

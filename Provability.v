@@ -42,7 +42,8 @@ Inductive PRECA : Fo -> Type :=
 PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .
 
-(***** MISLEADING THING *****)
+(***** MISLEADING THING! Do NOT use! *****)
+(* IT WORKS:
 Section PROPR.
 (*Context (axs : Fo -> Type).*)
 Context (ctx:list Fo).
@@ -53,7 +54,7 @@ Inductive PROPR : Fo -> Type :=
                  ->(PROPR B)
 .
 End PROPR.
-
+*)
 
 Section PREPR.
 (*Context (axs : Fo -> Type).*)
@@ -67,6 +68,7 @@ Inductive PREPR : Fo -> Type :=
 .
 (*Instance cMPe : (cMP PREPR) := MP_E.*)
 End PREPR.
+(* IT WORKS:
 Definition a1 ctx A B : @PROPR ctx (Impl A (Impl B A)).
 Proof. apply Hax_O.
 (*
@@ -75,12 +77,19 @@ Check Ha1 A B : PRECA (A --> (B --> A)).
 (*Check (Ha1 A B: PRECA (A --> (B --> A))) : @PR axi (A --> (B --> A)).*)
 *)
 refine (Ha1 _ _). Defined.
+*)
+Definition a1 ctx A B : @PREPR ctx (Impl A (Impl B A)).
+Proof. apply Hax_E.
+refine (Ha1 _ _). 
+Defined.
+
 Definition a2 axi A B C : @PREPR axi ((A-->(B-->C))-->((A-->B)-->(A-->C))).
 Proof. apply Hax_E, PRO, Ha2. Defined.
 Definition b1 axi (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
 @PREPR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax_E, Hb1, H. Defined.
 
+(* IT WORKS:
 Theorem subcalc {ctx} (A:Fo) : PROPR ctx A -> PREPR ctx A.
 Proof.
 intro p.
@@ -94,9 +103,11 @@ apply IHp1. apply IHp2.
 Defined.
 
 Coercion subcalc : PROPR >-> PREPR.
+*)
 
 (*Arguments GPR {axs}.*)
 (*Notation newMP := (MP (1:=I)).*)
+(* IT WORKS:
 Definition AtoA {ctx} (A:Fo) : PROPR ctx (A-->A).
 Proof.
 apply MP_O with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
@@ -105,7 +116,9 @@ apply MP_O with (A:= A-->((A-->A)-->A)).
 apply Hax_O, Ha1.
 apply Hax_O, Ha2.
 Defined.
+*)
 
+(* IT WORKS:
 Definition a12 axi ph t xi : @PREPR axi (match (substF t xi ph) with 
       | Some q => (Impl (Fora xi ph) q)
       | None => Top
@@ -113,6 +126,16 @@ Definition a12 axi ph t xi : @PREPR axi (match (substF t xi ph) with
 Proof. induction (substF t xi ph) eqn:g. eapply Hax_E, Ha12, g.
 unfold Top.
 exact (AtoA  Bot).
+Defined.
+*)
+
+Definition AtoA {ctx} (A:Fo) : PREPR ctx (A-->A).
+Proof.
+apply MP_E with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
+apply Hax_E, PRO, Ha1. (* apply (Hax _ _ (Ha1 _ _)).*)
+apply MP_E with (A:= A-->((A-->A)-->A)).
+apply Hax_E, PRO, Ha1.
+apply Hax_E, PRO, Ha2.
 Defined.
 
 (* page 155 *)

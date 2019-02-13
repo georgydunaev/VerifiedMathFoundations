@@ -46,7 +46,7 @@ apply MP_E with (A:= (Fora xi (Top --> A))).
 * apply GEN_E.
   apply MP_E with (A:= A).
   + exact q.
-  + apply subcalc, a1.
+  + apply a1. (*apply subcalc, a1.*)
 * apply b1.
   trivial.
 Defined.
@@ -58,7 +58,7 @@ Proof.
 intros x.
 apply MP_E with (A:= B).
 exact x.
-apply subcalc, a1.
+apply (*subcalc,*) a1.
 Defined.
 
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PREPR l F)) : (PREPR (A::l) F).
