@@ -9,8 +9,8 @@ Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module PRE := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
 Export PRE.
 
-Import FormulasNotationsASCII.
-Local Open Scope txtnot.
+Import PredFormulasNotationsASCII.
+Local Open Scope pretxtnot.
 
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
@@ -38,6 +38,8 @@ Inductive PRECA : Fo -> Type :=
 | PRO  :> forall A, (PROCA A) -> (PRECA A)
 | Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
  (r:Fo) (s:(substF t xi ph)=Some r), PRECA ((Fora xi ph) --> r)
+(*| Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
+ (r:Fo) (s:(substF t xi ph)=Some r), PRECA ((Fora xi ph) --> r)*)
 | Hb1  : forall (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false),
 PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .

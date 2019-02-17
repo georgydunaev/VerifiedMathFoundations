@@ -19,8 +19,8 @@ Export X. *)
 Module X := Deduction_mod SetVars FuncSymb PredSymb.
 Export X.
 
-Import FormulasNotationsASCII.
-Local Open Scope txtnot.
+Import PredFormulasNotationsASCII.
+Local Open Scope pretxtnot.
 
 Module Facts := BoolEqualityFacts SetVars.
 

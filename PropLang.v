@@ -25,17 +25,21 @@ Module Lang (PropVars : UsualDecidableTypeFull).
  |Impl:Fo->Fo->Fo
  .
 
- Notation " x --> y ":=(Impl x y) (at level 80, right associativity).
- Notation " x -/\ y ":=(Conj x y) (at level 80).
- Notation " x -\/ y ":=(Disj x y) (at level 80).
- Notation " -. x " :=(Impl x Bot) (at level 80).
+Module PropFormulasNotationsASCII.
+ Notation " x --> y ":=(Impl x y) (at level 80, right associativity):protxtnot.
+ Notation " x -/\ y ":=(Conj x y) (at level 80):protxtnot.
+ Notation " x -\/ y ":=(Disj x y) (at level 80):protxtnot.
+ Notation " -. x " :=(Impl x Bot) (at level 80):protxtnot.
  Definition Neg (A:Fo):Fo := Impl A Bot.
  Definition Top:Fo := Neg Bot.
-
+ Delimit Scope protxtnot with otd.
+End PropFormulasNotationsASCII.
+Export PropFormulasNotationsASCII.
+Open Scope protxtnot.
  (* BEGIN experimental *)
  Section exper_1.
  Inductive PROCAI_1 : Fo -> Type :=
- | eHa1  (A B:PropVars.t) :  PROCAI_1 (A-->(B-->A))
+ | eHa1  (A B:PropVars.t) :  PROCAI_1 (A-->(B-->A))%otd
  | eHa2  (A B:PropVars.t): forall (C:PropVars.t),
           PROCAI_1 ((A-->(B-->C))-->((A-->B)-->(A-->C)))
  | eHa3  (A B:PropVars.t): PROCAI_1 ((A-/\ B)--> A)
@@ -683,10 +687,32 @@ eapply Ha8.
  eapply Ded, Ded.
  Abort.
 
+ (*
  Lemma sile2 (A B:Prop) : ((A->B)->B)->A.
  Proof.
  intro H. PROCA
  destruct (classic A).
  trivial.
  destruct (classic B).
+ *)
+ Theorem propswap (A B C:Fo):
+ PR PROCAI empctx ((A-->(B-->C))-->(B-->(A-->C))).
+ Proof.
+ eapply DedI, DedI, DedI.
+ eapply MP.
+ 2 : {
+ eapply MP.
+ 2 : {
+ apply hyp.
+ unfold add2ctx.
+ right. right. left. reflexivity.
+ }
+ apply hyp.
+ unfold add2ctx.
+ left. reflexivity.
+ }
+ apply hyp.
+ unfold add2ctx.
+ right. left. reflexivity.
+ Defined.
 End Lang.

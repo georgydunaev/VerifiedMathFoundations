@@ -32,15 +32,15 @@ Inductive Fo :=
 Definition Neg (A:Fo):Fo := Impl A Bot.
 Definition Top:Fo := Neg Bot.
 
-Module FormulasNotationsUnicode.
- Notation " '⊥' "   :=(Bot) (at level 80) : uninot.
- Notation " x '∧' y ":=(Conj x y) (at level 80) : uninot.
- Notation " x '∨' y ":=(Disj x y) (at level 80) : uninot.
- Notation " x '→' y ":=(Impl x y) (at level 80, right associativity) : uninot.
- Notation " '∀' x f " :=(Fora x f) (at level 80) : uninot.
- Notation " '∃' x f " :=(Exis x f) (at level 80) : uninot.
- Notation " '¬' x "   :=(Neg x) (at level 80)  : uninot.
-Delimit Scope uninot with unidel.
+Module PredFormulasNotationsUnicode.
+ Notation " '⊥' "   :=(Bot) (at level 80) : preuninot.
+ Notation " x '∧' y ":=(Conj x y) (at level 80) : preuninot.
+ Notation " x '∨' y ":=(Disj x y) (at level 80) : preuninot.
+ Notation " x '→' y ":=(Impl x y) (at level 80, right associativity) : preuninot.
+ Notation " '∀' x f " :=(Fora x f) (at level 80) : preuninot.
+ Notation " '∃' x f " :=(Exis x f) (at level 80) : preuninot.
+ Notation " '¬' x "   :=(Neg x) (at level 80)  : preuninot.
+Delimit Scope preuninot with eud.
 (* Example :
 Fail Check (¬ ⊥).
 Check (¬ ⊥)%unidel.
@@ -48,19 +48,19 @@ Local Open Scope uninot.
 Check (¬ ⊥).
 Local Close Scope uninot.
 *)
-End FormulasNotationsUnicode.
+End PredFormulasNotationsUnicode.
 
-Module FormulasNotationsASCII.
- Notation " x --> y ":=(Impl x y) (at level 80, right associativity) : txtnot.
- Notation " x -/\ y ":=(Conj x y) (at level 80) : txtnot.
- Notation " x -\/ y ":=(Disj x y) (at level 80) : txtnot.
+Module PredFormulasNotationsASCII.
+ Notation " x --> y ":=(Impl x y) (at level 80, right associativity) : pretxtnot.
+ Notation " x -/\ y ":=(Conj x y) (at level 80) : pretxtnot.
+ Notation " x -\/ y ":=(Disj x y) (at level 80) : pretxtnot.
 (*
- Notation " '(A.' x ')(' f ')' " :=(Fora x f) (at level 80) : txtnot.
- Notation " '(E.' x ')(' f ')' " :=(Exis x f) (at level 80) : txtnot.
+ Notation " '(A.' x ')(' f ')' " :=(Fora x f) (at level 80) : pretxtnot.
+ Notation " '(E.' x ')(' f ')' " :=(Exis x f) (at level 80) : pretxtnot.
 *)
- Notation " -. x "   :=(Neg x) (at level 80) : txtnot.
- Delimit Scope txtnot with txtdel.
-End FormulasNotationsASCII.
+ Notation " -. x "   :=(Neg x) (at level 80) : pretxtnot.
+ Delimit Scope pretxtnot with etd.
+End PredFormulasNotationsASCII.
 
 (* FFI *)
 Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=

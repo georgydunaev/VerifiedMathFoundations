@@ -10,8 +10,8 @@ Module Deduction_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module X := Provability_mod SetVars FuncSymb PredSymb.
 Export X.
 
-Import FormulasNotationsASCII.
-Local Open Scope txtnot.
+Import PredFormulasNotationsASCII.
+Local Open Scope pretxtnot.
 
 Export Coq.Lists.List.
 Import Bool.Bool.
