@@ -1,14 +1,18 @@
 Require List.
 Require Bool.
 Require Import Coq.Structures.Equalities.
-
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Import Misc.
+(*From VerifiedMathFoundations.library Require Import Misc.*)
 Require Export Provability.
 
 Module Deduction_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
 Module X := Provability_mod SetVars FuncSymb PredSymb.
 Export X.
+
+Import PredFormulasNotationsASCII.
+Local Open Scope pretxtnot.
+
 Export Coq.Lists.List.
 Import Bool.Bool.
 Notation SetVars := SetVars.t (only parsing).
@@ -42,7 +46,7 @@ apply MP_E with (A:= (Fora xi (Top --> A))).
 * apply GEN_E.
   apply MP_E with (A:= A).
   + exact q.
-  + apply subcalc, a1.
+  + apply a1. (*apply subcalc, a1.*)
 * apply b1.
   trivial.
 Defined.
@@ -54,7 +58,7 @@ Proof.
 intros x.
 apply MP_E with (A:= B).
 exact x.
-apply subcalc, a1.
+apply (*subcalc,*) a1.
 Defined.
 
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PREPR l F)) : (PREPR (A::l) F).
@@ -109,16 +113,21 @@ Fixpoint weaken (F : Fo) (li l : list Fo) (x : PREPR l F) {struct li} :
    end.
 
 (*Export List Notations.*)
-Fixpoint notGenWith (xi:SetVars)(l:list Fo)(B:Fo)(m:(PREPR l B)){struct m}:bool.
+Fixpoint notGenWith (xi:SetVars)(l:list Fo)
+(B:Fo)(m:(PREPR l B)){struct m}:bool.
 Proof.
-destruct m eqn: o.
+(*induction m.  eqn: o.*)
+destruct m  eqn: o.
+(*Show Proof.*)
 exact true.
 destruct p eqn:j.
 exact true.
 exact true.
 exact true.
+(*exact (andb IHm1 IHm2).
+exact (andb (negb (SetVars.eqb xi xi0)) IHm).*)
 exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
-exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ).
+exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ). 
 Defined.
 
 (*Fixpoint HA xi : true = PeanoNat.Nat.eqb (xi) (xi).
@@ -260,7 +269,7 @@ Definition swapSIMPL ctx A B C
 (HA : forall xi : SetVars.t, isParamF xi A = false)
 (HB : forall xi : SetVars.t, isParamF xi B = false)
 (HC : forall xi : SetVars.t, isParamF xi C = false) :
-(PREPR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
 2 : { intro xi. simpl.
@@ -277,7 +286,7 @@ apply hyp_E; firstorder.
 Defined.
 
 Definition swap ctx A B C :
-(PREPR ctx (A --> (B --> C) --> (B --> (A --> C)) )).
+(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
 Admitted.

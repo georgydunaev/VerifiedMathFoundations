@@ -6,8 +6,11 @@ Export Formulas.
 Export Coq.Lists.List.
 
 Module Provability_mod (SetVars FuncSymb PredSymb: UsualDecidableTypeFull).
-Module XPro := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
-Export XPro.
+Module PRE := Formulas.Formulas_mod SetVars FuncSymb PredSymb.
+Export PRE.
+
+Import PredFormulasNotationsASCII.
+Local Open Scope pretxtnot.
 
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
@@ -16,56 +19,33 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | b :: m => (sum (b = a) (InL a m))
   end.
 
-(* PROpositional Calculus Axioms *)
+(* intuitionistic "PROpositional" Calculus Axioms *)
 Inductive PROCA : Fo -> Type :=
 | Ha1  : forall A B, PROCA (A-->(B-->A))
 | Ha2  : forall A B C, PROCA ((A-->(B-->C))-->((A-->B)-->(A-->C)))
+| Ha3  : forall A B, PROCA (Conj A B --> A)
+| Ha4  : forall A B, PROCA (Conj A B --> B)
+| Ha5  : forall A B, PROCA (A --> (B --> Conj A B))
+| Ha6  : forall A B, PROCA (A --> Disj A B)
+| Ha7  : forall A B, PROCA (B --> Disj A B)
+| Ha8  : forall A B C, PROCA ((A --> C) --> ((B --> C) --> (Disj A B --> C)))
+| Ha9  : forall A B, PROCA (Neg A --> (A --> B))
+| Ha10  : forall A B, PROCA ((A --> B) --> ((A --> Neg B) --> Neg A))
 .
 
-(* PREdicate Calculus Axioms *)
+(* intuitionistic PREdicate Calculus Axioms *)
 Inductive PRECA : Fo -> Type :=
 | PRO  :> forall A, (PROCA A) -> (PRECA A)
 | Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
- (r:Fo) (s:(substF t xi ph)=Some r), PRECA (Impl (Fora xi ph) r)
+ (r:Fo) (s:(substF t xi ph)=Some r), PRECA ((Fora xi ph) --> r)
+(*| Ha12 : forall (ph: Fo) (t:Terms) (xi:SetVars.t)
+ (r:Fo) (s:(substF t xi ph)=Some r), PRECA ((Fora xi ph) --> r)*)
 | Hb1  : forall (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false),
 PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 .
 
-(*Coercion PRO : PROCA >-> PRECA.*)
-
-(*Section GRP_sec.
-Record checks := {
-useMP:Prop;
-useGEN:Prop;
-}.*)
-
-(*Context (useGEN:Prop).*)
-(*Context (c:checks).*)
-(*
-Inductive GPR : Fo -> Type :=
-| hyp (A : Fo): (InL A ctx)-> GPR A
-| Hax :> forall (A : Fo), (axs A) -> GPR A
-| MP (q:useMP c) (A B: Fo) : (GPR A)->(GPR (Impl A B))
-                 ->(GPR B)
-| GEN (q:useGEN c) (A : Fo) (xi:SetVars.t): (GPR A)->(GPR (Fora xi A))
-.
-End GRP_sec.
-
-
-Definition dcb := {|useMP:=True;useGEN:=True|}.
-
-(* Provability in the propositional calculus. *)
-Definition PROPR := GPR {|useMP:=True;useGEN:=False|} PROCA.
-(* Provability in predicate calculus. *)
-Definition PREPR := GPR {|useMP:=True;useGEN:=True|} PRECA.
-(*Definition PR := GPR dcb PRECA.  aka PREPR *)
-*)
-
-(* TODO: Fo divide into Fm_O and Fm_E. *)
-(*Class cMP (PR:Fo-> Type) := 
-MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
-.*)
-
+(***** MISLEADING THING! Do NOT use! *****)
+(* IT WORKS:
 Section PROPR.
 (*Context (axs : Fo -> Type).*)
 Context (ctx:list Fo).
@@ -75,9 +55,8 @@ Inductive PROPR : Fo -> Type :=
 | MP_O (A B: Fo) : (PROPR A)->(PROPR (Impl A B))
                  ->(PROPR B)
 .
-(*Check cMP PROPR.
-Instance cMPo : (cMP PROPR) := MP_O.*)
 End PROPR.
+*)
 
 Section PREPR.
 (*Context (axs : Fo -> Type).*)
@@ -91,6 +70,7 @@ Inductive PREPR : Fo -> Type :=
 .
 (*Instance cMPe : (cMP PREPR) := MP_E.*)
 End PREPR.
+(* IT WORKS:
 Definition a1 ctx A B : @PROPR ctx (Impl A (Impl B A)).
 Proof. apply Hax_O.
 (*
@@ -99,12 +79,19 @@ Check Ha1 A B : PRECA (A --> (B --> A)).
 (*Check (Ha1 A B: PRECA (A --> (B --> A))) : @PR axi (A --> (B --> A)).*)
 *)
 refine (Ha1 _ _). Defined.
+*)
+Definition a1 ctx A B : @PREPR ctx (Impl A (Impl B A)).
+Proof. apply Hax_E.
+refine (Ha1 _ _). 
+Defined.
+
 Definition a2 axi A B C : @PREPR axi ((A-->(B-->C))-->((A-->B)-->(A-->C))).
 Proof. apply Hax_E, PRO, Ha2. Defined.
 Definition b1 axi (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false):
 @PREPR axi (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) ).
 Proof. apply Hax_E, Hb1, H. Defined.
 
+(* IT WORKS:
 Theorem subcalc {ctx} (A:Fo) : PROPR ctx A -> PREPR ctx A.
 Proof.
 intro p.
@@ -118,9 +105,11 @@ apply IHp1. apply IHp2.
 Defined.
 
 Coercion subcalc : PROPR >-> PREPR.
+*)
 
 (*Arguments GPR {axs}.*)
 (*Notation newMP := (MP (1:=I)).*)
+(* IT WORKS:
 Definition AtoA {ctx} (A:Fo) : PROPR ctx (A-->A).
 Proof.
 apply MP_O with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
@@ -129,7 +118,9 @@ apply MP_O with (A:= A-->((A-->A)-->A)).
 apply Hax_O, Ha1.
 apply Hax_O, Ha2.
 Defined.
+*)
 
+(* IT WORKS:
 Definition a12 axi ph t xi : @PREPR axi (match (substF t xi ph) with 
       | Some q => (Impl (Fora xi ph) q)
       | None => Top
@@ -138,5 +129,22 @@ Proof. induction (substF t xi ph) eqn:g. eapply Hax_E, Ha12, g.
 unfold Top.
 exact (AtoA  Bot).
 Defined.
+*)
+
+Definition AtoA {ctx} (A:Fo) : PREPR ctx (A-->A).
+Proof.
+apply MP_E with (A:=(A-->(A-->A))).  (*(MP ctx (A-->(A-->A)) _).*)
+apply Hax_E, PRO, Ha1. (* apply (Hax _ _ (Ha1 _ _)).*)
+apply MP_E with (A:= A-->((A-->A)-->A)).
+apply Hax_E, PRO, Ha1.
+apply Hax_E, PRO, Ha2.
+Defined.
+
+(* page 155 *)
+Theorem reverse_subst (xi eta:SetVars.t) (ph ps:Fo)
+(H: (substF eta xi ph) = Some ps) : (substF xi eta ps) = Some ph.
+Proof.
+unfold substF in H.
+Abort.
 
 End Provability_mod.

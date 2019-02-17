@@ -25,8 +25,11 @@ int notmain()
 }
 */
 
-int main()
-{
+int main(int argc, char * argv[]){
+    int i;
+    for(i = 0; i < argc; i++){
+        std::cout << "Argument "<< i << " = " << argv[i] << std::endl;
+    }
     //notmain(); exit(0);
     // Store the words from the two files into these two vectors
     vector<string> DataArray;
@@ -36,7 +39,10 @@ int main()
     // You only need to check for failure if you want to distinguish
     // between "no file" and "empty file". In this example, the two
     // situations are equivalent.
-    ifstream myfile("compilation.txt"); 
+    string name;
+    if(argc==2) {name = argv[1];} 
+    else {name = "compilation2Pred.txt";}
+    ifstream myfile(name.c_str()); 
     //ifstream qfile("queries.txt");
 
     // std::copy(InputIt first, InputIt last, OutputIt out) copies all

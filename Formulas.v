@@ -14,18 +14,13 @@ Module XFo := Terms_mod SetVars FuncSymb.
 Export cn.
 Export XFo.
 
-(*Local Notation SetVars := SetVars.t (*only parsing*).
-Local Notation FuncSymb := FuncSymb.t (*only parsing*). 
-Local Notation PredSymb := PredSymb.t (*only parsing*).*)
-(*Notation PredSymbQQ := PredSymb.t.*)
-
 Record PSV := MPSV{
  ps : PredSymb.t;
  psv : nat;
 }.
 
 Inductive Fo :=
- |Atom (p:PSV) : (Vector.t Terms (psv p)) ->  Fo
+ |Atom (p:PSV) : (Vector.t Terms (psv p)) -> Fo
  |Bot :Fo
  |Conj:Fo->Fo->Fo
  |Disj:Fo->Fo->Fo
@@ -34,7 +29,40 @@ Inductive Fo :=
  |Exis(x:SetVars.t)(f:Fo): Fo
 .
 
-(* Substitution *)
+Definition Neg (A:Fo):Fo := Impl A Bot.
+Definition Top:Fo := Neg Bot.
+
+Module PredFormulasNotationsUnicode.
+ Notation " '⊥' "   :=(Bot) (at level 80) : preuninot.
+ Notation " x '∧' y ":=(Conj x y) (at level 80) : preuninot.
+ Notation " x '∨' y ":=(Disj x y) (at level 80) : preuninot.
+ Notation " x '→' y ":=(Impl x y) (at level 80, right associativity) : preuninot.
+ Notation " '∀' x f " :=(Fora x f) (at level 80) : preuninot.
+ Notation " '∃' x f " :=(Exis x f) (at level 80) : preuninot.
+ Notation " '¬' x "   :=(Neg x) (at level 80)  : preuninot.
+Delimit Scope preuninot with eud.
+(* Example :
+Fail Check (¬ ⊥).
+Check (¬ ⊥)%unidel.
+Local Open Scope uninot.
+Check (¬ ⊥).
+Local Close Scope uninot.
+*)
+End PredFormulasNotationsUnicode.
+
+Module PredFormulasNotationsASCII.
+ Notation " x --> y ":=(Impl x y) (at level 80, right associativity) : pretxtnot.
+ Notation " x -/\ y ":=(Conj x y) (at level 80) : pretxtnot.
+ Notation " x -\/ y ":=(Disj x y) (at level 80) : pretxtnot.
+(*
+ Notation " '(A.' x ')(' f ')' " :=(Fora x f) (at level 80) : pretxtnot.
+ Notation " '(E.' x ')(' f ')' " :=(Exis x f) (at level 80) : pretxtnot.
+*)
+ Notation " -. x "   :=(Neg x) (at level 80) : pretxtnot.
+ Delimit Scope pretxtnot with etd.
+End PredFormulasNotationsASCII.
+
+(* FFI *)
 Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
    match f with
    | Atom p t0 => Vector.fold_left orb false (Vector.map (isParamT xi) t0)
@@ -44,98 +72,67 @@ Fixpoint isParamF (xi : SetVars.t) (f : Fo) {struct f} : bool :=
        if SetVars.eqb x xi then false else isParamF xi f0
    end.
 
-Fixpoint substF (t:Terms) (xi: SetVars.t) (u : Fo): option Fo. 
-Proof.
-pose(f := substF t xi).
-destruct u.
-refine (Some (Atom p _)).
-exact (Vector.map (substT t xi) t0).
-exact (Some Bot).
- exact (
- match (f u1),(f u2) with
- | Some f0,Some f1 => (Some (Conj f0 f1))
- | _,_ => None
- end).
- exact (
- match (f u1),(f u2) with
- | Some f0,Some f1 => (Some (Disj f0 f1))
- | _,_ => None
- end).
- exact (
- match (f u1),(f u2) with
- | Some f0,Some f1 => (Some (Impl f0 f1))
- | _,_ => None
- end).
-(*destruct (isParamF xi (Fora x0 u)).*)
-refine (match (isParamF xi (Fora x u)) with 
-| true => match (isParamT x t) with 
-          | false => match substF t xi u with
-                    | Some q => Some (Fora x q)
-                    | None => None
-                    end
-          | true => None
-          end
-| false => Some (Fora x u) end).
-refine (match (isParamF xi (Exis x u)) with 
-| true => match (isParamT x t) with 
-          | false => match substF t xi u with
-                    | Some q => Some (Exis x q)
-                    | None => None
-                    end
-          | true => None
-          end
-| false => Some (Exis x u) end).
-Defined.
-
-Definition Top:Fo := Impl Bot Bot.
-
-Notation " x --> y ":=(Impl x y) (at level 80).
-(*
-Notation " u '[' t >> xi ] ":=(substT t xi u ) (at level 10).
-Set Warnings "-notation-overridden".
-Notation " ph [ t | xi ] ":=(substF t xi ph ) (at level 10).
-(*Set Warnings "default".*)
-Check fun (t:Terms) (x:SetVars) => ( t [ t >> x ]).
-Check fun (t:Terms) (x:SetVars) (ph:Fo) => ( ph [ t | x ] ).
-*)
+(* Substitution *)
+Fixpoint substF (t : Terms) (xi : SetVars.t) (u : Fo)
+ {struct u} : option Fo
+ :=let f := (substF t xi) in
+   match u with
+   | Atom p t0 => Some (Atom p (map (substT t xi) t0))
+   | Bot => Some Bot
+   | Conj u1 u2 =>
+     match (f u1),(f u2) with
+     | Some f0,Some f1 => (Some (Conj f0 f1))
+     | _,_ => None
+     end
+   | Disj u1 u2 =>
+     match (f u1),(f u2) with
+     | Some f0,Some f1 => (Some (Disj f0 f1))
+     | _,_ => None
+     end
+   | Impl u1 u2 =>
+     match (f u1),(f u2) with
+     | Some f0,Some f1 => (Some (Impl f0 f1))
+     | _,_ => None
+     end
+   | Fora x psi =>
+       if isParamF xi (Fora x psi)
+       then
+        if isParamT x t
+        then None
+        else
+         match f psi with
+         | Some q => Some (Fora x q)
+         | None => None
+         end
+       else Some (Fora x psi)
+   | Exis x psi =>
+       if isParamF xi (Exis x psi)
+       then
+        if isParamT x t
+        then None
+        else
+         match f psi with
+         | Some q => Some (Exis x q)
+         | None => None
+         end
+       else Some (Exis x psi)
+   end.
 
 Section Interpretation.
 Context {X} {fsI:forall(q:FSV),(Vector.t X (fsv q))->X}.
 Context {prI:forall(q:PSV),(Vector.t X (psv q))->Omega}.
 
-Fixpoint foI (val:SetVars.t->X) (f:Fo): Omega.
-Proof.
-destruct f.
-+ refine (prI p _).
-  eapply (@Vector.map Terms X (@teI _ fsI val)).
-  exact t.
-+ exact OFalse.
-+ exact ( OAnd (foI val f1) (foI val f2)).
-+ exact (  OOr (foI val f1) (foI val f2)).
-+ exact ( OImp (foI val f1) (foI val f2)).
-+ exact (forall m:X, foI (cng val x m) f).
-+ exact (Osig (fun m:X => foI (fun r:SetVars.t =>
-   match SetVars.eqb r x with
-   | true => m
-   | false => (val r)
-   end
-) f)
-).
-Defined.
-(*
-Fixpoint foI (val:SetVars->X) (f:Fo): Omega.
-Proof.
-destruct f.
-+ refine (prI p _).
-  apply (Vector.map  (teI val)).
-  exact t.
-+ exact false.
-+ exact ( andb (foI val f1) (foI val f2)).
-+ exact (  orb (foI val f1) (foI val f2)).
-+ exact (implb (foI val f1) (foI val f2)).
-+  (*Infinite conjunction!!!*)
- Show Proof.
-*)
+Fixpoint foI (val : SetVars.t -> X) (f : Fo) {struct f} : Omega :=
+   match f with
+   | Atom p t0 => prI p (map (@teI _ fsI val) t0)
+   | Bot => OFalse
+   | Conj f1 f2 => OAnd (foI val f1) (foI val f2)
+   | Disj f1 f2 => OOr (foI val f1) (foI val f2)
+   | Impl f1 f2 => OImp (foI val f1) (foI val f2)
+   | Fora x f0 => forall m : X, foI (cng val x m) f0
+   | Exis x f0 => exists m : X, foI (cng val x m) f0
+   end.
+
 End Interpretation.
 
 End Formulas_mod.

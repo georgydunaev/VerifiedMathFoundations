@@ -1,113 +1,393 @@
 (* Here will be theorems about classical propositional logic. *)
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
-Require Export Coq.Lists.List.
-Definition InL { A : Type } :=
-fix InL (a : A) (l : list A) {struct l} : Type :=
-  match l with
-  | Datatypes.nil => False
-  | b :: m => (sum (b = a) (InL a m))
-  end.
+Require Import PropLang.
+Require Import Logic.Classical.
+Require Import Logic.ChoiceFacts.
+Require Import Logic.IndefiniteDescription.
+Require Import ClassicalDescription.
+Require Import FunctionalExtensionality.
+Require Import PropExtensionality.
+
 Require Import Coq.Structures.Equalities.
-Module Lang (PropVars : UsualDecidableTypeFull).
- Inductive Fo :=
- |Atom (p:PropVars.t) :> Fo
- |Bot :Fo
- |Conj:Fo->Fo->Fo
- |Disj:Fo->Fo->Fo
- |Impl:Fo->Fo->Fo
- .
- Notation " x --> y ":=(Impl x y) (at level 80, right associativity). 
-(*81, right associativity*)
- Notation " x -/\ y ":=(Conj x y) (at level 80).
- Notation " x -\/ y ":=(Disj x y) (at level 80).
- Notation " -. x " :=(Impl x Bot) (at level 80).
- Definition Top:Fo := Impl Bot Bot.
 
- Inductive PROCAI : Fo -> Type :=
- | Ha1  : forall A B, PROCAI (A-->(B-->A))
- | Ha2  : forall A B C, PROCAI ((A-->(B-->C))-->((A-->B)-->(A-->C)))
- | Ha3  : forall A B, PROCAI ((A-/\ B)--> A)
- | Ha4  : forall A B, PROCAI ((A-/\ B)--> B)
- | Ha5  : forall A B, PROCAI (A-->(B-->(A-/\B)))
- | Ha6  : forall A B, PROCAI (A-->(A-\/ B))
- | Ha7  : forall A B, PROCAI (B-->(A-\/ B))
- | Ha8  : forall A B C, PROCAI ((A-->C)-->((B-->C)-->((A-\/ B)-->C)))
- | Ha9  : forall A B, PROCAI (-.A --> A --> B )
- .
- Inductive PROCA : Fo -> Type :=
- | Intui :> forall f, PROCAI f -> PROCA f
- | Ha10  : forall A, PROCA (A -\/ -.A)
- .
-End Lang.
+(*
+Module Lang' (PropVars : UsualDecidableTypeFull).
+ Module XLang := Lang PropVars.
+ Export XLang.
+End Lang'.
+*)
 
+(* Classical proposition interpretation *)
 Module ProCl (PropVars : UsualDecidableTypeFull).
- Module XLang := Lang PropVars. (* Export XLang. *)
- (*Check XLang.Fo.*)
+ Module XLang := Lang PropVars.
  Import XLang.
- (*Check Fo.*)
- Section PR.
-  (*Context (ctx:list Fo).*)
-  Context (ctx:Fo -> Type).
-  Context (axs:Fo -> Type).
-  Inductive PR : Fo -> Type :=
-  | hyp (A : Fo) : (*InL A ctx*) ctx A -> PR A
-  | Hax :> forall (A : Fo), (axs A) -> PR A
-  | MP (A B: Fo) : (PR A)->(PR (Impl A B))->(PR B)
-  .
- End PR.
- Section foI_dn. (* Entails for double negation. *)
-  Context (val:PropVars.t->Prop).
-  Fixpoint foI_dn (f:Fo) : Prop := 
-  match f with 
-   | Atom p => (((val p)->False)->False)
-   | Bot => False
-   | f1 -/\ f2 => foI_dn f1 /\ foI_dn f2
-   | f1 -\/ f2 => (((foI_dn f1 \/ foI_dn f2)->False)->False)
-   | f1 --> f2 => (foI_dn f1) -> (foI_dn f2)
-  end.
- End foI_dn.
- Export List.ListNotations.
- (*Section sou.
-  Context (val:PropVars.t->Prop).
-  Check PROCA.*)
-  Theorem sou_dn f (H:PR (*[]*) (fun x=>False) PROCA f) : 
-    forall (val:PropVars.t->Prop), foI_dn val f.
-  Proof. intro val.
-  induction H;firstorder.
-  (*+ inversion i.*)
-  + induction a;firstorder.
-    * induction p; firstorder.
-      (*- simpl. intros x y. exact x.
-      - simpl. intros x y z. exact (x z (y z)).*)
-        simpl. intros.
-        induction C ;firstorder.
- (*-- simpl in * |- *. intros. simpl in * |- *.
-    exact (H1 (fun y=> (or_ind H H0) y H2)).
- -- exact (H1 (or_ind H H0)).
- -- firstorder.
- -- firstorder.
- -- firstorder.
- * firstorder.
- + firstorder.*)
+
+ Section lem3.
+ Context (P Q:Fo).
+ Definition PandQ: Fo->Type := fun f => (f=P)\/(f=Q).
+ Definition PandNQ: Fo->Type := fun f => (f=P)\/(f=-.Q).
+ Definition NPandQ: Fo->Type := fun f => (f=-.P)\/(f=Q).
+ Definition NPandNQ: Fo->Type := fun f => (f=-.P)\/(f=-.Q).
+
+ Theorem lem3_1: PR PROCA PandQ (P -/\ Q).
+ Proof.
+ unshelve eapply MP.
+ exact Q.
+ unfold PandQ.
+ apply hyp. right. reflexivity.
+ 
+ unshelve eapply MP.
+ exact P.
+ unfold PandQ.
+ apply hyp. left. reflexivity.
+
+ apply Hax. apply Intui, Ha5.
  Defined.
- (*End sou.*)
- Definition Empt := fun x:Fo => False.
+
+ (* TODO: lem3_2*)
+ Section rule10. (*p.45*)
+ Context (Gamma:Fo->Type).
+ Context (A B:Fo).
+ (*Check (fun x=>Gamma x \/ x=A).*)
+ Theorem rule10 (H1:PR PROCA (add2ctx A Gamma) B )
+  (H2:PR PROCA (add2ctx A Gamma) (-.B) )
+ :
+ PR PROCA Gamma (-.A).
+ Proof.
+ apply Ded in H1.
+ apply Ded in H2.
+ 1 : eapply MP.
+ 2 : eapply MP.
+ 3 : apply Hax, Intui, Ha10.
+ exact H2. exact H1.
+ Defined.
+ End rule10.
+
+ Theorem lem3_3: PR PROCA NPandQ (-.(P -/\ Q)).
+ Proof.
+ unfold NPandQ.
+ (* eapply permut. *)
+ 1 : eapply rule10.
+ (*instantiate (1:= fun e=> e=-.P).*)
+ (* intros x H. left. exact H.*)
+ eapply MP.
+ apply hyp.
+ left. reflexivity.
+ apply Hax. apply Intui. apply Ha3.
+ apply hyp.
+ right. left. reflexivity.
+(*(add2ctx A Gamma)).
+ specify (-.P).*)
+ (*unshelve eapply MP.
+ exact Q.
+ unfold PandQ.
+ apply hyp. right. reflexivity.
+ 
+ unshelve eapply MP.
+ exact P.
+ unfold PandQ.
+ apply hyp. left. reflexivity.
+
+ apply Hax. apply Intui, Ha5.
+ Defined.*)
+ Defined.
+
+ (* case analysis *)
+ Theorem rule8 A B C Gamma (H1:PR PROCA (add2ctx A Gamma) C )
+  (H2:PR PROCA (add2ctx B Gamma) C )
+ :
+ PR PROCA (add2ctx (A-\/ B) Gamma) C.
+ Proof.
+ apply Ded in H1.
+ apply Ded in H2.
+ apply invDed.
+ 1 : eapply MP.
+ 2 : eapply MP.
+ 3 : apply Hax, Intui, Ha8.
+ exact H2.
+ exact H1.
+ Defined.
+
+ Theorem rule9 A B Gamma (H1:PR PROCA Gamma A )
+  (H2:PR PROCA Gamma (-.A) )
+ :
+ PR PROCA Gamma B.
+ Proof.
+ 1 : eapply MP.
+ 2 : eapply MP.
+ 3 : apply Hax, Intui, Ha9.
+ exact H1.
+ exact H2.
+ Defined.
+
+ Theorem lem3_8: PR PROCA NPandNQ (-.(P -\/ Q)).
+ Proof.
+ unfold NPandNQ.
+ eapply rule10.
+ instantiate (1:=Bot).
+ + apply rule8.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. left. reflexivity.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. right. reflexivity.
+ + eapply rule8.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. left. reflexivity.
+   * eapply rule9.
+     apply hyp. left. reflexivity.
+     apply hyp. right. right. reflexivity.
+ Defined.
+ End lem3.
+
+(*
+No result for Strong LEM:
+grep -rnw '/home/user/opam-coq.8.8.1/4.02.3/lib/coq/theories/' -e 'classicT'
+It mentioned here:
+https://github.com/coq/coq/wiki/CoqAndAxioms
+http://www.chargueraud.org/viewcoq.php?sFile=softs%2Ftlc%2Fsrc%2FUseClassic.v
+Check excluded_middle_informative.
+*)
+
+ Definition ttt0 : (PropVars.t -> Prop) -> (PropVars.t -> bool).
+ Proof.
+ intros P p.
+ destruct (excluded_middle_informative (P p)).
+ exact true.
+ exact false.
+ Defined.
+ Definition ttt1 : (PropVars.t -> bool) -> (PropVars.t -> Prop).
+ Proof.
+ intros f p.
+ destruct (f p). (* eqn:s.*)
+ exact True.
+ exact False.
+ Defined.
+ Theorem ttt01 P : (ttt1 (ttt0 P)) = P.
+ Proof.
+ apply functional_extensionality.
+ intro x.
+ unfold ttt0,ttt1.
+ apply propositional_extensionality.
+ destruct (excluded_middle_informative (P x)).
+ { split. intros _. exact p. intros _. constructor. }
+ { split. intros []. exact n. }
+ Defined.
+ Theorem ttt10 f : (ttt0 (ttt1 f)) = f.
+ Proof.
+ apply functional_extensionality; intro x.
+ unfold ttt0,ttt1.
+ destruct (f x).
+ + destruct (excluded_middle_informative True).
+   reflexivity. destruct n. constructor.
+ + destruct (excluded_middle_informative False).
+   destruct f0. reflexivity.
+ Defined.
+(* EXPERIMENT:
+Axiom type_extensionality : forall (A B:Type)
+ (f:A->B) (invf:B->A) (H1: forall b, (f (invf b)) = b)
+ (H2: forall a, (invf (f a)) = a), A = B.
+Theorem Q : (PropVars.t -> Prop)=(PropVars.t -> bool).
+Proof.
+eapply type_extensionality.
+exact ttt10.
+exact ttt01.
+Defined.
+*)
+ Definition fff0 : Prop -> bool.
+ Proof.
+ intros P.
+ destruct (excluded_middle_informative P).
+ exact true.
+ exact false.
+ Defined.
+ Definition fff1 : bool -> Prop.
+ Proof.
+ intros b.
+ destruct b. (* eqn:s.*)
+ exact True.
+ exact False.
+ Defined.
+ Theorem fff01 P : (fff1 (fff0 P)) = P.
+ Proof.
+ (* apply functional_extensionality.
+ intro x.*)
+ unfold fff0,fff1.
+ apply propositional_extensionality.
+ destruct (excluded_middle_informative P).
+ { split. intros _. exact p. intros _. constructor. }
+ { split. intros []. exact n. }
+ Defined.
+ Theorem fff10 b : (fff0 (fff1 b)) = b.
+ Proof.
+ (*apply functional_extensionality; intro x.*)
+ unfold fff0,fff1.
+ destruct b.
+ + destruct (excluded_middle_informative True).
+   reflexivity. destruct n. constructor.
+ + destruct (excluded_middle_informative False).
+   destruct f. reflexivity.
+ Defined.
+
+Inductive eq2 (A : Type) (x : A) : A -> Prop :=
+ eq2_refl : @eq2 A x x.
+
+Inductive paths {A : Type} (a : A) : A -> Type :=
+ idpath : paths a a.
+
+Theorem thm1 (A:Type) a b: (@paths A a b)-> a=b.
+Proof.
+intro H.
+destruct H.
+reflexivity.
+Defined.
+
+Theorem rule5 A B Gamma (H1:PR PROCA Gamma A )
+  (H2:PR PROCA Gamma B )
+ :
+ PR PROCA Gamma (A-/\ B).
+Proof.
+eapply MP. exact H2.
+eapply MP. exact H1.
+apply Hax, Intui, Ha5.
+Defined.
+
+(*
+Check (PropVars.t -> Prop).
+Check (PropVars.t -> bool).
+*)
+ Section lem4. (* LC p.47 *)
+ Definition ne (b:bool) (A:Fo) : Fo := if b then A else -.A .
+ Inductive ctx_bld (str:PropVars.t -> bool) : Fo -> Type :=
+ | con : forall p:PropVars.t, ctx_bld str (ne (str p) (Atom p)).
+
+(* Definition ctx_bld (str:PropVars.t -> bool) : Fo -> Type.
+ Proof.
+ intro f.
+ Admitted. *)
+ Theorem lem4 (A:Fo) (str:PropVars.t -> bool) (eps:bool)
+  : 
+  PR PROCA (ctx_bld str) (ne (fff0 (foI_cl (ttt1 str) A)) A).
+ Proof.
+ induction A; simpl.
+ + unfold fff0,fff1, ne.
+   destruct (excluded_middle_informative (ttt1 str p)).
+   * unfold ttt1 in t.
+     destruct (str p) eqn:j. 2 : { destruct t. }
+     apply hyp.
+     assert (Q:(ne (str p) p) = Atom p).
+     rewrite j. reflexivity.
+     rewrite <- Q.
+     apply con.
+   * unfold ttt1 in n.
+     destruct (str p) eqn:j. destruct (n I).
+     apply hyp.
+     assert (Q:(ne (str p) p) = -.(Atom p)).
+     rewrite j. reflexivity.
+     rewrite <- Q.
+     apply con.
+  +  unfold fff0,fff1, ne.
+     destruct (excluded_middle_informative False).
+     destruct f.
+     apply AtoA.
+  +  simpl.
+Check fff0.
+  unfold fff0,fff1, ne.
+destruct (excluded_middle_informative
+       (foI_cl (ttt1 str) A1 /\ foI_cl (ttt1 str) A2)) as [[G1 G2]|G].
+  - unfold fff0 in *|-*.
+    destruct (excluded_middle_informative
+                (foI_cl (ttt1 str) A1)) , 
+             (excluded_middle_informative
+                (foI_cl (ttt1 str) A2)).
+    * simpl in IHA1, IHA2. apply rule5; assumption.
+    * simpl in IHA1, IHA2. destruct (n G2).
+    * simpl in IHA1, IHA2. destruct (n G1).
+    * simpl in IHA1, IHA2. destruct (n G1).
+  - apply not_and_or in G.
+unfold fff0,fff1, ne in *|-*.
+    destruct (excluded_middle_informative
+                (foI_cl (ttt1 str) A1)) , 
+             (excluded_middle_informative
+                (foI_cl (ttt1 str) A2)).
+
+Lemma and2prod (A B:Prop) : (A/\B)->(A*B).
+Proof.
+intro H.
+destruct H as [H1 H2].
+constructor; assumption.
+Defined.
+
+Lemma or2sum (A B:Prop) : (A\/B)->(A+B).
+Proof.
+intro H.
+destruct (fff0 A) eqn:mA.
++ unshelve eapply f_equal in mA.
+  2 : exact fff1.
+  simpl in mA.
+  rewrite fff01 in mA.
+  left.
+  rewrite mA. constructor.
++ destruct (fff0 B) eqn:mB.
+  - unshelve eapply f_equal in mB.
+    2 : exact fff1.
+    simpl in mB.
+    rewrite fff01 in mB.
+    right. rewrite mB. constructor.
+  - unshelve eapply f_equal in mA.
+    2 : exact fff1.
+    simpl in mA.
+    rewrite fff01 in mA.
+    unshelve eapply f_equal in mB.
+    2 : exact fff1.
+    simpl in mB.
+    rewrite fff01 in mB.
+    assert (Q:False).
+    {
+     destruct H.
+     * rewrite mA in H. destruct H.
+     * rewrite mB in H. destruct H.
+    }
+    destruct Q.
+Defined.
+(*ex
+sig
+destruct H as [J|J].
+    destruct G.*)
+(*
+change (Neg Bot) with (Impl Bot Bot).
+unfold Neg.
+     change (Atom p) with (ne (str p) p).
+
+   simpl. *)
+ Abort.
+ End lem4.
+
+ (* lem3, page 47 *)
+ Section lem3'.
+ Context (A:Fo).
+ Fixpoint vblesoffm (F:Fo) (v:PropVars.t) : Type :=
+ match F with
+ | Atom p => (v=p)
+ | Bot => False
+ | Conj f0 f1 | Disj f0 f1 | Impl f0 f1 =>
+    sum (vblesoffm f0 v) (vblesoffm f1 v)
+ end.
+(*
+ destruct F.
+ Definition 
+ Theorem 
+*)
+ End lem3'.
+ (* Completeness theorem for DN semantics of the CProL*)
  Theorem com_dn f (H : forall (val:PropVars.t->Prop), foI_dn val f) : 
-  PR Empt PROCA f.
+  PR empctx PROCA f.
  Proof.
  Abort.
- Section foI_bo.
-  Context (val:PropVars.t->bool).
-  Fixpoint foI_bo (f:Fo) : bool := 
-  match f with 
-   | Atom p => (val p)
-   | Bot => false
-   | f1 -/\ f2 => andb (foI_bo f1) (foI_bo f2)
-   | f1 -\/ f2 => orb (foI_bo f1) (foI_bo f2)
-   | f1 --> f2 => implb (foI_bo f1) (foI_bo f2)
-  end.
- End foI_bo.
 
+ (* Unfinished completeness theorem. *)
  Definition Consis (G:Fo -> Type) := (PR G PROCA Bot)->False.
 
  Definition MaxCon (G:Fo -> Type) (Y:Consis G) :=
@@ -171,9 +451,9 @@ unfold Delta.
  Abort.
  End Delta.
 
- induction (surj f).
+ (*induction (surj f).*)
 
- Definition MaxC (acc : Fo->Type) (H:Consis acc) (n:nat) : 
+ Definition MaxCe (acc : Fo->Type) (H:Consis acc) (n:nat) : 
   sig (fun Q : Fo->Type => Consis Q).
  Proof.
  induction n as [|n].
@@ -196,9 +476,9 @@ Context (acc:Fo->Type) (H :Consis acc).
  destruct (surj f).
  pose (m:= MaxC acc H (S x)).
  destruct m.
- exact exists
-
-refine (sigT (fun n=>)).
+ (*exact exists
+refine (sigT (fun n=>)).*)
+ Abort.
 
  Definition MaxC' (acc : Fo->Type) (H:Consis acc) (n:nat) : 
  sigT (fun Q : Fo->Type => 
@@ -212,24 +492,23 @@ refine (sigT (fun n=>)).
 
  Definition MaxC'' (acc : Fo->Type) (H:Consis acc) : 
   exists Q : Fo->Type, Consis Q.
+ (* induction n.
+ admit. *)
+ Abort.
 
- induction n.
-
-admit.
-
- Definition MaxC (acc : Fo->Type) (H:Consis acc) (n:nat) : Fo->Type.
+ Definition MaxCx (acc : Fo->Type) (H:Consis acc) (n:nat) : Fo->Type.
  Proof.
  intros f.
  induction f.
  unfold Consis in H.
- Check lem1_0 acc (H:Consis G) A 
-  (*Consis (conca A G))+(Consis (conca (-.A) G)*)
+ (*Check lem1_0 acc (H:Consis G) A.
+ Consis (conca A G))+(Consis (conca (-.A) G)*)
+ (*induction n.
+ + *)
+ Abort.
 
- induction n.
- + 
- Theorem thm (G:Fo->Type) (H:Consis G) : isMax (MaxC G H).
+ (*Theorem thm (G:Fo->Type) (H:Consis G) : isMax (MaxC G H).
  Proof.
- 
  Definition MaxC : forall (G:Fo->Type) (H:Consis G),
 
  Theorem com_bo f
@@ -238,7 +517,7 @@ admit.
  Proof.
   induction f.
   simpl in * |- *.
- Abort.
+ Abort.*)
  End assump.
 End ProCl.
 (*

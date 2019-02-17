@@ -18,6 +18,10 @@ Module PredSymb : UsualDecidableTypeFull := PeanoNat.Nat.
 Export X. *)
 Module X := Deduction_mod SetVars FuncSymb PredSymb.
 Export X.
+
+Import PredFormulasNotationsASCII.
+Local Open Scope pretxtnot.
+
 Module Facts := BoolEqualityFacts SetVars.
 
 (*Local Notation SetVars := SetVars.t (only parsing).

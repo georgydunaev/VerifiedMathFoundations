@@ -1,7 +1,7 @@
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Propositional.
 Require Import PredicateCalculus.
-Check Propositional.InL.
+(*Check Propositional.InL.*)
 Module O.
 Import Propositional.
 Export Propositional.

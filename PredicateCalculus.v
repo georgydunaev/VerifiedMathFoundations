@@ -94,7 +94,7 @@ Proof. induction u.
   trivial.
 Defined.
 
-Lemma NPthenNCAST_vec:forall p xi t ts (H:(isParamF xi (Atom p ts)=false)), 
+Lemma NPthenNCAST_vec:forall p xi t ts (H:(isParamF xi (Atom p ts)=false)),
   (Vector.map (substT t xi) ts) = ts.
 Proof.
 intros p xi t1 ts H.
@@ -640,6 +640,14 @@ induction m (* eqn: meq *); intros lfi val.
      * simpl.
        intros a0 b c.
        exact (a0 c (b c)).
+     * simpl. intros [i0 i1]. assumption.
+     * simpl. intros [i0 i1]. assumption.
+     * simpl. intros m1 m2. split; assumption.
+     * simpl. intros n. left. assumption.
+     * simpl. intros n. right. assumption.
+     * simpl. intros f1 f2 [h|h]. exact (f1 h). exact (f2 h).
+     * simpl. intros i0 i1. destruct (i0 i1).
+     * simpl. intros i0 i1 i2. apply (i1 i2). apply (i0 i2).
   ++ simpl in *|-*.
   (*destruct (substF t xi ph) eqn: j.*)
   apply (UnivInst ph val xi t r s).
@@ -665,8 +673,6 @@ induction m (* eqn: meq *); intros lfi val.
   exact B.
 Defined.
 (** SOUNDNESS IS PROVED **)
-
-(*Check foI.*)
 
 (*
 Theorem completeness (f:Fo)
