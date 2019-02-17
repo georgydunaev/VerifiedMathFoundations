@@ -651,6 +651,9 @@ induction m (* eqn: meq *); intros lfi val.
   ++ simpl in *|-*.
   (*destruct (substF t xi ph) eqn: j.*)
   apply (UnivInst ph val xi t r s).
+  ++ simpl in *|-*.
+  (*destruct (substF t xi ph) eqn: j.*)
+  apply (ExisGene ph val xi t r s).
   (*simpl. firstorder.*)
   ++ simpl in *|-*.
      unfold OImp.
