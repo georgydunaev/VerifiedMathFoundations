@@ -42,6 +42,8 @@ Inductive PRECA : Fo -> Type :=
  (r:Fo) (s:(substF t xi ph)=Some r), PRECA (r --> (Exis xi ph) )
 | Hb1  : forall (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false),
 PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
+| Hb2  : forall (ps ph: Fo) (xi:SetVars.t) (H:isParamF xi ps = false),
+PRECA (Impl (Fora xi (Impl ph ps)) (Impl (Exis xi ph) ps ) )
 .
 
 (***** MISLEADING THING! Do NOT use! *****)

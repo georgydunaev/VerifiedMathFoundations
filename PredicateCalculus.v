@@ -661,6 +661,12 @@ induction m (* eqn: meq *); intros lfi val.
      apply H0.
      rewrite -> (NPthenNCACVF xi ps0 m val H).
      exact H1.
+  ++ simpl in *|-*.
+     unfold OImp.
+     intros H0 [m H1].
+     rewrite <- (NPthenNCACVF xi ps0 m val H).
+     eapply H0.
+     exact H1.
 + simpl in * |- *.
   unfold OImp in IHm2.
   apply IHm2.
@@ -690,6 +696,4 @@ Defined. *)
 End cor.
 (*Print Assumptions correct.*)
 
-
-(*End sec0.*)
 End Soundness_mod.

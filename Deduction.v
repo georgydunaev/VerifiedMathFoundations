@@ -125,6 +125,7 @@ exact true.
 exact true.
 exact true.
 exact true.
+exact true.
 (*exact (andb IHm1 IHm2).
 exact (andb (negb (SetVars.eqb xi xi0)) IHm).*)
 exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
@@ -239,6 +240,7 @@ Proof.
 intros H xi Q.
 destruct m. simpl. try reflexivity.
 destruct p eqn:j.
+simpl. try reflexivity.
 simpl. try reflexivity.
 simpl. try reflexivity.
 simpl. try reflexivity.
