@@ -296,6 +296,14 @@ Defined.
 
 End subst_sec.
 
+Check Sub.
+ Definition craig {ctx} (p : PropVars.t) (A:Fo) : 
+  PR PROCAI ctx (A--> ((Sub p Top A)-\/(Sub p Bot A))).
+ Proof.
+ induction A.
+ + simpl.
+ Abort. (* proof through completeness... *)
+
  Definition AtoA_I {ctx} (A:Fo) : PR PROCAI ctx (A-->A).
  Proof.
  apply MP with (A-->(A-->A)).
@@ -556,20 +564,29 @@ End subst_sec.
  + simpl in * |- *; destruct (foI_bo val A), (foI_bo val B); firstorder.
  Defined.
 
-
+Record Model := {
+ KM_W:Set;
+ KM_R:KM_W->KM_W->Prop;
+ KM_R_transitive : transitive KM_W KM_R;
+ KM_R_reflexive : reflexive KM_W KM_R;
+ KM_vf:PropVars.t -> KM_W -> Prop;
+ KM_mvf: forall (x y : KM_W)(p:PropVars.t), KM_vf p x -> KM_R x y -> KM_vf p y
+}.
  (*
    Kripke semantics for the intuitionistic
    proposition logic.
  *)
  Open Scope type_scope.
  Section WR.
- Context (W:Set) (R:W->W->Prop) (R_transitive : transitive W R)
+ Variables (W:Set) (R:W->W->Prop) (R_transitive : transitive W R)
  (R_reflexive : reflexive W R).
- Context (vf:PropVars.t -> W -> Prop) 
+ Variables (vf:PropVars.t -> W -> Prop)
  (mvf: forall (x y : W)(p:PropVars.t), vf p x -> R x y -> vf p y).
 
  Section foI_kr. (* Entails *)
- Fixpoint foI_kr (x:W) (f:Fo) : Prop := 
+ Fixpoint foI_kr (x:W) (f:Fo) : Prop. (* := *)
+ Proof using W R R_transitive R_reflexive vf mvf.
+ exact (
  match f with 
    | Atom p => (vf p x)
    | Bot => False
@@ -577,7 +594,10 @@ End subst_sec.
    | f1 -\/ f2 => foI_kr x f1 \/ foI_kr x f2
    | f1 --> f2 =>
  (forall y:W, R x y -> ((foI_kr y f1) -> (foI_kr y f2)))
- end. (*foI x f1 =-> foI x f2*)
+ end
+ ).
+ Defined.
+ (*foI x f1 =-> foI x f2*)
  End foI_kr.
 
  Theorem utv1 x f: foI_kr x (f-->Bot) <-> forall y, R x y -> not (foI_kr y f).
@@ -662,7 +682,16 @@ End subst_sec.
    exact H4.
  Defined.
  End WR.
- 
+Check @foI_kr.
+
+(* TODO:
+ Theorem utv3 : exists (W:Set) (R:W->W->Prop) (R_transitive : transitive W R)
+ (R_reflexive : reflexive W R) (vf:PropVars.t -> W -> Prop) 
+ (mvf: forall (x y : W)(p:PropVars.t), vf p x -> R x y -> vf p y) (x:W), 
+  ~ foI_kr W R vf x f
+.
+*)
+
  Lemma sile1 (A B:Prop) : (~~A)->A.
  Proof.
  intro H.
