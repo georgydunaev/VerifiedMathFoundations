@@ -160,7 +160,7 @@ Defined.
 
 (* p.137 *)
 Section Lem2.
-
+(*
 Lemma mqd x t pi m (H:isParamT x t = false): 
 (@teI X fsI (cng pi x m) t) = (@teI X fsI pi t).
 Proof.
@@ -180,8 +180,8 @@ rewrite -> (nth_map (teI pi) v p2 p2 eq_refl).
 rewrite <- H1.
 apply H0.
 exact (all_then_someP _ _ p1 _ (isParamT x) H).
-Defined.
-
+Defined.*)
+(*
 (* USELESS THEOREM *)
 Lemma cng_commT  x xi m0 m1 pi t :
 SetVars.eqb x xi = false -> 
@@ -213,7 +213,7 @@ rewrite -> (nth_map (teI (cng (cng pi x m0) xi m1)) v p1 p2 HU).
 rewrite -> (nth_map (teI (cng (cng pi xi m1) x m0)) v p2 p2 eq_refl).
 apply H.
 Defined.
-
+*)
 Lemma weafunT pi mu (q: forall z, pi z = mu z) t :
 @teI X fsI pi t = @teI X fsI mu t.
 Proof.
@@ -366,23 +366,6 @@ rewrite -> (nth_map (teI (cng pi x m)) v p1 p2 H1).
 rewrite -> (nth_map (teI pi) v p2 p2 eq_refl).
 apply H0.
 apply (all_then_someP Terms (fsv f) p2 v (isParamT x) H).
-Defined.
-
-Lemma EXISTS_EQV : forall A0 A1 : X -> Prop, 
-(forall m, A0 m <-> A1 m) -> ((exists m:X, A0 m) <-> (exists m:X, A1 m)).
-Proof.
-intros A0 A1 H0.
-split.
-+ intros.
-  destruct H as [x Hx].
-  exists x.
-  rewrite <- H0.
-  exact (Hx).
-+ intros.
-  destruct H as [x Hx].
-  exists x.
-  rewrite -> H0.
-  exact (Hx).
 Defined.
 
 Lemma eqb_comm x xi : SetVars.eqb xi x =  SetVars.eqb x xi.

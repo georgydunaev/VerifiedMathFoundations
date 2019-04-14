@@ -1,10 +1,12 @@
-(* LC = Languages and Calculi (N.K. Vereschagin, A.Shen) *)
+(* Used books:
+ LC = Languages and Calculi (N.K. Vereschagin, A.Shen)
+*)
 Require Import FunctionalExtensionality.
 Require Import Logic.Classical_Prop.
 Require Import Logic.Classical_Pred_Type.
 Require Import Logic.ChoiceFacts.
 Require Import Logic.IndefiniteDescription.
-
+Require Import PeanoNat.
 Require Export Coq.Lists.List.
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
@@ -55,12 +57,30 @@ Open Scope protxtnot.
  End exper_1.
  (* END experimental *)
 
-
-
- (** ==== Contexts ==== **)
- Theorem lf2ft :(list Fo) -> (Fo->Type).
+(*Section ooop.
+Context (Y:Type).
+Definition HH1 := list Y.
+ Theorem lf2ft : HH1 -> Y ->Type.
  Proof. intros lf f. exact (InL f lf). Defined.
- (* Coercion lf2ft. : (list Fo) >-> (Fo->Type). *)
+ Coercion lf2ft : HH1 >-> Funclass.
+End ooop.
+Check (nil:list Fo) Bot.
+Check (nil:HH1 Fo) Bot.*)
+ (** ==== Contexts ==== **)
+Definition listFo := list Fo.
+(* Definition HH2 := (Fo->Type). *)
+(*  Theorem lf2ft :(list Fo) -> (Fo->Type). *)
+ Theorem lf2ft : listFo -> (Fo -> Type).
+ Proof. intros lf f. exact (InL f lf). Defined.
+Coercion lf2ft : listFo >-> Funclass.
+Check (nil:listFo):Fo->Type.
+
+(*
+Coercion jjj :=lf2ft.
+Identity Coercion lf2ft3 : HH1 >-> HH2.
+Coercion jjj :=lf2ft.
+list*)
+
 
  Inductive empctx : Fo -> Type :=. (* empty context *)
 
@@ -549,10 +569,38 @@ Check Sub.
    | f1 -\/ f2 => orb (foI_bo f1) (foI_bo f2)
    | f1 --> f2 => implb (foI_bo f1) (foI_bo f2)
   end.
+
+ (* axioms are sound *)
+ Lemma axioms_sou (A : Fo) (a : PROCA A) : foI_bo A = true.
+ Proof.
+   induction a.
+   * induction p; simpl; destruct (foI_bo A), (foI_bo B);
+     try destruct (foI_bo C); firstorder.
+   * simpl; destruct (foI_bo A); firstorder.
+ Defined.
+
+ (* strong soundness *)
+ Theorem str_sou_bo ctx f (H:PR PROCA ctx f)
+ (Q:forall g, (ctx g)-> (foI_bo g)=true): (foI_bo f)=true.
+ Proof.
+ induction H.
+ + apply Q.
+   exact c.
+ + apply (axioms_sou _ a).
+ + simpl in * |- *. 
+(*destruct (foI_bo B). reflexivity.
+rewrite IHPR1 in IHPR2.
+destruct IHPR2.
+simpl.
+reflexivity.
+simpl in IHPR2.*)
+destruct (foI_bo A), (foI_bo B); firstorder.
+ Defined.
+
  End foI_bo.
 
  (*Soundness of the boolean semantics *)
- Theorem sou_bo f (H:PR PROCA empctx f) :
+ (*Theorem sou_bo f (H:PR PROCA empctx f) :
     forall (val:PropVars.t->bool), (foI_bo val f)=true.
  Proof. intro val.
  induction H.
@@ -562,7 +610,384 @@ Check Sub.
      try destruct (foI_bo val C); firstorder.
    * simpl; destruct (foI_bo val A); firstorder.
  + simpl in * |- *; destruct (foI_bo val A), (foI_bo val B); firstorder.
+ Defined.*)
+
+
+ (*Lemma axioms_sou (A : Fo) (a : PROCA A)
+  (val : PropVars.t -> bool) : foI_bo val A = true.
+ Proof.
+   induction a.
+   * induction p; simpl; destruct (foI_bo val A), (foI_bo val B); 
+     try destruct (foI_bo val C); firstorder.
+   * simpl; destruct (foI_bo val A); firstorder.
+ Defined.*)
+
+ (* strong soundness *)
+ (*Theorem str_sou_bo ctx f (H:PR PROCA ctx f) (val:PropVars.t->bool)
+ (Q:forall g, (ctx g)-> (foI_bo val g)=true): (foI_bo val f)=true.
+ Proof.
+ induction H.
+ + apply Q.
+   exact c.
+ + apply (axioms_sou _ a).
+ + simpl in * |- *; destruct (foI_bo val A), (foI_bo val B); firstorder.
+ Defined.*)
+
+ Theorem sou_bo f (H:PR PROCA empctx f) :
+    forall (val:PropVars.t->bool), (foI_bo val f)=true.
+ Proof. intro val.
+ eapply str_sou_bo.
+ + exact H.
+ + intros g [].
  Defined.
+
+(* Completeness *)
+Axiom classicT : forall (P : Prop), {P} + {~ P}.
+Definition fu : Prop -> bool := fun P => 
+match (classicT P) with
+| left _ => true
+| right _ => false
+end.
+(*
+Coercion ffu := fu.
+Definition Q (n:nat) := if (fu(n=n)) then true else false.
+Fail Definition Q (n:nat) := if ((n=n)) then true else false.
+*)
+(* Consistent *)
+Definition consi G :=
+ (sigT (fun A=> prod (PR PROCA G A) (PR PROCA G (Neg A)))->False).
+Definition complete G := prod (consi G)
+ (forall A:Fo, sum (PR PROCA G A) (PR PROCA G (Neg A))).
+Section W.
+(*Context (Fm:Set).*)
+Context (Gamma:Fo->Type).
+Context (CG:consi Gamma).
+Context (nomer:nat->Fo).
+Context (remon:Fo->nat).
+Context (nomer_sect: forall x, remon (nomer x) = x).
+Context (nomer_retr: forall x, nomer (remon x) = x).
+Fixpoint fam (n:nat) : Fo->Type :=
+match n with
+| 0 => Gamma
+| S n => (*let previou := fam n *)
+         let G:= nomer n in
+         let extctx := (add2ctx G (fam n)) in
+         if (fu(consi extctx)) then extctx else (fam n)
+end.
+
+(*Context (fam : nat -> (Fm->Prop)). *)
+(*sigT     existT
+exists   ex_intro *)
+(*"exists"*)
+Definition Delta : Fo->Type := fun f=> sigT (fun n=> fam n f).
+
+Definition fam_mon f n : fam n f -> fam (S n) f.
+Proof.
+intro H.
+simpl.
+destruct (fu (consi (add2ctx (nomer n) (fam n)))).
+2 : exact H.
+right. exact H.
+Defined.
+
+(* Here we find the smallest n,
+ such that $\Gamma_n$ can prove A *)
+Lemma max_m0 m : (Nat.max m 0) = m.
+Proof.
+induction m. trivial. simpl. reflexivity.
+Defined.
+
+Section finite_argument.
+Definition small (A : Fo) (p : PR PROCA Delta A) : nat.
+Proof.
+induction p.
++ destruct c as [x fxA]. exact x.
++ exact 0.
++ exact (max IHp1 IHp2).
+Defined.
+
+(*bad*)
+
+(*
+Lemma grea a b : a <= max a b.
+induction a, b.
++ apply le_n.
++ simpl. apply le_S. induction b. trivial. apply le_S. assumption.
++ simpl. apply le_n.
++ simpl.  simpl in IHa.
+apply le_n_S. exact IHa.
+firstorder.
+
+(*unfold max.*)
+induction a.
++ induction b.
+  - apply le_n.
+  - apply le_S. exact IHb.
++ simpl.
+   induction b.
+  - apply le_n.
+  - apply le_n_S.
+simpl in IHa.
+apply le_S. exact IHb.
+simpl.*)
+
+
+Section upward_inhabited_family.
+(* Author of section: ejgallego
+https://stackoverflow.com/users/1955696/ejgallego *)
+Context (fam : nat -> Type).
+Context (fam_mon : forall n, fam n -> fam (S n)).
+Lemma fam_gt n k (hb : fam n) : fam (n + k).
+Proof. now rewrite Nat.add_comm; induction k; auto; apply fam_mon. Qed.
+Lemma fam_leq n m (hl : n <= m) (hb : fam n) : fam m.
+Proof. now rewrite <- (Nat.sub_add _ _ hl), Nat.add_comm; apply fam_gt. Qed.
+Lemma mxinh m n (hb : fam n) : fam (max n m).
+Proof. exact (fam_leq _ _ (Nat.le_max_l _ _) hb). Qed.
+End upward_inhabited_family.
+
+
+Lemma indstep1 m n (A : Fo) (c : fam n A) : fam (max n m) A.
+Proof.
+apply (mxinh (fun k=>fam k A) (fam_mon A)).
+assumption.
+Defined.
+(*induction m; simpl.
+exact c.
+induction n.
+apply fam_mon.
+rewrite max_m0 in IHm.
+exact IHm.
+Admitted. (*Nat.max*)*)
+
+
+Theorem max_sym n : forall m, (max m n) = (max n m).
+Proof.
+induction n.
++ intros. simpl. induction m; trivial.
++ intros. simpl. induction m; try trivial.
+simpl. apply f_equal. apply IHn.
+Defined.
+
+(*
+Theorem max_sym m n : (max m n) = (max n m).
+Proof.
+induction m,n.
++ trivial.
++ simpl. trivial.
++ simpl. trivial.
++ simpl. trivial.
+simpl in IHm.
+unfold Nat.max.
+Admitted.
+*)
+(*/bad*)
+
+Lemma lemJ0 A Q R: PR PROCA (fam Q) A ->
+ PR PROCA (fam (max Q R)) A.
+Proof.
+intro x. induction x.
++ apply hyp. apply indstep1. exact c.
++ apply Hax. exact a.
++ simpl in *|-*.
+  eapply MP.
+  - apply IHx1.
+  - apply IHx2.
+Defined.
+
+(*Lemma lemJ1 A Q R: PR PROCA (fam R) A ->
+ PR PROCA (fam (max Q R)) A.
+Admitted.*)
+
+Definition it_works (A : Fo) (p : PR PROCA Delta A) :
+PR PROCA (fam (small A p)) A .
+Proof.
+induction p.
++ apply hyp.
+  simpl.
+  destruct c. assumption.
++ apply Hax. exact a.
++ simpl in *|-*.
+  eapply MP.
+  - apply lemJ0. exact IHp1.
+  - rewrite max_sym. apply lemJ0. exact IHp2.
+Defined.
+
+(*
+Lemma Nat.max m (S n) 
+simpl in IHm.
+ simpl.
+Lemma indstep m n (W:n<=m) (A : Fo) (c : fam n A) : fam m A.
+Proof.
+le
+induction W.
+pose (t:=(m - n)).
+induction t eqn:h.
+2 : {
+destruct m.
+(*destruct (lt n m).
+destruct W. "<=" le*)
+Abort.*)
+(*
+Lemma gr_easy m n A :
+ PR PROCA (fam n) A -> PR PROCA (fam (max m n)) A.
+Proof. intro H.
+induction H.
++ apply hyp.1 apply lemJ1.
+Abort.*)
+(*
+Require Import Omega.
+Require Import Arith.
+PeanoNat.max
+
+auto with arith.
+omega.
+firstorder.
+auto.
+apply IHp1.
+
+PR
+(*+ destruct c as [x fxA]. exact x.
++ exact 0.
++ exact (max IHp1 IHp2).
+Defined.*)
+Admitted.
+
+simpl in *|-*.*)
+
+(*Theorem finite_proof (A : Fo) (p : PR PROCA Delta A)
+:  .*)
+End finite_argument.
+
+Lemma fuPtrue P : (fu P = true)->P.
+Proof.
+intro K. unfold fu in K.
+destruct (classicT P). exact p. inversion K.
+Defined.
+
+Lemma fuPfalse P : (fu P = false)->~P.
+Proof.
+intro K. unfold fu in K.
+destruct (classicT P). inversion K. exact n.
+Defined.
+
+Lemma truePfu (P:Prop) : P->(fu P = true).
+Proof.
+intro K.
+unfold fu.
+destruct (classicT P). reflexivity.
+destruct (n K).
+Defined.
+
+Lemma falsePfu (P:Prop) : ~P->(fu P = false).
+Proof.
+intro K.
+unfold fu.
+destruct (classicT P). 
+destruct (K p).
+reflexivity.
+Defined.
+
+Lemma consi_fam n : consi (fam n).
+Proof.
+induction n.
++ simpl. exact CG.
++ simpl.
+  pose (t:= fu(consi (add2ctx (nomer n) (fam n)))).
+induction (fu (consi (add2ctx (nomer n) (fam n)))) eqn:h.
+  2 : { exact IHn. }
+apply fuPtrue.
+exact h.
+Defined.
+
+Theorem condel : consi Delta.
+Proof.
+unfold consi.
+intros [A [p1 p2]].
+(*apply (it_works A) in p1.*)
+assert (q1:=it_works _ p1).
+assert (q2:=it_works _ p2).
+eapply lemJ0 in q1.
+eapply lemJ0 in q2.
+rewrite max_sym in q2.
+eapply consi_fam.
+exists A.
+split.
+- exact q1.
+- exact q2.
+Defined.
+
+Lemma delta_mon A j : fam j A -> Delta A.
+Proof. intro H.
+unfold Delta. exists j. exact H.
+Defined.
+
+Lemma pr_del_mon A j:  PR PROCA (fam j) A -> PR PROCA Delta A.
+Proof. intro H.
+induction H.
++ apply hyp. eapply delta_mon. exact c.
++ apply Hax. exact a.
++ eapply MP. exact IHPR1. exact IHPR2.
+Defined.
+
+Axiom NNPP_Type : forall p : Type, ((p->False)->False) -> p.
+
+Theorem comdel : complete Delta.
+Proof.
+unfold complete.
+split.
++ exact condel.
++ intro A.
+pose (i:=remon A).
+pose (extctx := add2ctx A (fam i)).
+destruct (classicT (consi extctx)).
+- left.
+  assert (R:fam (S i) A).
+  { simpl. unfold i.
+    rewrite nomer_retr.
+    fold i. rewrite truePfu.
+    2 : exact c.
+    left. trivial. }
+  apply hyp.
+  eapply delta_mon. exact R.
+- right. unfold consi,not in n.
+  apply NNPP_Type in n.
+  destruct n as [a [H1 H2]].
+  apply Ded in H1.
+  apply Ded in H2.
+  eapply pr_del_mon.
+  eapply MP.
+  2 : eapply MP.
+  3 : { apply Hax,Intui. eapply Ha10. }
+  exact H2.
+  exact H1.
+Defined.
+
+(* p.49 *)
+(*Theorem lemma2 :*)
+(*
+Axiom classicType : forall T : Type, sum T (T->False).
+destruct (classicType (Delta A)). 
+- left. apply hyp. exact d.
+- right.
+assert (easyly: forall i, fam i A -> False).
+admit.
+pose (i:=remon (Neg A)).
+Check fam (remon (Neg A)).
+(*assert (D:(PR PROCA Delta A->False)
+ *(PR PROCA Delta (Neg A)->False)).
+admit.
+exfalso.
+destruct D as [D1 D2].
+Delta
+Check remon A.
+Theorem yorn A : Delta*)
+Print fam.
+Admitted.*)
+
+End W.
+
+
+
 
 Record Model := {
  KM_W:Set;

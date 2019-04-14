@@ -182,7 +182,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   intros xi H0.
   pose (W:=H xi H0).
   simpl in W.
-  apply (lm2 _ _ W).
+  apply (conj_true_then_right _ _ W).
  (*Last part about GEN*)
   apply a2.
   + apply MP_E with (A:= (Fora xi (A-->A0))).
@@ -192,14 +192,14 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
     intros xi0 H0.
     pose (W:=H xi0 H0).
     simpl in W.
-    * exact (lm2 _ _ W).
+    * exact (conj_true_then_right _ _ W).
     * simpl.
       apply b1.
       pose (r := isParamF xi A).
       pose (U := H xi).
       fold r in U |- *.
       simpl in U.
-      destruct (N r).
+      destruct (bool_eq_true_or_false r).
       - pose (C:= lm _ _(U H0)).
         exfalso.
         rewrite Facts.eqb_refl in C.
@@ -207,6 +207,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
       - exact H0.
 Defined.
 
+(* USELESS
 Definition lm3 (a b :bool)(A: true = a)(B: true = b):true = (a && b) 
 :=
  (if a as a0 return (true = a0 -> true = a0 && b)
@@ -230,7 +231,7 @@ simpl.
 exact A.
 Show Proof.
 Defined.*)
-
+*)
 
 Fixpoint forClosed (A B:Fo)(m:(PREPR (cons A nil) B)):
 (forall xi:SetVars, (false = isParamF xi A))
@@ -238,6 +239,10 @@ Fixpoint forClosed (A B:Fo)(m:(PREPR (cons A nil) B)):
 (forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m)).
 Proof.
 intros H xi Q.
+rewrite <- H in Q.
+inversion Q.
+(*unfold notGenWith.
+simpl.
 destruct m. simpl. try reflexivity.
 destruct p eqn:j.
 simpl. try reflexivity.
@@ -253,7 +258,7 @@ simpl. try reflexivity.
   pose (U:=H xi).
   rewrite <- Q in U.
   exfalso.
-  inversion U.
+  inversion U.*)
 Defined.
 
 Fixpoint SimplDed (A B:Fo) (il: list Fo)(m:(PREPR (cons A il) B))

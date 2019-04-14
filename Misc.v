@@ -13,30 +13,7 @@ Proof.
   reflexivity.
 Defined.
 
-(*Theorem eq_equ (A B:Prop) : A=B -> (A <-> B).
-Proof.
-intro p. 
-destruct p.
-firstorder.
-Defined.
-
-Theorem conj_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 /\ B0) = (A1 /\ B1).
-Proof. destruct pA, pB; reflexivity. Defined.
-Theorem disj_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 \/ B0) = (A1 \/ B1).
-Proof. destruct pA, pB; reflexivity. Defined.
-Theorem impl_eq (A0 B0 A1 B1:Prop)(pA:A0=A1)(pB:B0=B1): (A0 -> B0) = (A1 -> B1).
-Proof. destruct pA, pB; reflexivity. Defined.
-*)
-
 Lemma EqualThenEquiv A B: A=B -> (A<->B). intro H. rewrite H. exact (iff_refl B). Defined.
-
-(*
-Lemma ix W (P Q:W->Prop) (H: P = Q):(forall x, P x)=(forall y, Q y).
-Proof.
-rewrite H.
-reflexivity.
-Defined.
-*)
 
 Lemma AND_EQV : forall A0 B0 A1 B1 : Prop, 
 (A0 <-> A1) -> (B0 <-> B1) -> ((A0 /\ B0) <-> (A1 /\ B1)).
@@ -78,6 +55,23 @@ split.
   exact (H m).
 Defined.
 
+Lemma EXISTS_EQV {X}: forall A0 A1 : X -> Prop, 
+(forall m, A0 m <-> A1 m) -> ((exists m:X, A0 m) <-> (exists m:X, A1 m)).
+Proof.
+intros A0 A1 H0.
+split.
++ intros.
+  destruct H as [x Hx].
+  exists x.
+  rewrite <- H0.
+  exact (Hx).
++ intros.
+  destruct H as [x Hx].
+  exists x.
+  rewrite -> H0.
+  exact (Hx).
+Defined.
+
 Import Bool.
 Lemma orb_elim (a b:bool): ((a||b)=false)->((a=false)/\(b=false)).
 Proof.
@@ -93,14 +87,15 @@ Proof.
 intros. firstorder.
 Defined.
 
-Theorem lm2 (a b :bool)(G:true = (a && b) ): true = b.
+(*lm2*)
+Theorem conj_true_then_right (a b :bool)(G:true = (a && b) ): true = b.
 Proof.
 destruct a.
 trivial.
 inversion G.
 Defined.
 
-Theorem N (rr:bool): (true=rr \/ rr=false).
+Theorem bool_eq_true_or_false (rr:bool): (true=rr \/ rr=false).
 Proof.
 destruct rr; firstorder.
 Defined.

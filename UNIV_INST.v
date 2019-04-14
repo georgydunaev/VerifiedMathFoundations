@@ -61,9 +61,12 @@ simpl.
 reflexivity.
 Defined.
 
-Definition G h (n:nat) (l:Vector.t bool n) := 
+Definition G h (n:nat) (l:Vector.t bool n) : Prop :=
  @eq bool (@fold_left bool bool orb false (S n) (cons bool h n l)) false.
 
+Print IDProp.
+Definition mIDProp : Prop := (forall A : Prop, A -> A).
+(*Check False_ind (@IDProp).*)
 
 Definition McaseS {A} (P : forall {n}, t A (S n) -> Prop)
   (H : forall h {n} t, @P n (h :: t)) {n} (v: t A (S n)) : P v :=
@@ -72,13 +75,23 @@ match v with
   |_ => fun devil => False_ind (@IDProp) devil (* subterm !!! *)
 end.
 
+(*
+Check McaseS.
+Definition McaseSs {A} (P : forall {n}, t A (S n) -> Prop)
+  (H : forall h {n} t, @P n (h :: t)) {n} (v: t A (S n)) : P v.
+induction v.
+destruct v.
+Check @IDProp.
+Check False_ind.
+*)
+(* useless
 Definition McaseS' {A} {n : nat} (v : t A (S n)) : forall (P : t A (S n) -> Prop)
   (H : forall h t, P (h :: t)), P v :=
   match v with
   | h :: t => fun P H => H h t
   | _ => fun devil => False_ind (@IDProp) devil
   end.
-
+*)
 
 Lemma vp1 (n:nat) (l : t bool (S n)) : exists (q:bool) (m:t bool n), l = (q::m).
 Proof.

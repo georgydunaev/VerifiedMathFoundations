@@ -53,8 +53,13 @@ Definition Terms_ind (T : Terms -> Prop)
     end.
 (*Check Terms_ind.*)
 
-Fixpoint substT (t:Terms) (xi: SetVars.t) (u:Terms): Terms.
-Proof.
+Fixpoint substT (t:Terms) (xi: SetVars.t) (u:Terms): Terms
+:=
+   match u with
+   | FVC s => if (SetVars.eqb s xi) then t else FVC s
+   | FSC f t0 => FSC f (Vector.map (substT t xi) t0)
+   end.
+(*Proof.
 destruct u as [s|f t0].
 2 : {
  refine (FSC _ _).
@@ -65,8 +70,8 @@ destruct u as [s|f t0].
  exact t.
  exact s.
 }
-(*Show Proof.*)
-Defined.
+Show Proof.
+Defined.*)
 
 Fixpoint isParamT (xi : SetVars.t) (t : Terms) {struct t} : bool :=
    match t with
