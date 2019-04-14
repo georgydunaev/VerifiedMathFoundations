@@ -7,6 +7,7 @@ Require Import Logic.Classical_Pred_Type.
 Require Import Logic.ChoiceFacts.
 Require Import Logic.IndefiniteDescription.
 Require Import PeanoNat.
+Require Import Bool.
 Require Export Coq.Lists.List.
 Definition InL { A : Type } :=
 fix InL (a : A) (l : list A) {struct l} : Type :=
@@ -333,7 +334,6 @@ Check Sub.
  apply Hax, Ha2.
  Defined.
 
-
  Theorem subcalc {ctx} {B} : (PR PROCAI ctx B) -> (PR PROCA ctx B).
  Proof.
  intro m.
@@ -480,6 +480,27 @@ Check Sub.
    apply Hax.
    apply Intui, Ha2.
  Defined.
+
+ Definition contrap_I {ctx} (A B:Fo) 
+(H:PR PROCAI ctx (A-->B)) : PR PROCAI ctx (-.B-->-.A).
+ Proof.
+(*eapply DedI.
+ eapply MP.
+ 2: {
+ apply Hax, Ha10.
+refine (Ha2 ). }
+
+ apply Hax, Ha1. (* apply (Hax _ _ (Ha1 _ _)).*)
+ apply MP with (A-->((A-->A)-->A)) (*1:=I*).
+ apply Hax, Ha1.
+ apply Hax, Ha2.
+ Defined.*)
+Admitted.
+
+ Definition contrap {ctx} (A B:Fo) 
+(H:PR PROCA ctx (A-->B)) : PR PROCA ctx (-.B-->-.A).
+ Proof.
+ Admitted.
 
  (* Order of the context is not important. *)
  Lemma permut axs L1 L2 A (H: forall x, L1 x -> L2 x)
@@ -643,11 +664,78 @@ destruct (foI_bo A), (foI_bo B); firstorder.
 
 (* Completeness *)
 Axiom classicT : forall (P : Prop), {P} + {~ P}.
+Axiom classicType : forall (P : Type), sum P (P->False).
+(*Context (Delta:Fo->Type) (CG:complete Delta).
+Definition nu (p:PropVars.t) : bool
+:= if (classicType (PR PROCA Delta p)) then true else false.
+*)
 Definition fu : Prop -> bool := fun P => 
-match (classicT P) with
+if (classicT P) then true else false.
+(*with
 | left _ => true
 | right _ => false
-end.
+end.*)
+Definition fuT : Type -> bool := fun P => 
+if (classicType P) then true else false.
+
+Lemma fuPtrue P : (fu P = true)->P.
+Proof.
+intro K. unfold fu in K.
+destruct (classicT P). exact p. inversion K.
+Defined.
+
+Lemma fuPfalse P : (fu P = false)->~P.
+Proof.
+intro K. unfold fu in K.
+destruct (classicT P). inversion K. exact n.
+Defined.
+
+Lemma truePfu (P:Prop) : P->(fu P = true).
+Proof.
+intro K.
+unfold fu.
+destruct (classicT P). reflexivity.
+destruct (n K).
+Defined.
+
+Lemma falsePfu (P:Prop) : ~P->(fu P = false).
+Proof.
+intro K.
+unfold fu.
+destruct (classicT P). 
+destruct (K p).
+reflexivity.
+Defined.
+
+Lemma fuTPtrue P : (fuT P = true)->P.
+Proof.
+intro K. unfold fuT in K.
+destruct (classicType P). exact p. inversion K.
+Defined.
+
+Lemma fuTPfalse P : (fuT P = false)->(P->False).
+Proof.
+intro K. unfold fuT in K.
+destruct (classicType P). inversion K. exact f.
+Defined.
+
+Lemma trueTPfu (P:Type) : P->(fuT P = true).
+Proof.
+intro K.
+unfold fuT.
+destruct (classicType P). reflexivity.
+destruct (f K).
+Defined.
+
+Lemma falseTPfu (P:Type) : (P->False)->(fuT P = false).
+Proof.
+intro K.
+unfold fuT.
+destruct (classicType P). 
+destruct (K p).
+reflexivity.
+Defined.
+
 (*
 Coercion ffu := fu.
 Definition Q (n:nat) := if (fu(n=n)) then true else false.
@@ -858,34 +946,6 @@ simpl in *|-*.*)
 :  .*)
 End finite_argument.
 
-Lemma fuPtrue P : (fu P = true)->P.
-Proof.
-intro K. unfold fu in K.
-destruct (classicT P). exact p. inversion K.
-Defined.
-
-Lemma fuPfalse P : (fu P = false)->~P.
-Proof.
-intro K. unfold fu in K.
-destruct (classicT P). inversion K. exact n.
-Defined.
-
-Lemma truePfu (P:Prop) : P->(fu P = true).
-Proof.
-intro K.
-unfold fu.
-destruct (classicT P). reflexivity.
-destruct (n K).
-Defined.
-
-Lemma falsePfu (P:Prop) : ~P->(fu P = false).
-Proof.
-intro K.
-unfold fu.
-destruct (classicT P). 
-destruct (K p).
-reflexivity.
-Defined.
 
 Lemma consi_fam n : consi (fam n).
 Proof.
@@ -961,9 +1021,102 @@ destruct (classicT (consi extctx)).
   exact H2.
   exact H1.
 Defined.
-
+End W.
 (* p.49 *)
-(*Theorem lemma2 :*)
+(* Check classicT False. sumbool*)
+Section lemma2.
+Context (Delta:Fo->Type) (CG:complete Delta).
+Definition nu (p:PropVars.t) : bool
+:= fuT (PR PROCA Delta p).
+(*if (classicType (PR PROCA Delta p)) then true else false.*)
+
+Lemma lem_2_1 (A:Fo):
+ (((foI_bo nu A)=true)->(PR PROCA Delta A)) *
+ (((foI_bo nu A)=false)->(PR PROCA Delta (Neg A))).
+Proof.
+induction A.
++ simpl. split; intro w.
+  - unfold nu in w.
+    apply fuTPtrue in w.
+    exact w.
+  - unfold nu in w.
+    destruct CG as [c s].
+    destruct (s p) as [H|H].
+    2 : { exact H. }
+    exfalso.
+    apply (fuTPfalse (PR PROCA Delta p)) in w.
+    * destruct w.
+    * exact H.
++ split;simpl;intros p. 
+  - inversion p.
+  - unfold Neg. apply AtoA.
++ split;simpl;intros p.
+  - rewrite andb_true_iff in p.
+    destruct p as [p1 p2].
+destruct IHA1 as [IHA1 _]. apply IHA1 in p1.
+destruct IHA2 as [IHA2 _]. apply IHA2 in p2.
+eapply MP.
+2 : eapply MP.
+3 : eapply Hax, Intui, Ha5.
+exact p2.
+exact p1.
+-
+destruct IHA1 as [_ IHA1].
+destruct IHA2 as [_ IHA2].
+(*apply andb_false_iff in p.
+Fail destruct p.*)
+apply andb_false_elim in p.
+destruct p.
+* apply IHA1 in e.
+  eapply MP. exact e.
+  apply contrap.
+  apply Hax, Intui, Ha3.
+* apply IHA2 in e.
+  eapply MP. exact e.
+  apply contrap.
+  apply Hax, Intui, Ha4.
++ admit. (*case for -\/*)
++ admit. (*case for -->*)
+Admitted.
+
+(*Theorem lemma2 : fu*)
+(*
+Lemma lem_2_1 (A:Fo): if (foI_bo nu A)
+ then (PR PROCA Delta A) else (PR PROCA Delta (Neg A)).
+Proof.
+induction A.
++ simpl. unfold nu.
+induction (fuT (PR PROCA Delta p))eqn:b.
+*)
+End lemma2.
+
+Definition satisf ctx : Prop :=
+ exists (v:PropVars.t->bool), forall g, ctx g -> foI_bo v g = true.
+Lemma compl ctx : (consi ctx) -> (satisf ctx).
+Admitted.
+Definition inconsi G :=
+ {A : Fo & (PR PROCA G A * PR PROCA G (Neg A))%type}.
+Lemma cimp ctx : (satisf ctx->False) -> inconsi (ctx).
+Admitted.
+Lemma vse ctx f : inconsi (add2ctx f ctx) -> PR PROCA ctx (-.(f)).
+Admitted.
+Lemma dne ctx f : PR PROCA ctx (-.(-.f)) -> PR PROCA ctx f.
+Admitted.
+ Theorem cmpl_bo f
+(H: forall (val:PropVars.t->bool), (foI_bo val f)=true)
+ : PR PROCA empctx f.
+Proof.
+apply dne.
+apply vse.
+apply cimp.
+(* intro val.
+ eapply str_sou_bo.
+ + exact H.
+ + intros g [].
+ Defined.*)
+Admitted.
+
+
 (*
 Axiom classicType : forall T : Type, sum T (T->False).
 destruct (classicType (Delta A)). 
@@ -984,7 +1137,7 @@ Theorem yorn A : Delta*)
 Print fam.
 Admitted.*)
 
-End W.
+
 
 
 
