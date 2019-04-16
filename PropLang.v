@@ -746,14 +746,16 @@ Definition consi G :=
  (sigT (fun A=> prod (PR PROCA G A) (PR PROCA G (Neg A)))->False).
 Definition complete G := prod (consi G)
  (forall A:Fo, sum (PR PROCA G A) (PR PROCA G (Neg A))).
+Section natnum.
+Context (nomer:nat->Fo).
+Context (remon:Fo->nat).
+Context (nomer_sect: forall x:nat, remon (nomer x) = x).
+Context (nomer_retr: forall x:Fo, nomer (remon x) = x).
 Section W.
 (*Context (Fm:Set).*)
 Context (Gamma:Fo->Type).
 Context (CG:consi Gamma).
-Context (nomer:nat->Fo).
-Context (remon:Fo->nat).
-Context (nomer_sect: forall x, remon (nomer x) = x).
-Context (nomer_retr: forall x, nomer (remon x) = x).
+
 Fixpoint fam (n:nat) : Fo->Type :=
 match n with
 | 0 => Gamma
@@ -1075,9 +1077,50 @@ destruct p.
   eapply MP. exact e.
   apply contrap.
   apply Hax, Intui, Ha4.
-+ admit. (*case for -\/*)
-+ admit. (*case for -->*)
-Admitted.
++ split;simpl;intros p.
+  - apply orb_true_elim in p.
+    destruct p.
+    * destruct IHA1 as [IHA1 _].
+      apply IHA1 in e.
+      eapply MP. exact e.
+      eapply Hax, Intui. constructor.
+    * destruct IHA2 as [IHA2 _].
+      apply IHA2 in e.
+      eapply MP. exact e.
+      eapply Hax, Intui. constructor.
+  - apply orb_false_elim in p.
+    destruct p as [p1 p2].
+    destruct IHA1 as [_ IHA1].
+    destruct IHA2 as [_ IHA2].
+    apply IHA1 in p1.
+    apply IHA2 in p2.
+    eapply MP. exact p2.
+    eapply MP. exact p1.
+    eapply Hax, Intui.
+    constructor.
++ split;simpl;intros p.
+  - rewrite <- leb_implb in p.
+    unfold leb in p.
+    destruct (foI_bo nu A1).
+    * destruct IHA1 as [IHA1 _].
+      destruct IHA2 as [IHA2 _].
+      apply IHA2 in p.
+      eapply MP. exact p. apply Hax, Intui, Ha1.
+    * destruct IHA1 as [_ IHA1].
+      eapply MP.
+      apply IHA1; reflexivity.
+      apply Hax, Intui, Ha9.
+  - destruct (foI_bo nu A1); simpl in *|-*.
+    * destruct IHA2 as [_ IHA2].
+       apply IHA2 in p.
+      eapply MP. exact p. eapply contrap.
+      apply Ded.
+      eapply MP. 2 : { apply hyp. left. reflexivity. }
+      destruct IHA1 as [IHA1 _].
+      assert (IHA1:=IHA1 eq_refl).
+      apply weak, IHA1.
+    * inversion p.
+Defined.
 
 (*Theorem lemma2 : fu*)
 (*
@@ -1092,16 +1135,107 @@ End lemma2.
 
 Definition satisf ctx : Prop :=
  exists (v:PropVars.t->bool), forall g, ctx g -> foI_bo v g = true.
-Lemma compl ctx : (consi ctx) -> (satisf ctx).
-Admitted.
+Lemma compl ctx : (complete ctx) -> (satisf ctx).
+Proof.
+intro H.
+exists (nu ctx).
+intros g ctxg.
+destruct (classic (foI_bo (nu ctx) g = true)).
++ assumption.
++ apply not_true_iff_false in H0.
+exfalso.
+destruct (lem_2_1 ctx H g) as [_ I2].
+apply I2 in H0.
+eapply hyp in ctxg.
+destruct H as [c s].
+unfold consi in c.
+apply c.
+exists g.
+split.
+- exact ctxg.
+- exact H0.
+Defined.
+Check Delta.
+Check pr_del_mon.
+
+Lemma satsubctx ctx CTX 
+(i:forall x, ctx x -> CTX x):
+ (satisf CTX) -> (satisf ctx).
+Proof.
+unfold satisf.
+intros [v H].
+exists v. intros g cg.
+apply H, i, cg.
+Defined.
+Lemma lem3 ctx : forall x : Fo, ctx x -> Delta ctx x.
+Proof.
+intros.
+eapply (delta_mon ctx x 0).
+simpl.
+exact X.
+Defined.
+
+Lemma compl2 ctx : (consi ctx) -> (satisf ctx).
+Proof.
+intro H.
+apply (satsubctx ctx (Delta ctx)).
+exact (lem3 _).
+apply compl.
+apply comdel.
+exact H.
+Defined.
+
+(*Check delta_mon.
+unfold satisf.
+exists (nu ctx).
+intros g ctxg.
+destruct (classic (foI_bo (nu ctx) g = true)).
++ assumption.
++ apply not_true_iff_false in H0.
+Check lem_2_1.
+exfalso.
+Admitted.*)
+
 Definition inconsi G :=
  {A : Fo & (PR PROCA G A * PR PROCA G (Neg A))%type}.
 Lemma cimp ctx : (satisf ctx->False) -> inconsi (ctx).
-Admitted.
+Proof.
+intro x.
+unfold inconsi.
+apply NNPP_Type.
+intro K.
+apply compl2 in K.
+exact (x K).
+Defined.
+
 Lemma vse ctx f : inconsi (add2ctx f ctx) -> PR PROCA ctx (-.(f)).
-Admitted.
+Proof.
+intro H.
+destruct H as [A [p1 p2]].
+apply Ded in p1.
+apply Ded in p2.
+eapply MP. exact p2.
+eapply MP. exact p1.
+apply Hax, Intui, Ha10.
+Defined.
+
 Lemma dne ctx f : PR PROCA ctx (-.(-.f)) -> PR PROCA ctx f.
-Admitted.
+Proof.
+intro H.
+assert (Q:PR PROCA ctx (f -\/ (-.f))).
+{ apply Hax, Ha11. }
+eapply MP.
+exact Q.
+1 : eapply MP.
+2 : eapply MP.
+3 : { eapply Hax, Intui, Ha8. }
++ apply Ded.
+  eapply MP. apply hyp. left. reflexivity.
+  eapply MP. apply weak. exact H.
+  apply Hax, Intui, Ha9.
++ apply AtoA.
+Defined.
+
  Theorem cmpl_bo f
 (H: forall (val:PropVars.t->bool), (foI_bo val f)=true)
  : PR PROCA empctx f.
@@ -1109,13 +1243,19 @@ Proof.
 apply dne.
 apply vse.
 apply cimp.
-(* intro val.
- eapply str_sou_bo.
- + exact H.
- + intros g [].
- Defined.*)
-Admitted.
-
+intro J.
+unfold satisf in J.
+destruct J as [val M].
+assert (M:=M (-.f)).
+assert (H:=H val).
+assert (U:add2ctx (-.f) empctx (-.f)).
+{ left. reflexivity. }
+assert (M:=M U).
+simpl in M.
+destruct (foI_bo val f).
++ simpl in M. inversion M.
++ inversion H.
+Defined.
 
 (*
 Axiom classicType : forall T : Type, sum T (T->False).
@@ -1136,9 +1276,9 @@ Check remon A.
 Theorem yorn A : Delta*)
 Print fam.
 Admitted.*)
+End natnum.
 
-
-
+Check cmpl_bo.
 
 
 
