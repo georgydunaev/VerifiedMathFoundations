@@ -484,23 +484,26 @@ Check Sub.
  Definition contrap_I {ctx} (A B:Fo) 
 (H:PR PROCAI ctx (A-->B)) : PR PROCAI ctx (-.B-->-.A).
  Proof.
-(*eapply DedI.
- eapply MP.
- 2: {
- apply Hax, Ha10.
-refine (Ha2 ). }
-
- apply Hax, Ha1. (* apply (Hax _ _ (Ha1 _ _)).*)
- apply MP with (A-->((A-->A)-->A)) (*1:=I*).
- apply Hax, Ha1.
- apply Hax, Ha2.
- Defined.*)
-Admitted.
+apply DedI.
+apply DedI.
+eapply MP.
+2 : { apply hyp. right. left. reflexivity. }
+eapply MP.
+2 : { apply weak. apply weak. exact H. }
+apply hyp. left. reflexivity.
+Defined.
 
  Definition contrap {ctx} (A B:Fo) 
 (H:PR PROCA ctx (A-->B)) : PR PROCA ctx (-.B-->-.A).
  Proof.
- Admitted.
+apply Ded.
+apply Ded.
+eapply MP.
+2 : { apply hyp. right. left. reflexivity. }
+eapply MP.
+2 : { apply weak. apply weak. exact H. }
+apply hyp. left. reflexivity.
+Defined.
 
  (* Order of the context is not important. *)
  Lemma permut axs L1 L2 A (H: forall x, L1 x -> L2 x)
