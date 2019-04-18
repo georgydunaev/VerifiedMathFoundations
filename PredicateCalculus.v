@@ -665,8 +665,25 @@ induction m (* eqn: meq *); intros lfi val.
   exact B.
 Defined.
 (** SOUNDNESS IS PROVED **)
-
-(*
+Section test.
+Context (x y z w:SetVars.t).
+Context (NEps:PredSymb.t). (* not equal sign*)
+Definition NE := MPSV NEps 2. (* valence = 2 *)
+Import VectorNotations.
+Check Terms.
+Definition zw : t Terms (psv NE) :=[FVC z;FVC w].
+Definition xx : t Terms (psv NE) :=[FVC x;FVC x].
+Import ListNotations.
+Theorem BAD : PREPR [Exis z (Exis w (Atom NE zw))]
+(Fora x (Atom NE xx)).
+Proof.
+apply GEN_E.
+Print PREPR.
+Print PRECA.
+(*???*)
+Abort.
+End test.
+(*PSV
 Theorem completeness (f:Fo)
 (H : forall (val:SetVars.t->X), @foI X fsI prI val f)
  : 
@@ -677,6 +694,7 @@ exists  (l:list Fo)
 Proof.
 Defined. *)
 End cor.
+
 (*Print Assumptions correct.*)
 
 End Soundness_mod.

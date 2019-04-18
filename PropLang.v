@@ -668,6 +668,14 @@ destruct (foI_bo A), (foI_bo B); firstorder.
 (* Completeness *)
 Axiom classicT : forall (P : Prop), {P} + {~ P}.
 Axiom classicType : forall (P : Type), sum P (P->False).
+
+Theorem choice :
+ forall (A B : Type) (R : A->B->Prop),
+   (forall x : A, exists y : B, R x y) ->
+    exists f : A->B, (forall x : A, R x (f x)).
+Proof. intros.
+Abort.
+
 (*Context (Delta:Fo->Type) (CG:complete Delta).
 Definition nu (p:PropVars.t) : bool
 := if (classicType (PR PROCA Delta p)) then true else false.
@@ -1466,3 +1474,5 @@ eapply Ha8.
  right. left. reflexivity.
  Defined.
 End Lang.
+
+Check classic.
