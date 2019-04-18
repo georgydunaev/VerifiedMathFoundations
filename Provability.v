@@ -68,7 +68,7 @@ Inductive PREPR : Fo -> Type :=
 | Hax_E :> forall (A : Fo), (PRECA A) -> PREPR A
 | MP_E (A B: Fo) : (PREPR A)->(PREPR (Impl A B))
                  ->(PREPR B)
-| GEN_E (A : Fo) (xi:SetVars.t)
+| GEN_E (A : Fo) (xi :SetVars.t)
  (nic:forall A : Fo, (InL A ctx)-> (isParamF xi A = false))
 : (PREPR A)->(PREPR (Fora xi A))
 .

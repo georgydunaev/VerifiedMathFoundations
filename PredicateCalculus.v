@@ -666,10 +666,10 @@ induction m (* eqn: meq *); intros lfi val.
 Defined.
 
 
-Theorem strong_correct (f:Fo) (l:list Fo) (m : PREPR l f) 
+Fixpoint strong_correct (f:Fo) (l:list Fo) (m : PREPR l f) 
 (val:SetVars.t->X)
 (lfi : forall  (h:Fo), (InL h l)->
-(@foI X fsI prI val h)) : @foI X fsI prI val f.
+(@foI X fsI prI val h)) {struct m}: @foI X fsI prI val f.
 Proof.
 revert lfi.
 induction m (* eqn: meq *); intros lfi (*val*).
@@ -717,17 +717,26 @@ induction m (* eqn: meq *); intros lfi (*val*).
   apply lfi. (*  exact (IHm2 IHm1).*)
 + simpl in * |- *.
   intro m0.
-(* simpl. *)
+
+eapply strong_correct.
+exact m.
+intros h J.
+apply <- NPthenNCACVF.
+2 : { apply nic. exact J. }
+apply lfi. exact J.
+Defined.
+
+(*(* simpl. *)
 apply <- NPthenNCACVF.
   apply IHm.
 (*  intros h B.
   intro val2.*)
   apply lfi.
-induction m.
+induction m eqn:b.
 - apply nic. exact i.
 - induction p.
-  * induction p; simpl.
-Abort.
+  * induction p; simpl in *|-*.
+Abort.*)
 
 (** SOUNDNESS IS PROVED **)
 Section test.
