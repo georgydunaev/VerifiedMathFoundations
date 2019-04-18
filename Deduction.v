@@ -28,11 +28,13 @@ intro q.
 apply MP_E with (A:=(Fora xi (ps --> ph))).
 (*apply (MP_E nil (Fora xi (ps --> ph))).*)
 + apply (GEN_E).
-  exact q.
+  - intros A [].
+  - exact q.
 + apply (b1 _).
   exact H.
 Defined.
 
+(* OBSOLETE
 Definition gen (A:Fo) (xi:SetVars) ctx
 (*Generalization from Bernay's rule*)
 : PREPR ctx (A) -> PREPR ctx (Fora xi A).
@@ -50,6 +52,7 @@ apply MP_E with (A:= (Fora xi (Top --> A))).
 * apply b1.
   trivial.
 Defined.
+*)
 
 Definition neg (f:Fo):= (Impl f Bot).
 
@@ -60,7 +63,7 @@ apply MP_E with (A:= B).
 exact x.
 apply (*subcalc,*) a1.
 Defined.
-
+(*TODO
 Fixpoint weak (A F:Fo) (l :list Fo) (x: (PREPR l F)) : (PREPR (A::l) F).
 Proof.
 destruct x as [a b|a b|i a b|a b].
@@ -79,10 +82,12 @@ assumption. *)
   * apply weak.
     exact x1.
 + apply GEN_E. (* Order is not important! *)
+  - intros F IL.
+    destruct IL as [C1|C2].
   apply weak. (* Order is not important! *)
   exact x.
 Defined.
-
+*)
 (*Fixpoint weak (A F : Fo) (l : list Fo) (x : PREPR l F) {struct x} :
    PREPR (A :: l) F :=
    match x in (GPR _ _ _ f) return (PREPR (A :: l) f) with
@@ -92,7 +97,7 @@ Defined.
        MP_E dcb PRECA (A :: l) I a b (weak A a l x1) (weak A (a --> b) l x2)
    | GEN_E _ _ _ _ a b x0 => GEN_E dcb PRECA (A :: l) I a b (weak A a l x0)
    end.*)
-
+(*TODO
 Fixpoint weaken (F:Fo) (li l :list Fo) (x: (PREPR l F)) {struct li}: (PREPR (li ++ l) F).
 Proof.
 destruct li.
@@ -111,7 +116,7 @@ Fixpoint weaken (F : Fo) (li l : list Fo) (x : PREPR l F) {struct li} :
    | Datatypes.nil => x
    | f :: li0 => weak f F (li0 ++ l) (weaken F li0 l x)
    end.
-
+*)
 (*Export List Notations.*)
 Fixpoint notGenWith (xi:SetVars)(l:list Fo)
 (B:Fo)(m:(PREPR l B)){struct m}:bool.
@@ -156,8 +161,9 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   simpl in i .
   destruct i .
   * rewrite <- e.
-    pose (J:=weaken _ il nil (AtoA A )).
-    rewrite app_nil_r in J.
+(*    pose (J:=weaken _ il nil (AtoA A )).*)
+    pose (J:=(@AtoA il A )).
+    (*rewrite app_nil_r in J.*)
     exact J.
   * simpl in H.
     apply a1i.
@@ -187,6 +193,7 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   apply a2.
   + apply MP_E with (A:= (Fora xi (A-->A0))).
     apply GEN_E.
+    { intros A1 M. apply nic. simpl. right. exact M. }
     simple refine (@Ded _ _ _ _ _).
     exact m.
     intros xi0 H0.

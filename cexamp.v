@@ -66,6 +66,9 @@ Definition xeqy := Atom (MPSV 0 2)
 Theorem upr : PREPR (xeqy::nil) (Fora 2 xeqy).
 Proof.
 apply GEN_E.
+{ intros A M. destruct M. 
+  + rewrite <- e. unfold xeqy. simpl. reflexivity.
+  +  destruct i. }
 apply hyp_E.
 simpl.
 apply inl.

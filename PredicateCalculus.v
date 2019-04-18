@@ -664,6 +664,71 @@ induction m (* eqn: meq *); intros lfi val.
   apply lfi.
   exact B.
 Defined.
+
+
+Theorem strong_correct (f:Fo) (l:list Fo) (m : PREPR l f) 
+(val:SetVars.t->X)
+(lfi : forall  (h:Fo), (InL h l)->
+(@foI X fsI prI val h)) : @foI X fsI prI val f.
+Proof.
+revert lfi.
+induction m (* eqn: meq *); intros lfi (*val*).
++ exact (lfi A i).
++ destruct p eqn:k.
+  ++ destruct p0.
+     * simpl.
+       intros a0 b.
+       exact a0.
+     * simpl.
+       intros a0 b c.
+       exact (a0 c (b c)).
+     * simpl. intros [i0 i1]. assumption.
+     * simpl. intros [i0 i1]. assumption.
+     * simpl. intros m1 m2. split; assumption.
+     * simpl. intros n. left. assumption.
+     * simpl. intros n. right. assumption.
+     * simpl. intros f1 f2 [h|h]. exact (f1 h). exact (f2 h).
+     * simpl. intros i0 i1. destruct (i0 i1).
+     * simpl. intros i0 i1 i2. apply (i1 i2). apply (i0 i2).
+  ++ simpl in *|-*.
+  (*destruct (substF t xi ph) eqn: j.*)
+  apply (UnivInst ph val xi t r s).
+  ++ simpl in *|-*.
+  (*destruct (substF t xi ph) eqn: j.*)
+  apply (ExisGene ph val xi t r s).
+  (*simpl. firstorder.*)
+  ++ simpl in *|-*.
+     unfold OImp.
+     intros H0 H1 m.
+     apply H0.
+     rewrite -> (NPthenNCACVF xi ps0 m val H).
+     exact H1.
+  ++ simpl in *|-*.
+     unfold OImp.
+     intros H0 [m H1].
+     rewrite <- (NPthenNCACVF xi ps0 m val H).
+     eapply H0.
+     exact H1.
++ simpl in * |- *.
+  unfold OImp in IHm2.
+  apply IHm2.
+  apply lfi.
+  apply IHm1.
+  apply lfi. (*  exact (IHm2 IHm1).*)
++ simpl in * |- *.
+  intro m0.
+(* simpl. *)
+apply <- NPthenNCACVF.
+  apply IHm.
+(*  intros h B.
+  intro val2.*)
+  apply lfi.
+induction m.
+- apply nic. exact i.
+- induction p.
+  * induction p; simpl.
+Abort.
+
 (** SOUNDNESS IS PROVED **)
 Section test.
 Context (x y z w:SetVars.t).
