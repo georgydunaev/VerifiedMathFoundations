@@ -9,6 +9,12 @@ Require Import Coq.Structures.Equalities.
 the soundness theorem of predicate logic.
 *)
 
+Lemma my_andb_true_eq :
+  forall a b:bool, a && b = true -> a = true  /\ b = true.
+Proof.
+  destr_bool. auto.
+Defined.
+
 Notation Omega := Prop.
 Definition OFalse := False.
 Definition OAnd := and.
@@ -67,8 +73,7 @@ Defined.
 Definition G h (n:nat) (l:Vector.t bool n) : Prop :=
  @eq bool (@fold_left bool bool orb false (S n) (cons bool h n l)) false.
 
-Print IDProp.
-Definition mIDProp : Prop := (forall A : Prop, A -> A).
+(*Definition mIDProp : Prop := (forall A : Prop, A -> A).*)
 (*Check False_ind (@IDProp).*)
 
 Definition McaseS {A} (P : forall {n}, t A (S n) -> Prop)
@@ -133,7 +138,7 @@ intros.
 simpl.
 unfold G in H.
 rewrite -> (B0 h n l) in H.
-pose (Q:=A1 _ _ H).
+assert (Q:=A1 _ _ H).
 destruct Q as [H0 H1].
 exact H0.
 (* OK!! *)
@@ -142,9 +147,9 @@ intros.
 unfold G in H0.
 simpl in  |- *.
 rewrite -> (B0 h (S n) l) in H0.
-pose (Q:=A1 _ _ H0).
+assert (Q:=A1 _ _ H0).
 destruct Q as [HH0 HH1].
-pose (YO := vp1 n l).
+assert (YO := vp1 n l).
 destruct YO as [YO1 [YO2 YO3]].
 rewrite -> YO3.
 apply H.
@@ -809,6 +814,7 @@ Defined.*)
 Import Bool.Bool.
 Export Coq.Lists.List.
 
+(*
 Theorem lm (a b :bool)(G:true = (a && b) ): true = a.
 Proof.
 destruct a.
@@ -822,9 +828,9 @@ destruct a.
 trivial.
 inversion G.
 Defined.
-
+*)
 Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons  A il) B)) 
-(H:forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m))
+(H:forall xi:SetVars, (isParamF xi A = true) ->(notGenWith xi _ _ m = true))
 {struct m}:(PREPR il (A-->B)).
 Proof.
 destruct m. (*as [i|i|i|i|i|i|i].*)
@@ -832,34 +838,34 @@ destruct m. (*as [i|i|i|i|i|i|i].*)
   simpl in i .
   destruct i .
   * rewrite <- e.
-(*    pose (J:=weaken _ il nil (AtoA A )).*)
-    pose (J:=(@AtoA il A )).
-    (*rewrite app_nil_r in J.*)
-    exact J.
+    exact (AtoA A).
   * simpl in H.
     apply a1i.
     apply hyp_E with (ctx:=il) (1:=i).
-    (*exact (hyp _ il _ i).*)
 + apply a1i.
   apply Hax_E, p.
 + apply MP_E with (A:= (A-->A0)).
 - simple refine (@Ded _ _ _ _ _).
   exact m1.
   intros xi H0.
-  pose (W:=H xi H0).
+  assert (W:=H xi H0).
   simpl in W.
-  pose (J:=notGenWith xi (A :: il) A0 m1).
+  assert (J:=notGenWith xi (A :: il) A0 m1).
   try reflexivity.
-  fold J.
-  fold J in W.
-  apply (lm _ _ W).
+(*  fold J. 
+  fold J in W. *)
+  apply my_andb_true_eq in W as [W _].
+  exact W.
+  (*apply (lm _ _ W).*)
 - apply MP_E with (A:= (A-->(A0-->B))).
   simple refine (@Ded _ _ _ _ _).
   exact m2.
   intros xi H0.
-  pose (W:=H xi H0).
+  assert (W:=H xi H0).
   simpl in W.
-  apply (conj_true_then_right _ _ W).
+  apply my_andb_true_eq in W as [_ W].
+  exact W.
+  (* apply (conj_true_then_right _ _ W). *)
  (*Last part about GEN*)
   apply a2.
 + apply MP_E with (A:= (Fora xi (A-->A0))).
@@ -887,9 +893,10 @@ simpl. right. exact M.
     simple refine (@Ded _ _ _ _ _).
     exact m.
     intros xi0 H0.
-    pose (W:=H xi0 H0).
+    assert (W:=H xi0 H0).
     simpl in W.
-    * exact (conj_true_then_right _ _ W).
+    * apply my_andb_true_eq in W as [_ W]; exact W.
+(*exact (conj_true_then_right _ _ W).*)
     * 
      simpl.
 (*
@@ -1309,11 +1316,11 @@ apply weafunF.
 intros z.
 unfold cng.
 destruct (SetVars.eqb z xi) eqn:e0, (SetVars.eqb z xe) eqn:e1.
-pose (U0:= proj1 (SetVars.eqb_eq z xi) e0).
+assert (U0:= proj1 (SetVars.eqb_eq z xi) e0).
 rewrite U0 in e1.
-pose (U1:= proj1 (SetVars.eqb_eq xi xe) e1).
+assert (U1:= proj1 (SetVars.eqb_eq xi xe) e1).
 symmetry in U1.
-pose (U2:= proj2 (SetVars.eqb_eq xe xi) U1).
+assert (U2:= proj2 (SetVars.eqb_eq xe xi) U1).
 rewrite U2 in H.
 inversion H.
 reflexivity. reflexivity. reflexivity.
@@ -1333,7 +1340,7 @@ Lemma lem2caseAtom : forall (p : PSV) (t0 : Vector.t Terms (psv p))
 Proof.
 intros.
 + simpl in H.
-  pose (Q:=SomeInj _ _ H).
+  assert (Q:=SomeInj _ _ H).
   rewrite <- Q.
   simpl.
   apply EqualThenEquiv.
@@ -1376,25 +1383,23 @@ Lemma eqb_comm x xi : SetVars.eqb xi x =  SetVars.eqb x xi.
 Proof.
 destruct (SetVars.eqb xi x) eqn:e1.
 symmetry.
-pose (Y:= proj1 (SetVars.eqb_eq xi x) e1).
+assert (Y:= proj1 (SetVars.eqb_eq xi x) e1).
 rewrite -> Y at 1.
 rewrite <- Y at 1.
 exact e1.
 symmetry.
-pose (n3:= proj2 (not_iff_compat (SetVars.eqb_eq x xi)) ).
+assert (n3:= proj2 (not_iff_compat (SetVars.eqb_eq x xi)) ).
 apply not_true_iff_false.
 apply n3.
 intro q.
 symmetry in q.
 revert q.
 fold (xi <> x).
-pose (n5:= proj1 (not_iff_compat (SetVars.eqb_eq xi x)) ).
+assert (n5:= proj1 (not_iff_compat (SetVars.eqb_eq xi x)) ).
 apply n5.
 apply not_true_iff_false.
 exact e1.
 Defined.
-
-
 
 Lemma NPthenNCACVF xi fi m mu :  isParamF xi fi = false ->
 @foI X fsI prI (cng mu xi m) fi <-> @foI X fsI prI mu fi.
@@ -1424,7 +1429,7 @@ simpl in * |- *.
   apply IHfi2. destruct (orb_false_elim _ _ H). apply H1.
 * apply FORALL_EQV. intro m0.
   destruct (SetVars.eqb x xi) eqn:e1.
-  pose (C:=proj1 (SetVars.eqb_eq x xi) e1).
+  assert (C:=proj1 (SetVars.eqb_eq x xi) e1).
   rewrite <- C.
   pose (D:= twice_the_same mu x m m0).
   exact (weafunF _ _ D fi).
@@ -1438,9 +1443,9 @@ simpl in * |- *.
   fold (cng (cng mu xi m) x m0).
   fold (cng mu x m0).
   destruct (SetVars.eqb x xi) eqn:e1.
-  pose (C:=proj1 (SetVars.eqb_eq x xi) e1).
+  assert (C:=proj1 (SetVars.eqb_eq x xi) e1).
   rewrite <- C.
-  pose (D:= twice_the_same mu x m m0).
+  assert (D:= twice_the_same mu x m m0).
   exact (weafunF _ _ D fi).
   rewrite cng_commF_EQV.
   (*here inductive IHfi*)
