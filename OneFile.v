@@ -56,27 +56,17 @@ Defined.
 Definition ATS_G h (n:nat) (l:Vector.t bool n) : Prop :=
  @eq bool (@fold_left bool bool orb false (S n) (cons bool h n l)) false.
 
-Definition McaseS {A} (P : forall {n}, t A (S n) -> Prop)
-  (H : forall h {n} t, @P n (h :: t)) {n} (v: t A (S n)) : P v :=
-match v with
-  |h :: t => H h t
-  |_ => fun devil => False_ind (@IDProp) devil (* subterm !!! *)
-end.
-
 Lemma vp1 (n:nat) (l : t bool (S n)) : exists (q:bool) (m:t bool n), l = (q::m).
 Proof.
-apply (@McaseS bool (fun n => 
+apply (@caseS bool (fun n => 
 fun (l : t bool (S n)) => exists (q : bool) (m : t bool n), l = q :: m)).
 intros.
 exists h.
 exists t.
 reflexivity.
 Defined.
-(*
-Theorem A1 (x y:bool): (orb x y = false)->(x=false)/\(y=false).
-Proof. intro H. destruct x, y; firstorder || inversion H. Defined.
-*)
-Fixpoint all_then_someV (n:nat) (l:Vector.t bool n) {struct l}:
+
+Fixpoint all_then_someV (n:nat) (l:Vector.t bool n) {struct l} :
 (Vector.fold_left orb false l ) = false ->
 (forall p, (Vector.nth l p  ) = false).
 Proof.
