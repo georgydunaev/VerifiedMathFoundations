@@ -1,14 +1,235 @@
 (* Author: Georgy Dunaev, georgedunaev@gmail.com *)
 Require Import Bool.
-Require Coq.Vectors.Vector.
+Require Import Coq.Vectors.Vector.
 Require Import Coq.Lists.List.
 Require Import Coq.Vectors.Vector.
 Require Import Coq.Structures.Equalities.
+
+(* Firstly I prove some lemmas, then the module "ALL_mod" contains
+the soundness theorem of predicate logic.
+*)
+
 Notation Omega := Prop.
 Definition OFalse := False.
 Definition OAnd := and.
 Definition OOr := or.
 Definition OImp := (fun x y:Omega => x->y).
+
+Definition InL { A : Type } :=
+fix InL (a : A) (l : list A) {struct l} : Type :=
+  match l with
+  | Datatypes.nil => False
+  | b :: m => (sum (b = a) (InL a m))
+  end.
+(*
+Lemma orb_intro (a b:bool): ((a=false)/\(b=false))->((a||b)=false).
+Proof.
+intros. firstorder.
+Defined.
+orb_false_intro
+*)
+(*Import Bool.*)
+(*
+Lemma orb_elim (a b:bool): ((a||b)=false)->((a=false)/\(b=false)).
+Proof.
+intros. destruct a,b. 
+simpl in H. inversion H.
+simpl in H. inversion H.
+firstorder.
+firstorder.
+Defined.
+Check orb_false_elim.
+*)
+
+(** 4. ALL THEN SOME (VECTOR) **)
+Import VectorNotations.
+
+Fixpoint B2 (n:nat) (l:t bool n) :fold_left orb true l  = true.
+Proof.
+destruct l; simpl.
+reflexivity.
+apply B2.
+Defined.
+
+Fixpoint B0 b (n:nat) (l:t bool n) : 
+fold_left orb false (b :: l)  = orb b (fold_left orb false l) .
+Proof.
+destruct l.
+simpl. firstorder.
+simpl.
+destruct b.
+simpl.
+apply B2.
+simpl.
+reflexivity.
+Defined.
+
+Definition G h (n:nat) (l:Vector.t bool n) : Prop :=
+ @eq bool (@fold_left bool bool orb false (S n) (cons bool h n l)) false.
+
+Print IDProp.
+Definition mIDProp : Prop := (forall A : Prop, A -> A).
+(*Check False_ind (@IDProp).*)
+
+Definition McaseS {A} (P : forall {n}, t A (S n) -> Prop)
+  (H : forall h {n} t, @P n (h :: t)) {n} (v: t A (S n)) : P v :=
+match v with
+  |h :: t => H h t
+  |_ => fun devil => False_ind (@IDProp) devil (* subterm !!! *)
+end.
+
+(*
+Check McaseS.
+Definition McaseSs {A} (P : forall {n}, t A (S n) -> Prop)
+  (H : forall h {n} t, @P n (h :: t)) {n} (v: t A (S n)) : P v.
+induction v.
+destruct v.
+Check @IDProp.
+Check False_ind.
+*)
+(* useless
+Definition McaseS' {A} {n : nat} (v : t A (S n)) : forall (P : t A (S n) -> Prop)
+  (H : forall h t, P (h :: t)), P v :=
+  match v with
+  | h :: t => fun P H => H h t
+  | _ => fun devil => False_ind (@IDProp) devil
+  end.
+*)
+
+Lemma vp1 (n:nat) (l : t bool (S n)) : exists (q:bool) (m:t bool n), l = (q::m).
+Proof.
+apply (@McaseS bool (fun n => 
+fun (l : t bool (S n)) => exists (q : bool) (m : t bool n), l = q :: m)).
+intros.
+exists h.
+exists t.
+reflexivity.
+Defined.
+
+Theorem A1 (x y:bool): (orb x y = false)->(x=false)/\(y=false).
+Proof. intro H. destruct x, y; firstorder || inversion H. Defined.
+
+Fixpoint all_then_someV (n:nat) (l:Vector.t bool n) {struct l}:
+(Vector.fold_left orb false l ) = false ->
+(forall p, (Vector.nth l p  ) = false).
+Proof.
+intros.
+(*induction*)
+destruct l (*eqn:equa*).
+inversion p. (* simpl. destruct p; trivial.*)
+fold G in H.
+assert (vari : G h n l).
+exact H.
+clear H.
+revert h l vari.
+set (P := fun n p => forall (h : bool) (l : t bool n) (_ : G h n l),
+@eq bool (@nth bool (S n) (cons bool h n l) p) false).
+revert n p.
+fix loop 1.
+intros n;revert n.
+unshelve eapply (@Fin.rectS P).
+unfold P.
+intros.
+simpl.
+unfold G in H.
+rewrite -> (B0 h n l) in H.
+pose (Q:=A1 _ _ H).
+destruct Q as [H0 H1].
+exact H0.
+(* OK!! *)
+unfold P.
+intros.
+unfold G in H0.
+simpl in  |- *.
+rewrite -> (B0 h (S n) l) in H0.
+pose (Q:=A1 _ _ H0).
+destruct Q as [HH0 HH1].
+pose (YO := vp1 n l).
+destruct YO as [YO1 [YO2 YO3]].
+rewrite -> YO3.
+apply H.
+unfold G.
+rewrite <- YO3.
+exact HH1.
+Defined.
+
+(** 5. MISC **)
+(* Lemmas START *)
+Lemma AND_EQV : forall A0 B0 A1 B1 : Prop, 
+(A0 <-> A1) -> (B0 <-> B1) -> ((A0 /\ B0) <-> (A1 /\ B1)).
+Proof.
+intros A0 B0 A1 B1 H0 H1.
+rewrite H0.
+rewrite H1.
+reflexivity.
+Defined.
+
+Lemma OR_EQV : forall A0 B0 A1 B1 : Prop, 
+(A0 <-> A1) -> (B0 <-> B1) -> ((A0 \/ B0) <-> (A1 \/ B1)).
+Proof.
+intros A0 B0 A1 B1 H0 H1.
+rewrite H0.
+rewrite H1.
+reflexivity.
+Defined.
+
+Lemma IMP_EQV : forall A0 B0 A1 B1 : Prop, 
+(A0 <-> A1) -> (B0 <-> B1) -> ((A0 -> B0) <-> (A1 -> B1)).
+Proof.
+intros A0 B0 A1 B1 H0 H1.
+rewrite H0.
+rewrite H1.
+reflexivity.
+Defined.
+
+Lemma FORALL_EQV {X}: forall A0 A1 : X -> Prop, 
+(forall m, A0 m <-> A1 m) -> ((forall m:X, A0 m) <-> (forall m:X, A1 m)).
+Proof.
+intros A0 A1 H0.
+split.
++ intros.
+  rewrite <- H0.
+  exact (H m).
++ intros.
+  rewrite -> H0.
+  exact (H m).
+Defined.
+
+Lemma EXISTS_EQV {X}: forall A0 A1 : X -> Prop, 
+(forall m, A0 m <-> A1 m) -> ((exists m:X, A0 m) <-> (exists m:X, A1 m)).
+Proof.
+intros A0 A1 H0.
+split.
++ intros.
+  destruct H as [x Hx].
+  exists x.
+  rewrite <- H0.
+  exact (Hx).
++ intros.
+  destruct H as [x Hx].
+  exists x.
+  rewrite -> H0.
+  exact (Hx).
+Defined.
+
+
+
+(*Lemma orb_intro (a b:bool): ((a=false)/\(b=false))->((a||b)=false).
+Proof.
+intros. firstorder.
+Defined.*)
+
+(*lm2*)
+(*Theorem conj_true_then_right (a b :bool)(G:true = (a && b) ): true = b.
+Proof.
+destruct a.
+trivial.
+inversion G.
+Defined.*)
+(* Lemmas END *)
+
+
+
 
 Module ALL_mod (SetVars FuncSymb PredSymb 
  : UsualDecidableTypeFull).
@@ -58,7 +279,6 @@ Definition Terms_ind (T : Terms -> Prop)
         end in
       H_FSC f v (loopv _ v)
     end.
-(*Check Terms_ind.*)
 
 Fixpoint substT (t:Terms) (xi: SetVars.t) (u:Terms): Terms
 :=
@@ -239,12 +459,7 @@ End Interpretation2.
 Import PredFormulasNotationsASCII.
 Local Open Scope pretxtnot.
 
-Definition InL { A : Type } :=
-fix InL (a : A) (l : list A) {struct l} : Type :=
-  match l with
-  | Datatypes.nil => False
-  | b :: m => (sum (b = a) (InL a m))
-  end.
+
 
 (* intuitionistic "PROpositional" Calculus Axioms *)
 Inductive PROCA : Fo -> Type :=
@@ -770,11 +985,9 @@ rewrite -> NP in H.
 inversion H.
 Defined.
 
-Lemma orb_intro (a b:bool): ((a=false)/\(b=false))->((a||b)=false).
-Proof.
-intros. firstorder.
-Defined.
 
+
+(* Examples of *)
 Definition swapSIMPL ctx A B C
 (HA : forall xi : SetVars.t, isParamF xi A = false)
 (HB : forall xi : SetVars.t, isParamF xi B = false)
@@ -783,8 +996,8 @@ Definition swapSIMPL ctx A B C
 Proof.
 unshelve eapply SimplDed.
 2 : { intro xi. simpl.
-apply orb_intro. split. apply HA.
-apply orb_intro. split. apply HB. apply HC.
+apply orb_false_intro. apply HA.
+apply orb_false_intro. apply HB. apply HC.
 }
 unshelve eapply SimplDed. 2 : apply HB.
 unshelve eapply SimplDed. 2 : apply HA.
@@ -795,206 +1008,13 @@ apply hyp_E; firstorder.
 apply hyp_E; firstorder.
 Defined.
 
+(* It is also true:
 Definition swap ctx A B C :
 (PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply SimplDed.
 Admitted.
-(** 4. ALL THEN SOME (VECTOR) **)
-Require Import Coq.Vectors.Vector.
-Import VectorNotations.
-
-Fixpoint B2 (n:nat) (l:t bool n) :fold_left orb true l  = true.
-Proof.
-destruct l; simpl.
-reflexivity.
-apply B2.
-Defined.
-
-Fixpoint B0 b (n:nat) (l:t bool n) : 
-fold_left orb false (b :: l)  = orb b (fold_left orb false l) .
-Proof.
-destruct l.
-simpl. firstorder.
-simpl.
-destruct b.
-simpl.
-apply B2.
-simpl.
-reflexivity.
-Defined.
-
-Definition G h (n:nat) (l:Vector.t bool n) : Prop :=
- @eq bool (@fold_left bool bool orb false (S n) (cons bool h n l)) false.
-
-Print IDProp.
-Definition mIDProp : Prop := (forall A : Prop, A -> A).
-(*Check False_ind (@IDProp).*)
-
-Definition McaseS {A} (P : forall {n}, t A (S n) -> Prop)
-  (H : forall h {n} t, @P n (h :: t)) {n} (v: t A (S n)) : P v :=
-match v with
-  |h :: t => H h t
-  |_ => fun devil => False_ind (@IDProp) devil (* subterm !!! *)
-end.
-
-(*
-Check McaseS.
-Definition McaseSs {A} (P : forall {n}, t A (S n) -> Prop)
-  (H : forall h {n} t, @P n (h :: t)) {n} (v: t A (S n)) : P v.
-induction v.
-destruct v.
-Check @IDProp.
-Check False_ind.
 *)
-(* useless
-Definition McaseS' {A} {n : nat} (v : t A (S n)) : forall (P : t A (S n) -> Prop)
-  (H : forall h t, P (h :: t)), P v :=
-  match v with
-  | h :: t => fun P H => H h t
-  | _ => fun devil => False_ind (@IDProp) devil
-  end.
-*)
-
-Lemma vp1 (n:nat) (l : t bool (S n)) : exists (q:bool) (m:t bool n), l = (q::m).
-Proof.
-apply (@McaseS bool (fun n => 
-fun (l : t bool (S n)) => exists (q : bool) (m : t bool n), l = q :: m)).
-intros.
-exists h.
-exists t.
-reflexivity.
-Defined.
-
-Theorem A1 (x y:bool): (orb x y = false)->(x=false)/\(y=false).
-Proof. intro H. destruct x, y; firstorder || inversion H. Defined.
-
-Fixpoint all_then_someV (n:nat) (l:Vector.t bool n) {struct l}:
-(Vector.fold_left orb false l ) = false ->
-(forall p, (Vector.nth l p  ) = false).
-Proof.
-intros.
-(*induction*)
-destruct l (*eqn:equa*).
-inversion p. (* simpl. destruct p; trivial.*)
-fold G in H.
-assert (vari : G h n l).
-exact H.
-clear H.
-revert h l vari.
-set (P := fun n p => forall (h : bool) (l : t bool n) (_ : G h n l),
-@eq bool (@nth bool (S n) (cons bool h n l) p) false).
-revert n p.
-fix loop 1.
-intros n;revert n.
-unshelve eapply (@Fin.rectS P).
-unfold P.
-intros.
-simpl.
-unfold G in H.
-rewrite -> (B0 h n l) in H.
-pose (Q:=A1 _ _ H).
-destruct Q as [H0 H1].
-exact H0.
-(* OK!! *)
-unfold P.
-intros.
-unfold G in H0.
-simpl in  |- *.
-rewrite -> (B0 h (S n) l) in H0.
-pose (Q:=A1 _ _ H0).
-destruct Q as [HH0 HH1].
-pose (YO := vp1 n l).
-destruct YO as [YO1 [YO2 YO3]].
-rewrite -> YO3.
-apply H.
-unfold G.
-rewrite <- YO3.
-exact HH1.
-Defined.
-
-(** 5. MISC **)
-(* Lemmas START *)
-Lemma AND_EQV : forall A0 B0 A1 B1 : Prop, 
-(A0 <-> A1) -> (B0 <-> B1) -> ((A0 /\ B0) <-> (A1 /\ B1)).
-Proof.
-intros A0 B0 A1 B1 H0 H1.
-rewrite H0.
-rewrite H1.
-reflexivity.
-Defined.
-
-Lemma OR_EQV : forall A0 B0 A1 B1 : Prop, 
-(A0 <-> A1) -> (B0 <-> B1) -> ((A0 \/ B0) <-> (A1 \/ B1)).
-Proof.
-intros A0 B0 A1 B1 H0 H1.
-rewrite H0.
-rewrite H1.
-reflexivity.
-Defined.
-
-Lemma IMP_EQV : forall A0 B0 A1 B1 : Prop, 
-(A0 <-> A1) -> (B0 <-> B1) -> ((A0 -> B0) <-> (A1 -> B1)).
-Proof.
-intros A0 B0 A1 B1 H0 H1.
-rewrite H0.
-rewrite H1.
-reflexivity.
-Defined.
-
-Lemma FORALL_EQV {X}: forall A0 A1 : X -> Prop, 
-(forall m, A0 m <-> A1 m) -> ((forall m:X, A0 m) <-> (forall m:X, A1 m)).
-Proof.
-intros A0 A1 H0.
-split.
-+ intros.
-  rewrite <- H0.
-  exact (H m).
-+ intros.
-  rewrite -> H0.
-  exact (H m).
-Defined.
-
-Lemma EXISTS_EQV {X}: forall A0 A1 : X -> Prop, 
-(forall m, A0 m <-> A1 m) -> ((exists m:X, A0 m) <-> (exists m:X, A1 m)).
-Proof.
-intros A0 A1 H0.
-split.
-+ intros.
-  destruct H as [x Hx].
-  exists x.
-  rewrite <- H0.
-  exact (Hx).
-+ intros.
-  destruct H as [x Hx].
-  exists x.
-  rewrite -> H0.
-  exact (Hx).
-Defined.
-
-Import Bool.
-Lemma orb_elim (a b:bool): ((a||b)=false)->((a=false)/\(b=false)).
-Proof.
-intros. destruct a,b. 
-simpl in H. inversion H.
-simpl in H. inversion H.
-firstorder.
-firstorder.
-Defined.
-
-(*Lemma orb_intro (a b:bool): ((a=false)/\(b=false))->((a||b)=false).
-Proof.
-intros. firstorder.
-Defined.*)
-
-(*lm2*)
-(*Theorem conj_true_then_right (a b :bool)(G:true = (a && b) ): true = b.
-Proof.
-destruct a.
-trivial.
-inversion G.
-Defined.*)
-(* Lemmas END *)
 
 (** 6. SOUNDNESS **)
 (** Soundness theorem section **)
@@ -1394,14 +1414,14 @@ simpl in * |- *.
   (*1st done *)
 * firstorder.
 * apply AND_EQV.
-  apply IHfi1. destruct (orb_elim _ _ H). apply H0.
-  apply IHfi2. destruct (orb_elim _ _ H). apply H1.
+  apply IHfi1. destruct (orb_false_elim _ _ H). apply H0.
+  apply IHfi2. destruct (orb_false_elim _ _ H). apply H1.
 * apply OR_EQV.
-  apply IHfi1. destruct (orb_elim _ _ H). apply H0.
-  apply IHfi2. destruct (orb_elim _ _ H). apply H1.
+  apply IHfi1. destruct (orb_false_elim _ _ H). apply H0.
+  apply IHfi2. destruct (orb_false_elim _ _ H). apply H1.
 * apply IMP_EQV.
-  apply IHfi1. destruct (orb_elim _ _ H). apply H0.
-  apply IHfi2. destruct (orb_elim _ _ H). apply H1.
+  apply IHfi1. destruct (orb_false_elim _ _ H). apply H0.
+  apply IHfi2. destruct (orb_false_elim _ _ H). apply H1.
 * apply FORALL_EQV. intro m0.
   destruct (SetVars.eqb x xi) eqn:e1.
   pose (C:=proj1 (SetVars.eqb_eq x xi) e1).
@@ -1704,7 +1724,6 @@ induction m (* eqn: meq *); intros lfi (*val*).
   apply lfi. (*  exact (IHm2 IHm1).*)
 + simpl in * |- *.
   intro m0.
-
 eapply strong_correct.
 exact m.
 intros h J.
