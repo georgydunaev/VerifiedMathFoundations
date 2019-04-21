@@ -438,16 +438,6 @@ exact x.
 apply a1.
 Defined.
 
-Fixpoint notGenWith (xi:SetVars)(l:list Fo)
-(B:Fo)(m:(PREPR l B)){struct m}:bool.
-Proof.
-destruct m eqn: o.
-+ exact true.
-+ exact true.
-+ exact (andb (notGenWith xi l _ p1) (notGenWith xi l _ p2)).
-+ exact (andb (negb (SetVars.eqb xi xi0)) (notGenWith xi l _ p) ). 
-Defined.
-
 Import Bool.Bool.
 Export Coq.Lists.List.
 (*EXPERIMENTAL:*)
@@ -482,126 +472,19 @@ destruct m.
     apply nic. left. trivial.
 Defined.
 
-(* OLD: *)
-(*
-Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons  A il) B)) 
-(H:forall xi:SetVars, (isParamF xi A = true) ->(notGenWith xi _ _ m = true))
-{struct m}:(PREPR il (A-->B)).
-Proof.
-destruct m. (*as [i|i|i|i|i|i|i].*)
-+ (*unfold InL in i.*)
-  simpl in i.
-  destruct i.
-  - rewrite <- e.
-    exact (AtoA A).
-  - (* simpl in H. *)
-    apply a1i.
-    apply hyp_E with (ctx:=il) (1:=i).
-+ apply a1i.
-  apply Hax_E, p.
-+ apply MP_E with (A:= (A-->A0)).
-  - simple refine (@Ded _ _ _ _ _).
-    1 : exact m1.
-    intros xi H0.
-    assert (W:=H xi H0).
-    simpl in W.
-    assert (J:=notGenWith xi (A :: il) A0 m1).
-    apply my_andb_true_eq in W as [W _].
-    exact W.
-  - apply MP_E with (A:= (A-->(A0-->B))).
-    * simple refine (@Ded _ _ _ _ _).
-      exact m2.
-      intros xi H0.
-      assert (W:=H xi H0).
-      simpl in W.
-      apply my_andb_true_eq in W as [_ W].
-      exact W.
-    * apply a2.
-+ (*Last part about GEN*)
-  apply MP_E with (A:= (Fora xi (A-->A0))).
-  - eapply GEN_E.
-    { intros A1 M. apply nic. right. exact M. }
-    simple refine (@Ded _ _ _ _ _).
-    * exact m.
-    * intros xi0 H0.
-      assert (W:=H xi0 H0).
-      simpl in W.
-      apply my_andb_true_eq in W as [_ W]; exact W.
-  - simpl.
-    eapply Hax_E.
-    eapply Hb1.
-    apply nic. left. trivial.
-Defined.
-
-Lemma forClosed (A B:Fo)(m:(PREPR (cons A nil) B)):
-(forall xi:SetVars, (false = isParamF xi A))
-->
-(forall xi:SetVars, (true = isParamF xi A)->(true=notGenWith xi _ _ m)).
-Proof.
-intros H xi Q.
-rewrite <- H in Q.
-inversion Q.
-Defined.
-
-Theorem SimplDed (A B:Fo) (il: list Fo)(m:(PREPR (cons A il) B))
-(NP:forall xi:SetVars, (isParamF xi A = false)) 
-:(PREPR il (A-->B)).
-Proof.
-simple refine (Ded _ _ _ _ _).
-+ exact m.
-+ intros xi H.
-  rewrite -> NP in H.
-  inversion H.
-Defined.
-*)
-(* Examples: *)
-(* OLD:
-Definition swapSIMPL ctx A B C
-(HA : forall xi : SetVars.t, isParamF xi A = false)
-(HB : forall xi : SetVars.t, isParamF xi B = false)
-(HC : forall xi : SetVars.t, isParamF xi C = false) :
-(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
-Proof.
-unshelve eapply SimplDed.
-2 : { intro xi. simpl.
-apply orb_false_intro. apply HA.
-apply orb_false_intro. apply HB. apply HC.
-}
-unshelve eapply SimplDed. 2 : apply HB.
-unshelve eapply SimplDed. 2 : apply HA.
-apply MP_E with (A:=B) .
-+ apply hyp_E.
-  simpl. firstorder. (*apply inr.*)
-+ apply MP_E with (A:=A) .
-  apply hyp_E; firstorder.
-  apply hyp_E; firstorder.
-Defined.
-*)
-Definition swapSIMPL ctx A B C :
+Definition swap_args ctx A B C :
 (PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
 Proof.
 unshelve eapply Ded.
-(*2 : { intro xi. simpl.
-apply orb_false_intro. apply HA.
-apply orb_false_intro. apply HB. apply HC.
-}*)
-unshelve eapply Ded. (* 2 : apply HB. *)
-unshelve eapply Ded. (* 2 : apply HA. *)
+unshelve eapply Ded.
+unshelve eapply Ded.
 apply MP_E with (A:=B) .
 + apply hyp_E.
-  simpl. firstorder. (*apply inr.*)
+  simpl. firstorder.
 + apply MP_E with (A:=A) .
   apply hyp_E; firstorder.
   apply hyp_E; firstorder.
 Defined.
-
-(* It is also true:
-Definition swap ctx A B C :
-(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
-Proof.
-unshelve eapply SimplDed.
-Admitted.
-*)
 
 (** 9. SOUNDNESS **)
 (* Soundness theorem section *)
