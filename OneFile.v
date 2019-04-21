@@ -450,25 +450,58 @@ Defined.
 
 Import Bool.Bool.
 Export Coq.Lists.List.
+(*EXPERIMENTAL:*)
+Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons  A il) B)) 
+{struct m}:(PREPR il (A-->B)).
+Proof.
+destruct m.
++ simpl in i.
+  destruct i.
+  - rewrite <- e.
+    exact (AtoA A).
+  - apply a1i.
+    apply hyp_E with (ctx:=il) (1:=i).
++ apply a1i.
+  apply Hax_E, p.
++ apply MP_E with (A:= (A-->A0)).
+  - simple refine (@Ded _ _ _ _).
+    1 : exact m1.
+  - apply MP_E with (A:= (A-->(A0-->B))).
+    * simple refine (@Ded _ _ _ _).
+      exact m2.
+    * apply a2.
++ (*Last part about GEN*)
+  apply MP_E with (A:= (Fora xi (A-->A0))).
+  - eapply GEN_E.
+    { intros A1 M. apply nic. right. exact M. }
+    simple refine (@Ded _ _ _ _ ).
+    * exact m.
+  - simpl.
+    eapply Hax_E.
+    eapply Hb1.
+    apply nic. left. trivial.
+Defined.
 
+(* OLD: *)
+(*
 Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons  A il) B)) 
 (H:forall xi:SetVars, (isParamF xi A = true) ->(notGenWith xi _ _ m = true))
 {struct m}:(PREPR il (A-->B)).
 Proof.
 destruct m. (*as [i|i|i|i|i|i|i].*)
-+ unfold In in i.
-  simpl in i .
-  destruct i .
++ (*unfold InL in i.*)
+  simpl in i.
+  destruct i.
   - rewrite <- e.
     exact (AtoA A).
-  - simpl in H.
+  - (* simpl in H. *)
     apply a1i.
     apply hyp_E with (ctx:=il) (1:=i).
 + apply a1i.
   apply Hax_E, p.
 + apply MP_E with (A:= (A-->A0)).
   - simple refine (@Ded _ _ _ _ _).
-    exact m1.
+    1 : exact m1.
     intros xi H0.
     assert (W:=H xi H0).
     simpl in W.
@@ -520,8 +553,9 @@ simple refine (Ded _ _ _ _ _).
   rewrite -> NP in H.
   inversion H.
 Defined.
-
+*)
 (* Examples: *)
+(* OLD:
 Definition swapSIMPL ctx A B C
 (HA : forall xi : SetVars.t, isParamF xi A = false)
 (HB : forall xi : SetVars.t, isParamF xi B = false)
@@ -535,6 +569,24 @@ apply orb_false_intro. apply HB. apply HC.
 }
 unshelve eapply SimplDed. 2 : apply HB.
 unshelve eapply SimplDed. 2 : apply HA.
+apply MP_E with (A:=B) .
++ apply hyp_E.
+  simpl. firstorder. (*apply inr.*)
++ apply MP_E with (A:=A) .
+  apply hyp_E; firstorder.
+  apply hyp_E; firstorder.
+Defined.
+*)
+Definition swapSIMPL ctx A B C :
+(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
+Proof.
+unshelve eapply Ded.
+(*2 : { intro xi. simpl.
+apply orb_false_intro. apply HA.
+apply orb_false_intro. apply HB. apply HC.
+}*)
+unshelve eapply Ded. (* 2 : apply HB. *)
+unshelve eapply Ded. (* 2 : apply HA. *)
 apply MP_E with (A:=B) .
 + apply hyp_E.
   simpl. firstorder. (*apply inr.*)
