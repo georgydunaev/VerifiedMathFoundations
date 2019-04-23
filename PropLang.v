@@ -668,24 +668,11 @@ destruct (foI_bo A), (foI_bo B); firstorder.
 (* Completeness *)
 Axiom classicT : forall (P : Prop), {P} + {~ P}.
 Axiom classicType : forall (P : Type), sum P (P->False).
+Axiom NNPP_Type : forall p : Type, ((p->False)->False) -> p.
 
-Theorem choice :
- forall (A B : Type) (R : A->B->Prop),
-   (forall x : A, exists y : B, R x y) ->
-    exists f : A->B, (forall x : A, R x (f x)).
-Proof. intros.
-Abort.
-
-(*Context (Delta:Fo->Type) (CG:complete Delta).
-Definition nu (p:PropVars.t) : bool
-:= if (classicType (PR PROCA Delta p)) then true else false.
-*)
 Definition fu : Prop -> bool := fun P => 
 if (classicT P) then true else false.
-(*with
-| left _ => true
-| right _ => false
-end.*)
+
 Definition fuT : Type -> bool := fun P => 
 if (classicType P) then true else false.
 
@@ -747,11 +734,6 @@ destruct (K p).
 reflexivity.
 Defined.
 
-(*
-Coercion ffu := fu.
-Definition Q (n:nat) := if (fu(n=n)) then true else false.
-Fail Definition Q (n:nat) := if ((n=n)) then true else false.
-*)
 (* Consistent *)
 Definition consi G :=
  (sigT (fun A=> prod (PR PROCA G A) (PR PROCA G (Neg A)))->False).
@@ -776,10 +758,6 @@ match n with
          if (fu(consi extctx)) then extctx else (fam n)
 end.
 
-(*Context (fam : nat -> (Fm->Prop)). *)
-(*sigT     existT
-exists   ex_intro *)
-(*"exists"*)
 Definition Delta : Fo->Type := fun f=> sigT (fun n=> fam n f).
 
 Definition fam_mon f n : fam n f -> fam (S n) f.
@@ -793,10 +771,6 @@ Defined.
 
 (* Here we find the smallest n,
  such that $\Gamma_n$ can prove A *)
-Lemma max_m0 m : (Nat.max m 0) = m.
-Proof.
-induction m. trivial. simpl. reflexivity.
-Defined.
 
 Section finite_argument.
 Definition small (A : Fo) (p : PR PROCA Delta A) : nat.
@@ -807,34 +781,8 @@ induction p.
 + exact (max IHp1 IHp2).
 Defined.
 
-(*bad*)
-
-(*
-Lemma grea a b : a <= max a b.
-induction a, b.
-+ apply le_n.
-+ simpl. apply le_S. induction b. trivial. apply le_S. assumption.
-+ simpl. apply le_n.
-+ simpl.  simpl in IHa.
-apply le_n_S. exact IHa.
-firstorder.
-
-(*unfold max.*)
-induction a.
-+ induction b.
-  - apply le_n.
-  - apply le_S. exact IHb.
-+ simpl.
-   induction b.
-  - apply le_n.
-  - apply le_n_S.
-simpl in IHa.
-apply le_S. exact IHb.
-simpl.*)
-
-
 Section upward_inhabited_family.
-(* Author of section: ejgallego
+(* Author of this section: ejgallego
 https://stackoverflow.com/users/1955696/ejgallego *)
 Context (fam : nat -> Type).
 Context (fam_mon : forall n, fam n -> fam (S n)).
@@ -846,20 +794,11 @@ Lemma mxinh m n (hb : fam n) : fam (max n m).
 Proof. exact (fam_leq _ _ (Nat.le_max_l _ _) hb). Qed.
 End upward_inhabited_family.
 
-
 Lemma indstep1 m n (A : Fo) (c : fam n A) : fam (max n m) A.
 Proof.
 apply (mxinh (fun k=>fam k A) (fam_mon A)).
 assumption.
 Defined.
-(*induction m; simpl.
-exact c.
-induction n.
-apply fam_mon.
-rewrite max_m0 in IHm.
-exact IHm.
-Admitted. (*Nat.max*)*)
-
 
 Theorem max_sym n : forall m, (max m n) = (max n m).
 Proof.
@@ -868,20 +807,6 @@ induction n.
 + intros. simpl. induction m; try trivial.
 simpl. apply f_equal. apply IHn.
 Defined.
-
-(*
-Theorem max_sym m n : (max m n) = (max n m).
-Proof.
-induction m,n.
-+ trivial.
-+ simpl. trivial.
-+ simpl. trivial.
-+ simpl. trivial.
-simpl in IHm.
-unfold Nat.max.
-Admitted.
-*)
-(*/bad*)
 
 Lemma lemJ0 A Q R: PR PROCA (fam Q) A ->
  PR PROCA (fam (max Q R)) A.
@@ -894,10 +819,6 @@ intro x. induction x.
   - apply IHx1.
   - apply IHx2.
 Defined.
-
-(*Lemma lemJ1 A Q R: PR PROCA (fam R) A ->
- PR PROCA (fam (max Q R)) A.
-Admitted.*)
 
 Definition it_works (A : Fo) (p : PR PROCA Delta A) :
 PR PROCA (fam (small A p)) A .
@@ -912,53 +833,7 @@ induction p.
   - apply lemJ0. exact IHp1.
   - rewrite max_sym. apply lemJ0. exact IHp2.
 Defined.
-
-(*
-Lemma Nat.max m (S n) 
-simpl in IHm.
- simpl.
-Lemma indstep m n (W:n<=m) (A : Fo) (c : fam n A) : fam m A.
-Proof.
-le
-induction W.
-pose (t:=(m - n)).
-induction t eqn:h.
-2 : {
-destruct m.
-(*destruct (lt n m).
-destruct W. "<=" le*)
-Abort.*)
-(*
-Lemma gr_easy m n A :
- PR PROCA (fam n) A -> PR PROCA (fam (max m n)) A.
-Proof. intro H.
-induction H.
-+ apply hyp.1 apply lemJ1.
-Abort.*)
-(*
-Require Import Omega.
-Require Import Arith.
-PeanoNat.max
-
-auto with arith.
-omega.
-firstorder.
-auto.
-apply IHp1.
-
-PR
-(*+ destruct c as [x fxA]. exact x.
-+ exact 0.
-+ exact (max IHp1 IHp2).
-Defined.*)
-Admitted.
-
-simpl in *|-*.*)
-
-(*Theorem finite_proof (A : Fo) (p : PR PROCA Delta A)
-:  .*)
 End finite_argument.
-
 
 Lemma consi_fam n : consi (fam n).
 Proof.
@@ -976,7 +851,6 @@ Theorem condel : consi Delta.
 Proof.
 unfold consi.
 intros [A [p1 p2]].
-(*apply (it_works A) in p1.*)
 assert (q1:=it_works _ p1).
 assert (q2:=it_works _ p2).
 eapply lemJ0 in q1.
@@ -1001,8 +875,6 @@ induction H.
 + apply Hax. exact a.
 + eapply MP. exact IHPR1. exact IHPR2.
 Defined.
-
-Axiom NNPP_Type : forall p : Type, ((p->False)->False) -> p.
 
 Theorem comdel : complete Delta.
 Proof.
@@ -1035,8 +907,8 @@ destruct (classicT (consi extctx)).
   exact H1.
 Defined.
 End W.
+
 (* p.49 *)
-(* Check classicT False. sumbool*)
 Section lemma2.
 Context (Delta:Fo->Type) (CG:complete Delta).
 Definition nu (p:PropVars.t) : bool
@@ -1066,28 +938,25 @@ induction A.
 + split;simpl;intros p.
   - rewrite andb_true_iff in p.
     destruct p as [p1 p2].
-destruct IHA1 as [IHA1 _]. apply IHA1 in p1.
-destruct IHA2 as [IHA2 _]. apply IHA2 in p2.
-eapply MP.
-2 : eapply MP.
-3 : eapply Hax, Intui, Ha5.
-exact p2.
-exact p1.
--
-destruct IHA1 as [_ IHA1].
-destruct IHA2 as [_ IHA2].
-(*apply andb_false_iff in p.
-Fail destruct p.*)
-apply andb_false_elim in p.
-destruct p.
-* apply IHA1 in e.
-  eapply MP. exact e.
-  apply contrap.
-  apply Hax, Intui, Ha3.
-* apply IHA2 in e.
-  eapply MP. exact e.
-  apply contrap.
-  apply Hax, Intui, Ha4.
+    destruct IHA1 as [IHA1 _]. apply IHA1 in p1.
+    destruct IHA2 as [IHA2 _]. apply IHA2 in p2.
+    eapply MP.
+    2 : eapply MP.
+    3 : eapply Hax, Intui, Ha5.
+    exact p2.
+    exact p1.
+  - destruct IHA1 as [_ IHA1].
+    destruct IHA2 as [_ IHA2].
+    apply andb_false_elim in p.
+    destruct p.
+    * apply IHA1 in e.
+      eapply MP. exact e.
+      apply contrap.
+      apply Hax, Intui, Ha3.
+    * apply IHA2 in e.
+      eapply MP. exact e.
+      apply contrap.
+      apply Hax, Intui, Ha4.
 + split;simpl;intros p.
   - apply orb_true_elim in p.
     destruct p.
@@ -1132,16 +1001,6 @@ destruct p.
       apply weak, IHA1.
     * inversion p.
 Defined.
-
-(*Theorem lemma2 : fu*)
-(*
-Lemma lem_2_1 (A:Fo): if (foI_bo nu A)
- then (PR PROCA Delta A) else (PR PROCA Delta (Neg A)).
-Proof.
-induction A.
-+ simpl. unfold nu.
-induction (fuT (PR PROCA Delta p))eqn:b.
-*)
 End lemma2.
 
 Definition satisf ctx : Prop :=
@@ -1166,8 +1025,6 @@ split.
 - exact ctxg.
 - exact H0.
 Defined.
-Check Delta.
-Check pr_del_mon.
 
 Lemma satsubctx ctx CTX 
 (i:forall x, ctx x -> CTX x):
@@ -1178,6 +1035,7 @@ intros [v H].
 exists v. intros g cg.
 apply H, i, cg.
 Defined.
+
 Lemma lem3 ctx : forall x : Fo, ctx x -> Delta ctx x.
 Proof.
 intros.
@@ -1195,17 +1053,6 @@ apply compl.
 apply comdel.
 exact H.
 Defined.
-
-(*Check delta_mon.
-unfold satisf.
-exists (nu ctx).
-intros g ctxg.
-destruct (classic (foI_bo (nu ctx) g = true)).
-+ assumption.
-+ apply not_true_iff_false in H0.
-Check lem_2_1.
-exfalso.
-Admitted.*)
 
 Definition inconsi G :=
  {A : Fo & (PR PROCA G A * PR PROCA G (Neg A))%type}.
@@ -1230,6 +1077,7 @@ eapply MP. exact p1.
 apply Hax, Intui, Ha10.
 Defined.
 
+(*
 Lemma dne ctx f : PR PROCA ctx (-.(-.f)) -> PR PROCA ctx f.
 Proof.
 intro H.
@@ -1246,12 +1094,36 @@ exact Q.
   apply Hax, Intui, Ha9.
 + apply AtoA.
 Defined.
+*)
+Lemma dne ctx f : PR PROCA ctx ((-.(-.f))-->f).
+Proof.
+apply Ded.
+assert (Q:PR PROCA ctx (f -\/ (-.f))).
+{ apply Hax, Ha11. }
+eapply MP.
+apply weak.
+exact Q.
+1 : eapply MP.
+2 : eapply MP.
+3 : { eapply Hax, Intui, Ha8. }
++ apply Ded.
+  eapply MP. apply hyp. left. reflexivity.
+  eapply MP.
+  - apply weak.  apply hyp. left. reflexivity. 
+  - apply Hax, Intui, Ha9.
++ apply AtoA.
+Defined.
+
+Lemma dnei ctx f : PR PROCA ctx (-.(-.f)) -> PR PROCA ctx f.
+Proof.
+intro H. eapply MP. exact H. apply dne.
+Defined.
 
  Theorem cmpl_bo f
 (H: forall (val:PropVars.t->bool), (foI_bo val f)=true)
  : PR PROCA empctx f.
 Proof.
-apply dne.
+apply dnei.
 apply vse.
 apply cimp.
 intro J.
@@ -1268,28 +1140,7 @@ destruct (foI_bo val f).
 + inversion H.
 Defined.
 
-(*
-Axiom classicType : forall T : Type, sum T (T->False).
-destruct (classicType (Delta A)). 
-- left. apply hyp. exact d.
-- right.
-assert (easyly: forall i, fam i A -> False).
-admit.
-pose (i:=remon (Neg A)).
-Check fam (remon (Neg A)).
-(*assert (D:(PR PROCA Delta A->False)
- *(PR PROCA Delta (Neg A)->False)).
-admit.
-exfalso.
-destruct D as [D1 D2].
-Delta
-Check remon A.
-Theorem yorn A : Delta*)
-Print fam.
-Admitted.*)
 End natnum.
-
-Check cmpl_bo.
 
 
 
