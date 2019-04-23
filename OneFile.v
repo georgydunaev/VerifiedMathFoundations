@@ -6,8 +6,7 @@ Require Import Coq.Vectors.Vector.
 Require Import Coq.Structures.Equalities.
 
 (* Firstly I prove some lemmas, then the module "ALL_mod" contains
-the soundness theorem of predicate logic.
-*)
+the soundness theorem of the predicate logic. *)
 
 (** 1. SOME NOTATIONS **)
 Notation Omega := Prop.
@@ -169,6 +168,7 @@ Defined.
 
 (*** PREDICATE CALCULUS ***)
 Module ALL_mod (SetVars FuncSymb PredSymb : UsualDecidableTypeFull).
+Module Facts := BoolEqualityFacts SetVars.
 
 (** 5. TERMS **)
 Record FSV := {
@@ -425,8 +425,6 @@ Defined.
 Notation SetVars := SetVars.t (only parsing).
 Notation FuncSymb := FuncSymb.t (only parsing).
 Notation PredSymb := PredSymb.t (only parsing).
-
-Module Facts := BoolEqualityFacts SetVars.
 
 Definition neg (f:Fo):= (Impl f Bot).
 
@@ -831,7 +829,7 @@ simpl in * |- *.
   pose (D:= dbl_cng mu x m m0).
   exact (weafunF _ _ D fi).
   rewrite cng_commF_EQV.
-  (* IHfi is a inductive hypotheis *)
+  (* IHfi is an inductive hypotheis *)
   apply IHfi.
   exact H.
   rewrite <-(eqb_comm xi x).
@@ -845,7 +843,7 @@ simpl in * |- *.
   assert (D:= dbl_cng mu x m m0).
   exact (weafunF _ _ D fi).
   rewrite cng_commF_EQV.
-  (* IHfi is a inductive hypothesis*)
+  (* IHfi is an inductive hypothesis*)
   apply IHfi.
   exact H.
   rewrite <-(eqb_comm xi x).
@@ -1013,13 +1011,12 @@ apply H0.
 Defined.
 
 (* SOUNDNESS OF THE PREDICATE CALCULUS *)
-Fixpoint strong_correct (f:Fo) (l:list Fo) (m : PREPR l f) 
-(val:SetVars.t->X)
-(lfi : forall  (h:Fo), (InL h l)->
-(@foI X fsI prI val h)) {struct m}: @foI X fsI prI val f.
+Theorem soundness (f:Fo) (l:list Fo) (m : PREPR l f) :
+ forall (val:SetVars.t->X),
+ (forall h:Fo, (InL h l) -> (@foI X fsI prI val h)) ->
+  @foI X fsI prI val f.
 Proof.
-revert lfi.
-induction m; intros lfi.
+induction m; intros val lfi.
 + exact (lfi A i).
 + destruct p eqn:k.
   ++ destruct p0.
@@ -1061,14 +1058,69 @@ induction m; intros lfi.
   apply lfi.
 + simpl in * |- *.
   intro m0.
-eapply strong_correct.
-exact m.
-intros h J.
-apply <- NPthenNCACVF.
-2 : { apply nic. exact J. }
-apply lfi. exact J.
+  eapply IHm. (* IHm is a (soundness A l) *)
+  intros h J.
+  apply <- NPthenNCACVF.
+  2 : { apply nic. exact J. }
+  apply lfi. exact J.
 Defined.
 
 End cor.
+
+(*Include replace_variable_with_itself.*)
+Fixpoint replxixiF (xi:SetVars.t) A: substF xi xi A = Some A.
+Proof.
+Admitted.
+
+Lemma forall_swap A x y :
+ PREPR nil (Fora y (Fora x A) --> Fora y (Fora x A)).
+Proof.
+apply Ded.
+apply GEN_E.
++ intros B [H1|H2].
+  - rewrite <- H1.
+    simpl.
+    rewrite Facts.eqb_refl. trivial.
+  - destruct H2.
++ apply GEN_E.
+  - intros B [H1|H2].
+    * rewrite <- H1.
+      simpl.
+      rewrite Facts.eqb_refl.
+      destruct (SetVars.eqb y x); trivial.
+    * destruct H2.
+  - eapply MP_E.
+    2 : { apply Hax_E.
+          eapply (Ha12 A x x).
+          apply replxixiF. }
+  * eapply MP_E.
+    2 : { apply Hax_E.
+          eapply (Ha12 (Fora x A) y y).
+          apply replxixiF. }
+  apply hyp_E. left. trivial.
+Defined.
+
+(*Check eqb_refl.
+(*Import Facts.*)
+Check Facts.eqb_refl.
+SetVars.eqb_refl.
+_refl.*)
+
+Section notation.
+(*Context ()*)
+Inductive NTerms : Type :=
+  | NFVC : SetVars.t -> NTerms
+  | NFSC : forall f : FSV, t NTerms (fsv f) -> NTerms
+.
+Inductive NFo :=
+ |NAtom (p:PSV) : (Vector.t NTerms (psv p)) -> NFo
+ |NBot :NFo
+ |NConj:NFo->NFo->NFo
+ |NDisj:NFo->NFo->NFo
+ |NImpl:NFo->NFo->NFo
+ |NFora(x:SetVars.t)(f:NFo): NFo
+ |NExis(x:SetVars.t)(f:NFo): NFo
+.
+End notation.
 
 End ALL_mod.
