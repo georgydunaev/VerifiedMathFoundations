@@ -1,6 +1,5 @@
 (* Author: Georgy Dunaev, georgedunaev@gmail.com *)
 Require Import Bool.
-Require Import Coq.Vectors.Vector.
 Require Import Coq.Lists.List.
 Require Import Coq.Vectors.Vector.
 Require Import Coq.Structures.Equalities.
@@ -8,7 +7,7 @@ Require Import Coq.Structures.Equalities.
 (* Firstly I prove some lemmas, then the module "ALL_mod" contains
 the soundness theorem of the predicate logic. *)
 
-(** 1. SOME NOTATIONS **)
+(** 1. NOTATIONS **)
 Notation Omega := Prop.
 Definition OFalse := False.
 Definition OAnd := and.
@@ -17,7 +16,7 @@ Definition OImp := (fun x y:Omega => x->y).
 
 (** 2. TRIVIAL LEMMAS **)
 Lemma my_andb_true_eq :
-  forall a b:bool, a && b = true -> a = true  /\ b = true.
+  forall a b:bool, a && b = true -> a = true /\ b = true.
 Proof.
   destr_bool. auto.
 Defined.
@@ -32,14 +31,14 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
 (** 3. ALL THEN SOME (VECTOR) **)
 Import VectorNotations.
 
-Fixpoint ATS_B2 (n:nat) (l:t bool n) :fold_left orb true l  = true.
+Fixpoint ATS_B2 (n:nat) (l:t bool n) :fold_left orb true l = true.
 Proof.
 destruct l; simpl.
 reflexivity.
 apply ATS_B2.
 Defined.
 
-Fixpoint B0 b (n:nat) (l:t bool n) : 
+Fixpoint ATS_B0 b (n:nat) (l:t bool n) : 
 fold_left orb false (b :: l)  = orb b (fold_left orb false l) .
 Proof.
 destruct l.
@@ -87,14 +86,14 @@ destruct l.
     intros.
     simpl.
     unfold ATS_G in H.
-    rewrite -> (B0 h n l) in H.
+    rewrite -> (ATS_B0 h n l) in H.
     apply orb_false_elim in H as [H _]; exact H.
   }
   { unfold P.
     intros.
     unfold ATS_G in H0.
     simpl in  |- *.
-    rewrite -> (B0 h (S n) l) in H0.
+    rewrite -> (ATS_B0 h (S n) l) in H0.
     apply orb_false_elim in H0 as [_ HH1].
     assert (YO := vp1 n l).
     destruct YO as [YO1 [YO2 YO3]].
@@ -107,6 +106,21 @@ destruct l.
 Defined.
 
 (** 4. MISC **)
+Definition ap {A B}{a0 a1:A} (f:A->B) (h:a0=a1):((f a0)=(f a1))
+:= match h in (_ = y) return (f a0 = f y) with
+   | eq_refl => eq_refl
+   end.
+
+Theorem SomeInj {foo} :forall (a b : foo), Some a = Some b -> a = b.
+Proof.
+  intros a b H.
+  inversion H.
+  reflexivity.
+Defined.
+
+Lemma EqualThenEquiv A B: A=B -> (A<->B).
+Proof. intro H. rewrite H. exact (iff_refl B). Defined.
+
 (* Lemmas START *)
 Lemma AND_EQV : forall A0 B0 A1 B1 : Prop,
  (A0 <-> A1) -> (B0 <-> B1) -> ((A0 /\ B0) <-> (A1 /\ B1)).
@@ -198,6 +212,43 @@ Definition Terms_ind (T : Terms -> Prop)
         end in
       H_FSC f v (loopv _ v)
     end.
+
+(* the next is useless for our aim *)
+Definition Terms_rect (T : Terms -> Type)
+                      (H_FVC : forall sv, T (FVC sv))
+                      (H_FSC : forall f v, (forall n, T (Vector.nth v n)) -> T (FSC f v)) :=
+  fix loopt (t : Terms) : T t :=
+    match t with
+    | FVC sv  => H_FVC sv
+    | FSC f v =>
+      let fix loopv s (v : Vector.t Terms s) : forall n, T (Vector.nth v n) :=
+        match v with
+        | @Vector.nil _ => Fin.case0 _
+        | @Vector.cons _ t _ v => fun n => Fin.caseS' n (fun n => T (Vector.nth (Vector.cons _ t _ v) n))
+                                                      (loopt t)
+                                                      (loopv _ v)
+        end in
+      H_FSC f v (loopv _ v)
+    end.
+
+(* the next is useless for our aim *)
+Definition Terms_rec (T : Terms -> Set)
+                      (H_FVC : forall sv, T (FVC sv))
+                      (H_FSC : forall f v, (forall n, T (Vector.nth v n)) -> T (FSC f v)) :=
+  fix loopt (t : Terms) : T t :=
+    match t with
+    | FVC sv  => H_FVC sv
+    | FSC f v =>
+      let fix loopv s (v : Vector.t Terms s) : forall n, T (Vector.nth v n) :=
+        match v with
+        | @Vector.nil _ => Fin.case0 _
+        | @Vector.cons _ t _ v => fun n => Fin.caseS' n (fun n => T (Vector.nth (Vector.cons _ t _ v) n))
+                                                      (loopt t)
+                                                      (loopv _ v)
+        end in
+      H_FSC f v (loopv _ v)
+    end.
+
 
 Fixpoint substT (t:Terms) (xi: SetVars.t) (u:Terms): Terms
 :=
@@ -393,14 +444,16 @@ PRECA (Impl (Fora xi (Impl ps ph)) (Impl ps (Fora xi ph)) )
 PRECA (Impl (Fora xi (Impl ph ps)) (Impl (Exis xi ph) ps ) )
 .
 
+Definition NotParamC xi ctx :=
+ forall F : Fo, InL F ctx -> isParamF xi F = false.
+
 Section PREPR.
 Context (ctx:list Fo).
 Inductive PREPR : Fo -> Type :=
 | hyp_E (A : Fo) : (InL A ctx) -> (PREPR A)
 | Hax_E :> forall (A : Fo), (PRECA A) -> (PREPR A)
-| MP_E (A B: Fo) : (PREPR A) -> (PREPR (Impl A B)) ->(PREPR B)
-| GEN_E (A: Fo) (xi :SetVars.t)
-  (nic:forall A : Fo, (InL A ctx) -> (isParamF xi A = false))
+| MP_E (A B: Fo) : (PREPR A) -> (PREPR (Impl A B)) -> (PREPR B)
+| GEN_E (A: Fo) (xi :SetVars.t) (nic:NotParamC xi ctx)
   : (PREPR A) -> (PREPR (Fora xi A))
 .
 End PREPR.
@@ -422,11 +475,38 @@ apply Hax_E, PRO, Ha1.
 apply Hax_E, PRO, Ha2.
 Defined.
 
+(* Another style of the proof:
+Definition AtoA {ctx} (A:Fo) : PREPR ctx (A-->A).
+Proof.
+eapply MP_E.
+2 : { eapply MP_E.
+  2 : { apply Hax_E, PRO, Ha2. }
+  apply Hax_E, PRO, Ha1. }
+apply Hax_E, PRO, Ha1.
+Unshelve. exact A.
+Defined.
+*)
+
 Notation SetVars := SetVars.t (only parsing).
 Notation FuncSymb := FuncSymb.t (only parsing).
 Notation PredSymb := PredSymb.t (only parsing).
 
-Definition neg (f:Fo):= (Impl f Bot).
+Import Coq.Lists.List.
+
+(* Example: 1st Bernays Rule is admissable *)
+Definition B1 (ps ph:Fo) (xi:SetVars) ctx 
+ (H:isParamF xi ps = false)
+ (T:NotParamC xi ctx) :
+ PREPR ctx (ps --> ph) -> PREPR ctx (ps --> Fora xi ph).
+Proof.
+intro q.
+apply MP_E with (A:=(Fora xi (ps --> ph))).
++ apply (GEN_E).
+  exact T.
+  exact q.
++ apply (b1 _).
+  exact H.
+Defined.
 
 Definition a1i (A B : Fo)(l : list Fo):(PREPR l B)->(PREPR l (Impl A B)).
 Proof.
@@ -436,10 +516,24 @@ exact x.
 apply a1.
 Defined.
 
-Import Bool.Bool.
-Export Coq.Lists.List.
-(*EXPERIMENTAL:*)
-Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons  A il) B)) 
+(* Example: Generalization from 1st Bernay's rule*)
+Definition gen (A:Fo) (xi:SetVars) ctx
+ (T:NotParamC xi ctx)
+ : PREPR ctx (A) -> PREPR ctx (Fora xi A).
+Proof.
+intro q.
+apply MP_E with (A:= Top).
+unfold Top.
+exact (@AtoA ctx Bot).
+apply B1.
++ trivial.
++ exact T.
++ apply a1i.
+  exact q.
+Defined.
+
+(* Deduction theorem *)
+Fixpoint Ded (A B:Fo)(il:list Fo)(m:(PREPR (cons A il) B))
 {struct m}:(PREPR il (A-->B)).
 Proof.
 destruct m.
@@ -492,11 +586,6 @@ Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
 Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
 
 Section Lem1.
-Definition ap {A B}{a0 a1:A} (f:A->B) (h:a0=a1):((f a0)=(f a1))
-:= match h in (_ = y) return (f a0 = f y) with
-   | eq_refl => eq_refl
-   end.
-
 (* page 136 of the book *)
 Definition lem1 (t : Terms) : forall (u :Terms) 
 (xi : SetVars.t) (pi : SetVars.t->X) ,
@@ -583,14 +672,13 @@ destruct mu eqn:u0 ; simpl; intros xi t0 H.
   trivial.
   trivial.
   trivial.
-* 
-  apply orb_false_elim in H as [H0 H1].
+* apply orb_false_elim in H as [H0 H1].
   rewrite -> NPthenNCASF.
   rewrite -> NPthenNCASF.
   trivial.
   trivial.
   trivial.
-*  apply orb_false_elim in H as [H0 H1].
+* apply orb_false_elim in H as [H0 H1].
   rewrite -> NPthenNCASF.
   rewrite -> NPthenNCASF.
   trivial.
@@ -622,9 +710,6 @@ induction t.
   rewrite -> (nth_map (teI mu) v p2 p2 eq_refl).
   apply H.
 Defined.
-
-Lemma EqualThenEquiv A B: A=B -> (A<->B). 
-Proof. intro H. rewrite H. exact (iff_refl B). Defined.
 
 Lemma weafunF (pi mu:SetVars.t->X) (q: forall z, pi z = mu z) fi :
  @foI X fsI prI pi fi <-> @foI X fsI prI mu fi.
@@ -719,13 +804,6 @@ assert (U2:= proj2 (SetVars.eqb_eq xe xi) U1).
 rewrite U2 in H.
 inversion H.
 reflexivity. reflexivity. reflexivity.
-Defined.
-
-Theorem SomeInj {foo} :forall (a b : foo), Some a = Some b -> a = b.
-Proof.
-  intros a b H.
-  inversion H.
-  reflexivity.
 Defined.
 
 Lemma lem2caseAtom : forall (p : PSV) (t0 : Vector.t Terms (psv p))
@@ -1067,9 +1145,13 @@ Defined.
 
 End cor.
 
+(* ============ END OF THE TEXT ============ *)
+
+
 (*Include replace_variable_with_itself.*)
 Fixpoint replxixiF (xi:SetVars.t) A: substF xi xi A = Some A.
 Proof.
+
 Admitted.
 
 Lemma forall_swap A x y :
