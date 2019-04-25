@@ -39,7 +39,7 @@ Module PropFormulasNotationsASCII.
 End PropFormulasNotationsASCII.
 Export PropFormulasNotationsASCII.
 Open Scope protxtnot.
- (* BEGIN experimental *)
+(* (* BEGIN experimental *)
  Section exper_1.
  Inductive PROCAI_1 : Fo -> Type :=
  | eHa1  (A B:PropVars.t) :  PROCAI_1 (A-->(B-->A))%otd
@@ -57,7 +57,7 @@ Open Scope protxtnot.
  .
  End exper_1.
  (* END experimental *)
-
+*)
 (*Section ooop.
 Context (Y:Type).
 Definition HH1 := list Y.
@@ -109,13 +109,13 @@ list*)
  | Ha9  : forall A B, PROCAI (-.A --> (A --> B) )
  | Ha10  : forall A B, PROCAI ((A-->B)-->(A -->-.B)-->-.A)
  .
-
+(*
  Theorem exper1 (A:Fo): (PROCAI_1 A) -> (PROCAI A).
  Proof.
  intro H.
  destruct H; constructor.
  Defined.
-
+*)
  (* Proposional calculus' axioms (Classical) *)
  Inductive PROCA : Fo -> Type :=
  | Intui :> forall f, PROCAI f -> PROCA f
@@ -156,6 +156,7 @@ list*)
  + apply lMP with A; assumption.
  Defined.
 
+(*
  Theorem experB1 {ctx} (A:Fo) :
   (PR PROCAI_1 ctx A) -> (PR PROCAI ctx A).
  Proof.
@@ -165,6 +166,7 @@ list*)
  apply Hax, exper1, a.
  eapply MP. exact IHPR1. exact IHPR2.
  Defined.
+*)
 
 Section subst_sec.
  Context (p:PropVars.t) (B:Fo).
