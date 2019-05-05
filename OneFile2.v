@@ -1176,6 +1176,22 @@ Section Troelstra.
 Context (X:Type).
 Context (fsI:forall(q:FSV),(Vector.t X (fsv q))->X).
 Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
+Lemma fresh_variable
+(A r : Fo)
+(y x : SetVars.t)
+(Hr : substF y x A = Some r)
+(v : SetVars.t -> X):
+@foI X fsI prI v A <-> @foI X fsI prI (cng v y (v x)) r.
+Proof.
+induction A.
++ simpl in *|-*.
+  apply SomeInj in Hr.
+  rewrite <- Hr.
+  simpl.
+  apply EqualThenEquiv.
+  apply f_equal.
+Admitted.
+
 Definition Satisf val f := (@foI X fsI prI val f).
 Definition SatisfC val l :=
 (forall h:Fo, (l h) -> Satisf val h).
@@ -1183,13 +1199,58 @@ Definition Entails l f :=
  forall val, SatisfC val l -> Satisf val f.
 Section thm.
 Context (A D r:Fo) (y x:SetVars) (Gamma:CTX)
-(Hr:substF y x A = Some r) (m:Entails (add2ctx r Gamma) D).
+(Hr:substF y x A = Some r) (j:Entails (add2ctx r Gamma) D).
 Context (H1:isParamF y A = false).
 Context (H2:isParamF y D = false).
 Context (H3:NotParamC y Gamma).
 Theorem renam : Entails (add2ctx A Gamma) D.
 Proof.
+intros v H.
+unfold Satisf.
+(* pose(w:=(fun m : SetVars.t =>
+ if SetVars.eqb m y then v x else v m)). *)
+unshelve eapply NPthenNCACVF.
+exact y.
+exact (v x).
+exact H2.
+eapply j.
+intros e Q.
+destruct Q.
++ unfold Satisf.
+destruct e0.
+unfold SatisfC in H.
+assert (Y:Satisf v A).
+{ apply H. left. reflexivity. }
+rewrite <- fresh_variable.
+exact Y.
+exact Hr.
++ unfold Satisf.
+unshelve rewrite -> NPthenNCACVF.
+apply H.
+right.
+exact g.
+apply H3.
+exact g.
+Defined.
+(* Check NPthenNCASF.
+unfold Satisf in Y. *)
+(*unshelve rewrite <- NPthenNCACVF in Y.
+exact y.
+exact (v x).*)
 
+(* end *)
+
+
+(* Check lem2 X fsI prI y A x v r Hr. *)
+rewrite <- lem2 in Y.
+pose (HA:=H A ).
+
+- unfold 
+(*unshelve eapply weafunF.
++ intro m.
+  exact (if (SetVars.eqb m y) then (v x) else (v m)).
++*)
+simpl in H.
 Abort.
 End thm.
 End Troelstra.
