@@ -28,6 +28,9 @@ fix InL (a : A) (l : list A) {struct l} : Type :=
   | b :: m => (sum (b = a) (InL a m))
   end.
 
+Theorem contraposition : forall p q:Prop, (p->q)->(~q->~p).
+Proof. intros. intro. apply H0. apply H. exact H1. Defined.
+
 (** 3. ALL THEN SOME (VECTOR) **)
 Import VectorNotations.
 
@@ -795,6 +798,159 @@ intros pi mu q.
     apply q.
 Defined.
 
+(** weak weafun theorems BEGIN **)
+(* it's for Torelsta's systems *)
+
+Lemma some_then_trueV
+     : forall (n : nat) (l : t bool n) (p : Fin.t n), l[@p] = true ->
+       Vector.fold_left orb false l = true.
+Proof.
+intros.
+apply not_false_is_true.
+eapply contraposition.
+refine (all_then_someV _ _).
+intro W.
+assert (Q:=W p).
+rewrite Q in H.
+inversion H.
+Defined.
+
+Lemma wweafunT pi mu t
+ (q: forall z, isParamT z t=true -> pi z = mu z) :
+ @teI X fsI pi t = @teI X fsI mu t.
+Proof.
+induction t.
++ simpl. apply q. simpl. exact (Facts.eqb_refl sv).
++ simpl. apply ap.
+  apply eq_nth_iff.
+  intros p1 p2 HU.
+  rewrite -> (nth_map (teI pi) v p1 p2 HU).
+  rewrite -> (nth_map (teI mu) v p2 p2 eq_refl).
+  apply H.
+  { intros z S. apply q. simpl.
+eapply some_then_trueV.
+rewrite ( nth_map (isParamT z) v p2 p2 eq_refl).
+exact S. }
+Defined.
+
+Lemma fleft (fi1 fi2 : Fo) (C:SetVars.t->Omega) (q:forall z : SetVars.t, 
+isParamF z fi1 || isParamF z fi2 = true -> C z):
+ forall z : SetVars.t, isParamF z fi1  = true -> C z.
+Proof.
+{ intros z J. apply q. rewrite orb_true_iff. left. exact J. }
+Defined.
+
+Lemma fright (fi1 fi2 : Fo) (C:SetVars.t->Omega) (q:forall z : SetVars.t, 
+isParamF z fi1 || isParamF z fi2 = true -> C z):
+ forall z : SetVars.t, isParamF z fi2 = true -> C z.
+Proof.
+{ intros z J. apply q. rewrite orb_true_iff. right. exact J. }
+Defined.
+
+Lemma wweafunF (pi mu:SetVars.t->X) fi (q: forall z, isParamF z fi=true -> pi z = mu z) :
+ @foI X fsI prI pi fi <-> @foI X fsI prI mu fi.
+Proof.
+revert pi mu q.
+induction fi.
+intros pi mu q.
++ simpl.
+  apply EqualThenEquiv.
+  apply ap.
+  apply eq_nth_iff.
+  intros p1 p2 HU.
+  rewrite -> (nth_map (teI pi) t p1 p2 HU).
+  rewrite -> (nth_map (teI mu) t p2 p2 eq_refl).
+destruct HU.
+  apply wweafunT.
+  simpl in q.
+intros z Q.
+eapply q.
+eapply some_then_trueV.
+  rewrite -> (nth_map (isParamT z) t p1 p1 eq_refl).
+  exact Q.
++ simpl. reflexivity.
++ simpl. intros.
+assert (q1:=fleft fi1 fi2 (fun z=>pi z = mu z) q).
+assert (q2:=fright fi1 fi2 (fun z=>pi z = mu z) q).
+(*  eapply fright in q.
+  rewrite -> (IHfi1 pi mu q1).
+rewrite orb_true_iff in q.
+assert (q1: forall z : SetVars.t,
+    isParamF z fi1  = true ->
+    pi z = mu z).
+{ intros z J. apply q. rewrite orb_true_iff. left. exact J. } *)
+  rewrite -> (IHfi1 pi mu q1).
+  rewrite -> (IHfi2 pi mu q2).
+  reflexivity.
++ simpl. intros.
+assert (q1:=fleft fi1 fi2 (fun z=>pi z = mu z) q).
+assert (q2:=fright fi1 fi2 (fun z=>pi z = mu z) q).
+  rewrite -> (IHfi1 pi mu q1).
+  rewrite -> (IHfi2 pi mu q2).
+  reflexivity.
++ simpl.
+  unfold OImp.
+  intros.
+assert (q1:=fleft fi1 fi2 (fun z=>pi z = mu z) q).
+assert (q2:=fright fi1 fi2 (fun z=>pi z = mu z) q).
+  split;
+   intros;
+   eapply (IHfi2 pi mu q2);
+   apply H;
+   apply (IHfi1 pi mu q1);
+   apply H0.
++ simpl.
+  intros.
+
+(*assert (q1:=fleft fi1 fi2 (fun z=>pi z = mu z) q).
+  assert (q2:=fright fi1 fi2 (fun z=>pi z = mu z) q).*)
+  split.
+  * intros.
+    rewrite IHfi.
+    apply H with (m:=m).
+    intro z.
+    unfold cng.
+    destruct (SetVars.eqb z x).
+    reflexivity.
+    symmetry.
+(*
+    apply q.
+  * intros.
+    rewrite IHfi.
+    apply H.
+    intro z.
+    unfold cng.
+    destruct (SetVars.eqb z x).
+    reflexivity.
+    apply q.
++ simpl.
+  split.
+  * intros.
+    destruct H as [m H].
+    exists m.
+    rewrite IHfi.
+    apply H.
+    intro z.
+    unfold cng.
+    destruct (SetVars.eqb z x).
+    reflexivity.
+    symmetry.
+    apply q.
+  * intros.
+    destruct H as [m H].
+    exists m.
+    rewrite IHfi.
+    apply H.
+    intro z.
+    unfold cng.
+    destruct (SetVars.eqb z x).
+    reflexivity.
+    apply q.
+Defined.
+*)
+Admitted.
+(** weak weafun theorems END **)
+
 Lemma cng_commF_EQV  xe xi m0 m1 pi fi :
 SetVars.eqb xe xi = false -> 
 (@foI X fsI prI (cng (cng pi xe m0) xi m1) fi <-> @foI X fsI prI (cng (cng pi xi m1) xe m0) fi).
@@ -1171,6 +1327,11 @@ Proof.
 Admitted.
 End Completeness.
 
+(*Include replace_variable_with_itself.*)
+Fixpoint replxixiF (xi:SetVars.t) A: substF xi xi A = Some A.
+Proof.
+Admitted.
+
 (* Troelstra's "Hilbert calculus" section *)
 Section Troelstra.
 Context (X:Type).
@@ -1179,10 +1340,68 @@ Context (prI:forall(q:PSV),(Vector.t X (psv q))->Omega).
 Lemma fresh_variable
 (A r : Fo)
 (y x : SetVars.t)
+(H1:isParamF y A = false)
 (Hr : substF y x A = Some r)
 (v : SetVars.t -> X):
 @foI X fsI prI v A <-> @foI X fsI prI (cng v y (v x)) r.
 Proof.
+(*remember (SetVars.eqb x y) as c.
+destruct c.*)
+destruct (SetVars.eq_dec x y).
+*
+destruct e.
+rewrite replxixiF in Hr.
+apply SomeInj in Hr.
+destruct Hr.
+eapply weafunF.
+intro z. unfold cng.
+remember (SetVars.eqb z x) as c.
+destruct c.
+2 : reflexivity.
+{ symmetry in Heqc.
+  apply SetVars.eqb_eq in Heqc.
+  destruct Heqc.
+  reflexivity. }
+
+*
+
+split.
++ intro j.
+  assert (Q:=lem2 X fsI prI y A x (cng v y (v x)) r Hr).
+  apply Q. clear Q.
+simpl.
+rewrite -> (weafunF X fsI prI 
+((cng (cng v y (v x)) x (cng v y (v x) y)))
+v
+).
+exact j.
+{ intro z.
+unfold cng.
+rewrite Facts.eqb_refl.
+remember (SetVars.eqb z x) as u.
+destruct u.
+{ symmetry in Hequ.
+  apply SetVars.eqb_eq in Hequ.
+  destruct Hequ.
+  reflexivity. }
+remember (SetVars.eqb z y) as uu.
+destruct uu.
+2 : reflexivity.
+(* weafunF is too strong!
+ valuations should be the same at FV of the formula *)
+
+(*
+destruct SetVars.eqb z y
+Check Facts.eqb_refl.
+Check BoolEqualityFacts
+ simpl.
+reflexivity.
+
+unshelve eapply lem2.
+  Check lem2 X fsI prI y A x v r Hr.
+*)
+
+(*
 induction A.
 + simpl in *|-*.
   apply SomeInj in Hr.
@@ -1190,6 +1409,8 @@ induction A.
   simpl.
   apply EqualThenEquiv.
   apply f_equal.
+*)
+
 Admitted.
 
 Definition Satisf val f := (@foI X fsI prI val f).
@@ -1223,6 +1444,7 @@ assert (Y:Satisf v A).
 { apply H. left. reflexivity. }
 rewrite <- fresh_variable.
 exact Y.
+exact H1.
 exact Hr.
 + unfold Satisf.
 unshelve rewrite -> NPthenNCACVF.
@@ -1240,7 +1462,7 @@ exact (v x).*)
 
 (* end *)
 
-
+(*!
 (* Check lem2 X fsI prI y A x v r Hr. *)
 rewrite <- lem2 in Y.
 pose (HA:=H A ).
@@ -1252,14 +1474,12 @@ pose (HA:=H A ).
 +*)
 simpl in H.
 Abort.
+*)
 End thm.
 End Troelstra.
 
 
-(*Include replace_variable_with_itself.*)
-Fixpoint replxixiF (xi:SetVars.t) A: substF xi xi A = Some A.
-Proof.
-Admitted.
+
 
 Lemma forall_swap A x y :
  PREPR empctx (Fora y (Fora x A) --> Fora y (Fora x A)).
