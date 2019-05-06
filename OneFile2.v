@@ -847,7 +847,8 @@ Proof.
 { intros z J. apply q. rewrite orb_true_iff. right. exact J. }
 Defined.
 
-Lemma wweafunF (pi mu:SetVars.t->X) fi (q: forall z, isParamF z fi=true -> pi z = mu z) :
+Lemma wweafunF (pi mu:SetVars.t->X) fi
+ (q: forall z, isParamF z fi=true -> pi z = mu z) :
  @foI X fsI prI pi fi <-> @foI X fsI prI mu fi.
 Proof.
 revert pi mu q.
@@ -910,19 +911,27 @@ assert (q2:=fright fi1 fi2 (fun z=>pi z = mu z) q).
     apply H with (m:=m).
     intro z.
     unfold cng.
-    destruct (SetVars.eqb z x).
+    remember (SetVars.eqb z x) as r1.
+    destruct r1.
     reflexivity.
     symmetry.
-(*
-    apply q.
+    assert (q:=q z).
+    rewrite Facts.eqb_sym in Heqr1.
+    rewrite <- Heqr1 in q.
+    exact (q H0).
   * intros.
     rewrite IHfi.
     apply H.
     intro z.
     unfold cng.
-    destruct (SetVars.eqb z x).
+    remember (SetVars.eqb z x) as r1.
+    destruct r1.
     reflexivity.
-    apply q.
+    intro H0.
+    assert (q:=q z).
+    rewrite Facts.eqb_sym in Heqr1.
+    rewrite <- Heqr1 in q.
+    exact (q H0).
 + simpl.
   split.
   * intros.
@@ -932,10 +941,18 @@ assert (q2:=fright fi1 fi2 (fun z=>pi z = mu z) q).
     apply H.
     intro z.
     unfold cng.
-    destruct (SetVars.eqb z x).
+    remember (SetVars.eqb z x) as r1.
+    destruct r1.
     reflexivity.
     symmetry.
-    apply q.
+    assert (q:=q z).
+    rewrite Facts.eqb_sym in Heqr1.
+    rewrite <- Heqr1 in q.
+    exact (q H0).
+(*    destruct (SetVars.eqb z x).
+    reflexivity.
+    symmetry.
+    apply q.*)
   * intros.
     destruct H as [m H].
     exists m.
@@ -943,12 +960,18 @@ assert (q2:=fright fi1 fi2 (fun z=>pi z = mu z) q).
     apply H.
     intro z.
     unfold cng.
-    destruct (SetVars.eqb z x).
+    remember (SetVars.eqb z x) as r1.
+    destruct r1.
     reflexivity.
-    apply q.
+    intro H0.
+    assert (q:=q z).
+    rewrite Facts.eqb_sym in Heqr1.
+    rewrite <- Heqr1 in q.
+    exact (q H0).
+(*    destruct (SetVars.eqb z x).
+    reflexivity.
+    apply q.*)
 Defined.
-*)
-Admitted.
 (** weak weafun theorems END **)
 
 Lemma cng_commF_EQV  xe xi m0 m1 pi fi :
