@@ -1370,7 +1370,7 @@ Lemma fresh_variable
 Proof.
 (*remember (SetVars.eqb x y) as c.
 destruct c.*)
-destruct (SetVars.eq_dec x y).
+(*destruct (SetVars.eq_dec x y).
 *
 destruct e.
 rewrite replxixiF in Hr.
@@ -1385,19 +1385,18 @@ destruct c.
   apply SetVars.eqb_eq in Heqc.
   destruct Heqc.
   reflexivity. }
+*)
 
-*
-
-split.
-+ intro j.
-  assert (Q:=lem2 X fsI prI y A x (cng v y (v x)) r Hr).
-  apply Q. clear Q.
+assert (Q:=lem2 X fsI prI y A x (cng v y (v x)) r Hr).
+rewrite -> Q.
 simpl.
-rewrite -> (weafunF X fsI prI 
+(* weafunF is too strong to use here!
+ valuations should be the same at FV of the formula *)
+rewrite -> (wweafunF X fsI prI 
 ((cng (cng v y (v x)) x (cng v y (v x) y)))
 v
 ).
-exact j.
+reflexivity.
 { intro z.
 unfold cng.
 rewrite Facts.eqb_refl.
@@ -1410,9 +1409,18 @@ destruct u.
 remember (SetVars.eqb z y) as uu.
 destruct uu.
 2 : reflexivity.
-(* weafunF is too strong!
- valuations should be the same at FV of the formula *)
+intro Y.
+symmetry in Hequu.
+apply SetVars.eqb_eq in Hequu.
+destruct Hequu.
+rewrite Y in H1.
+inversion H1.
+}
+Defined.
 
+
+
+(*apply Facts.*)
 (*
 destruct SetVars.eqb z y
 Check Facts.eqb_refl.
