@@ -1368,25 +1368,6 @@ Lemma fresh_variable
 (v : SetVars.t -> X):
 @foI X fsI prI v A <-> @foI X fsI prI (cng v y (v x)) r.
 Proof.
-(*remember (SetVars.eqb x y) as c.
-destruct c.*)
-(*destruct (SetVars.eq_dec x y).
-*
-destruct e.
-rewrite replxixiF in Hr.
-apply SomeInj in Hr.
-destruct Hr.
-eapply weafunF.
-intro z. unfold cng.
-remember (SetVars.eqb z x) as c.
-destruct c.
-2 : reflexivity.
-{ symmetry in Heqc.
-  apply SetVars.eqb_eq in Heqc.
-  destruct Heqc.
-  reflexivity. }
-*)
-
 assert (Q:=lem2 X fsI prI y A x (cng v y (v x)) r Hr).
 rewrite -> Q.
 simpl.
@@ -1417,32 +1398,6 @@ rewrite Y in H1.
 inversion H1.
 }
 Defined.
-
-
-
-(*apply Facts.*)
-(*
-destruct SetVars.eqb z y
-Check Facts.eqb_refl.
-Check BoolEqualityFacts
- simpl.
-reflexivity.
-
-unshelve eapply lem2.
-  Check lem2 X fsI prI y A x v r Hr.
-*)
-
-(*
-induction A.
-+ simpl in *|-*.
-  apply SomeInj in Hr.
-  rewrite <- Hr.
-  simpl.
-  apply EqualThenEquiv.
-  apply f_equal.
-*)
-
-Admitted.
 
 Definition Satisf val f := (@foI X fsI prI val f).
 Definition SatisfC val l :=
