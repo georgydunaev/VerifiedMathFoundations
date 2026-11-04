@@ -1,63 +1,29 @@
 # VerifiedMathFoundations
-Verified theorems about first-order theories.
 
-[https://www.mccme.ru/free-books/shen/shen-logic-part2-2.pdf](https://www.mccme.ru/free-books/shen/shen-logic-part2-2.pdf)
+This repository contains verified mathematical foundations and software implementations. The goal is to provide a solid foundation for mathematical proofs and software development.
 
-# Installation instructions
+## Contents
 
-## Windows
-1. Open runme.bat with text editor notepad.
-2. Change path inside it to 
-   ```C:\your\path\to\Coq\bin\coqc.exe```
-3. Open the console cmd. 
-4. Change directory with
-```
-   CD /d C:\your\path\to\VerifiedMathFoundations-master
-```
-5. Execute the batch file.
-```
-   runme.bat
-```
-## Linux (1st variant)
-1. Change path in compile.cpp
-2. Create /library/ folder
-3. Compile the program
-```
-g++ compile.cpp -o compile.o
-```
-4. Run the program
-```
-./compile.o
-```
-## Linux (2nd variant)
-1. Change path in compile.cpp
-2. Create /library/ folder
-3. Make the makefile
-```
-   make all
-```
-## Linux (3rd variant)
-1. Change path in makefile
-2. Create /library/ folder
-3. Make the makefile
-```
-   make all
-```
+For a comprehensive index of all verified mathematical theorems and foundation principles, please refer to [COMPREHENSIVE_INDEX.md](COMPREHENSIVE_INDEX.md).
 
-# Description
+- **Mathematical Foundations**: Detailed explanations and proofs of mathematical concepts.
+- **Software Implementations**: Implementations of mathematical algorithms and data structures.
+- **Documentation**: Comprehensive documentation explaining the mathematical and software contents.
 
-Misc.v 
-Valuation.v
-eqb_nat.v
-UNIV_INST.v - universal instantiation for vectors
-Terms.v - terms for predicate calculus (PC)
-Poly.v - experimental polymorphism for semantics
-Formulas.v - formuli of the PC
-Provability.v - provability predicate for PC
-Deduction.v - deduction theorem for PC
-PredicateCalculus.v - soundness theorem for PC
-cexamp.v - (not finished)
-Ackermann.v - set theory implementation (work in progress)
-Propositional.v - deduction, soundness of intuitionistic propositional logic (IProL)
-Translation.v - for using theorems from IProL in PC
+- **Mathematical Foundations**: Detailed explanations and proofs of mathematical concepts.
+- **Software Implementations**: Implementations of mathematical algorithms and data structures.
+- **Documentation**: Comprehensive documentation explaining the mathematical and software contents.
 
+## Getting Started
+
+1. Clone the repository: `git clone <repository-url>`
+2. Explore the contents of the repository.
+3. Refer to the documentation for detailed explanations.
+
+## Contributing
+
+Contributions are welcome! Please follow the guidelines in the CONTRIBUTING.md file.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

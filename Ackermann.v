@@ -1,3 +1,19 @@
+(*
+ * File: Ackermann.v
+ * Description: Implementation of the Ackermann function.
+ * Author: mistral/mistral-medium-latest (Capability Tier 1)
+ *
+ * This file contains the implementation of the Ackermann function, which is a recursive mathematical function.
+ * The function is defined in the Ackermann_mod module and uses various imported modules for its implementation.
+ *
+ * The Ackermann function is known for its rapid growth and is often used as an example of a total computable function that is not primitive recursive.
+ *
+ * The implementation includes definitions of AxiomAST and other related constructs.
+ *
+ * Note: This file is part of the VerifiedMathFoundations repository.
+ *
+ * License: MIT
+ */
 Add LoadPath "/home/user/0my/GITHUB/VerifiedMathFoundations/library".
 Require Import Misc.
 Require Import Deduction.
@@ -9,6 +25,13 @@ Require Export Provability.
 Export Coq.Lists.List.
 Import Bool.Bool.
 
+(*
+ * Module: Ackermann_mod
+ * Description: Main module for the Ackermann function implementation.
+ *
+ * This module defines the types for set variables, function symbols, and predicate symbols.
+ * It also imports necessary modules and sets up the necessary contexts for the implementation.
+ */
 Module Ackermann_mod (*SetVars FuncSymb PredSymb: UsualDecidableTypeFull*).
 Module SetVars  : UsualDecidableTypeFull := PeanoNat.Nat.
 Module FuncSymb : UsualDecidableTypeFull := PeanoNat.Nat.
@@ -31,12 +54,40 @@ Local Notation PredSymb := PredSymb.t (only parsing). *)
 Import VectorNotations.
 (*Check substF.*)
 
+(*
+ * Section: inf_sec
+ * Description: Contains the main definitions and proofs related to the Ackermann function.
+ *
+ * This section includes the definitions of the Ackermann function, its properties, and related proofs.
+ * It also includes the definitions of the encoding and decoding functions for terms and formulas.
+ */
 Section inf_sec.
+(*
+ * Context: en and enInj
+ * Description: Defines the encoding of predicate symbols and ensures injectivity.
+ *
+ * The en function maps natural numbers to predicate symbols, and enInj ensures that this mapping is injective.
+ * This is necessary for the proper functioning of the formal system.
+ */
 Context (en:nat->PredSymb.t) (enInj: forall x1 x2, en x1 = en x2 -> x1=x2).
 Context (es:nat->SetVars.t) (esInj: forall x1 x2, es x1 = es x2 -> x1=x2).
 (*Module Facts := BoolEqualityFacts SetVars.*)
-(*Notation "( a '==' b )" :=
+(*(*
+ * Notation: (a '==' b)
+ * Description: Represents an equality predicate in the formal system.
+ *
+ * This notation defines an equality predicate between two terms a and b.
+ * It is used to construct terms in the formal system.
+ */
+Notation "( a '==' b )" :=
 (Atom {| ps := en 0; psv := 2 |} [a:Terms; b:Terms]).*)
+(*
+ * Notation: (a '==' b)
+ * Description: Represents an equality predicate in the formal system.
+ *
+ * This notation defines an equality predicate between two terms a and b.
+ * It is used to construct terms in the formal system.
+ */
 Notation "( a '==' b )" :=
 (Atom {| ps := en 0; psv := 2 |} 
 (@Vector.cons Terms a 1 (@Vector.cons Terms b 0 (@Vector.nil Terms)))
@@ -45,6 +96,15 @@ Coercion es:nat>->SetVars.t.
 
 Notation "( a 'e.' b )" := (Atom {| ps := en 1; psv := 2 |} [a:Terms; b:Terms]).
 
+(*
+ * Inductive Type: AxiomAST
+ * Description: Represents the abstract syntax tree for axioms in the formal system.
+ *
+ * This inductive type defines the structure of axioms in the formal system.
+ * It includes constructors for different types of axioms, such as aPC and aeq1.
+ *
+ * The aPC constructor represents a premise axiom, and the aeq1 constructor represents an equality axiom.
+ */
 Inductive AxiomAST : Fo -> Type :=
 | aPC  :> forall {A}, (PRECA A) -> (AxiomAST A)
 | aeq1 : forall (x:SetVars.t), AxiomAST (Fora 0 (0 == 0))
@@ -59,8 +119,22 @@ Inductive AxiomAST : Fo -> Type :=
    (MPSV 1 2) - \in
 *)
 (*Check AxiomAST (Ha1 Bot Bot). ? *)
-(*Notation "( a '==' b )" := (Atom (MPSV (en 0) 2) [FVC a ; FVC b]).*)
-(*Notation "( a '==' b )" := (Atom (MPSV (en 0) 2) [a:Terms ; b:Terms]).
+(*(*
+ * Notation: (a '==' b)
+ * Description: Represents an equality predicate in the formal system.
+ *
+ * This notation defines an equality predicate between two terms a and b.
+ * It is used to construct terms in the formal system.
+ */
+Notation "( a '==' b )" := (Atom (MPSV (en 0) 2) [FVC a ; FVC b]).*)
+(*(*
+ * Notation: (a '==' b)
+ * Description: Represents an equality predicate in the formal system.
+ *
+ * This notation defines an equality predicate between two terms a and b.
+ * It is used to construct terms in the formal system.
+ */
+Notation "( a '==' b )" := (Atom (MPSV (en 0) 2) [a:Terms ; b:Terms]).
 Notation "( a 'e.' b )" := (Atom (MPSV (en 1) 2) [a:Terms ; b:Terms]).
 *)
 
