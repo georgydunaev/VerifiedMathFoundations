@@ -393,11 +393,48 @@ unfold Neg.
  Definition MaxCon (G:Fo -> Type) (Y:Consis G) :=
   (forall F:Fo, sum (G F) (G (-.F)) ).
  Definition conca (A:Fo) (G:Fo -> Type) :Fo -> Type 
-:= fun X :Fo => sum (X=A) (G A).
+:= fun X :Fo => sum (X=A) (G X).
+
+ Lemma PR_swap_axs_ctx : forall axs ctx C, PR axs ctx C -> PR ctx axs C.
+ Proof.
+   intros axs ctx C p.
+   induction p.
+   - apply Hax. exact c.
+   - apply hyp. exact a.
+   - eapply MP; eassumption.
+ Defined.
+
+ Lemma PR_conca_add2ctx : forall axs G A C,
+   PR axs (conca A G) C -> PR axs (add2ctx A G) C.
+ Proof.
+   intros axs G A C p.
+   induction p.
+   - apply hyp. destruct c as [e | g].
+     + left. symmetry. exact e.
+     + right. exact g.
+   - apply Hax. exact a.
+   - eapply MP; eassumption.
+ Defined.
 
  Theorem lem1_0 G (H:Consis G) A :
   (Consis (conca A G))+(Consis (conca (-.A) G)).
- Admitted.
+ Proof.
+   destruct (excluded_middle_informative (Consis (conca A G))) as [HL | HR].
+   - left. exact HL.
+   - right.
+     unfold Consis in *.
+     intros Hneg.
+     apply HR.
+     unfold Consis.
+     intros Hpos.
+     pose proof (PR_conca_add2ctx _ _ _ _ (PR_swap_axs_ctx _ _ _ Hpos)) as p1'.
+     pose proof (Ded A Bot G p1') as d1.
+     pose proof (PR_conca_add2ctx _ _ _ _ (PR_swap_axs_ctx _ _ _ Hneg)) as p2'.
+     pose proof (Ded (-.A) Bot G p2') as d2.
+     pose proof (MP PROCA G (-.A) Bot d1 d2) as bot_prf.
+     pose proof (PR_swap_axs_ctx _ _ _ bot_prf) as bot_swapped.
+     exact (H bot_swapped).
+ Qed.
  Section assump. (*temporary*)
  Context (enu: nat -> Fo).
  Context (surj: forall f:Fo, sig (fun n:nat=> f = enu n)).

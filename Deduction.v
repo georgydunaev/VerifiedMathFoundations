@@ -285,11 +285,44 @@ apply hyp_E; firstorder.
 apply hyp_E; firstorder.
 Defined.
 
-Definition swap ctx A B C :
-(PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
+Definition swap_inner ctx A B C :
+  PREPR ((A --> (B --> C)) :: ctx) (B --> (A --> C)).
 Proof.
-unshelve eapply SimplDed.
-Admitted.
+  pose (P := A --> (B --> C)).
+  pose (step1 := hyp_E (P :: ctx) P (inl eq_refl)).
+  pose (step2 := a2 (P :: ctx) A B C).
+  pose (step3 := MP_E (P :: ctx) P ((A --> B) --> (A --> C)) step1 step2).
+  pose (step4 := a1 (P :: ctx) ((A --> B) --> (A --> C)) B).
+  pose (step5 := MP_E (P :: ctx) ((A --> B) --> (A --> C)) (B --> ((A --> B) --> (A --> C))) step3 step4).
+  pose (step6 := a2 (P :: ctx) B (A --> B) (A --> C)).
+  pose (step7 := MP_E (P :: ctx) (B --> ((A --> B) --> (A --> C))) ((B --> (A --> B)) --> (B --> (A --> C))) step5 step6).
+  pose (step8 := a1 (P :: ctx) B A).
+  exact (MP_E (P :: ctx) (B --> (A --> B)) (B --> (A --> C)) step8 step7).
+Defined.
 
+Definition swap ctx A B C :
+  (PREPR ctx ((A --> (B --> C)) --> (B --> (A --> C)) )).
+Proof.
+  refine (Ded (A --> (B --> C)) (B --> (A --> C)) ctx (swap_inner ctx A B C) _).
+  intros xi H.
+  reflexivity.
+Defined.
+
+Fixpoint swap_ctx (Gamma : list Fo) (A B C : Fo) (p : PREPR (A :: B :: Gamma) C) {struct p} :
+  PREPR (B :: A :: Gamma) C.
+Proof.
+  destruct p as [F i | F ax | F G p1 p2 | F xi p0].
+  - apply hyp_E.
+    destruct i as [eA | [eB | iG]].
+    + right. left. exact eA.
+    + left. exact eB.
+    + right. right. exact iG.
+  - apply Hax_E. exact ax.
+  - apply MP_E with (A := F).
+    + apply swap_ctx. exact p1.
+    + apply swap_ctx. exact p2.
+  - apply GEN_E.
+    apply swap_ctx. exact p0.
+Defined.
 
 End Deduction_mod.
