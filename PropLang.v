@@ -228,7 +228,7 @@ End ctx_Sub_sec.
  Defined.
 
 Section ghj_sec.
- Local Inductive ghj : Fo->Type := | ghj_c : ghj p.
+ Inductive ghj : Fo->Type := | ghj_c : ghj p.
  Context (jkl: (p:Fo)<>B).
  Local Lemma j1 : ~ forall (axs:Fo->Prop) (A : Fo), axs A -> axs (Sub A).
  Proof.
